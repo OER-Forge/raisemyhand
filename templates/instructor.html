@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaiseMyHand - Instructor Dashboard</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>✋ RaiseMyHand - Instructor Dashboard</h1>
+            <p class="subtitle">Monitor and manage student questions in real-time</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="session-info">
+            <h2 id="session-title"></h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Student URL (Share this with students)</label>
+                    <div class="value" id="student-url"></div>
+                </div>
+                <div class="info-item">
+                    <label>Session Code</label>
+                    <div class="value" id="session-code"></div>
+                </div>
+                <div class="info-item">
+                    <label>Status</label>
+                    <div class="value">
+                        <span class="status-indicator active" id="session-status">Active</span>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="showQRCode()">Show QR Code</button>
+                <button class="btn btn-success" onclick="downloadReport('json')">Download Report (JSON)</button>
+                <button class="btn btn-success" onclick="downloadReport('csv')">Download Report (CSV)</button>
+                <button class="btn btn-danger" id="end-session-btn" onclick="endSession()">End Session</button>
+                <button class="btn btn-success" id="restart-session-btn" onclick="restartSession()" style="display: none;">Restart Session</button>
+            </div>
+        </div>
+
+        <div class="questions-container">
+            <div class="questions-header">
+                <h3>Questions</h3>
+                <span class="question-count" id="question-count">0 questions</span>
+            </div>
+            <div id="questions-list">
+                <div class="empty-state">
+                    <div class="empty-state-icon">💭</div>
+                    <div class="empty-state-text">No questions yet. Share the session URL with your students!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="qr-modal">
+        <div class="modal-content">
+            <h2>Scan to Join Session</h2>
+            <img id="qr-image" src="" alt="QR Code">
+            <p>Students can scan this code to access the session</p>
+            <button class="btn btn-secondary" onclick="hideQRCode()">Close</button>
+        </div>
+    </div>
+
+    <script src="/static/js/instructor.js"></script>
+</body>
+</html>

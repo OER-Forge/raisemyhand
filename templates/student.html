@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaiseMyHand - Submit Questions</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>✋ RaiseMyHand - Student Q&A</h1>
+            <p class="subtitle">Ask questions and upvote others</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="session-info">
+            <h2 id="session-title"></h2>
+            <p class="subtitle">Session Code: <strong id="session-code"></strong></p>
+        </div>
+
+        <div class="question-form">
+            <h3>Submit a Question</h3>
+            <form id="question-form">
+                <div class="form-group">
+                    <label for="question-text">Your Question</label>
+                    <textarea
+                        id="question-text"
+                        name="text"
+                        placeholder="What would you like to ask?"
+                        maxlength="1000"
+                        required
+                    ></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Question</button>
+            </form>
+        </div>
+
+        <div class="questions-container">
+            <div class="questions-header">
+                <h3>All Questions</h3>
+                <span class="question-count" id="question-count">0 questions</span>
+            </div>
+            <div id="questions-list">
+                <div class="empty-state">
+                    <div class="empty-state-icon">💭</div>
+                    <div class="empty-state-text">No questions yet. Be the first to ask!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/student.js"></script>
+</body>
+</html>

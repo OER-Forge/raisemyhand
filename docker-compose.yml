@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  raisemyhand:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - raisemyhand-data:/app/data
+    environment:
+      # Internal server binding (keep as 0.0.0.0)
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DATABASE_URL=sqlite:///./data/raisemyhand.db
+
+      # External URL for QR codes and shared links
+      # Change this to your actual network IP for phone access
+      # Find your IP: ifconfig (Mac/Linux) or ipconfig (Windows)
+      - BASE_URL=http://192.168.90.24:8000
+
+      # Timezone for displaying timestamps (uses IANA timezone names)
+      # Examples: America/New_York, America/Los_Angeles, Europe/London, Asia/Tokyo
+      # Default: UTC
+      - TIMEZONE=UTC
+
+      # Other examples:
+      #   - BASE_URL=http://localhost:8000  (laptop only, default)
+      #   - BASE_URL=https://raisemyhand.university.edu  (production)
+    restart: unless-stopped
+
+volumes:
+  raisemyhand-data:
