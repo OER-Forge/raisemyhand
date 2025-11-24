@@ -25,10 +25,11 @@ from passlib.context import CryptContext
 load_dotenv()
 
 from database import get_db, init_db
-from models import Session, Question
+from models import Session, Question, APIKey
 from schemas import (
     SessionCreate, SessionResponse, QuestionCreate, QuestionResponse, 
-    SessionWithQuestions, AdminLogin, Token, SessionPasswordVerify
+    SessionWithQuestions, AdminLogin, Token, SessionPasswordVerify,
+    APIKeyCreate, APIKeyResponse, InstructorAuth
 )
 
 # Initialize rate limiter
@@ -84,6 +85,24 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
+def verify_api_key(api_key: Optional[str], db) -> bool:
+    """Verify API key and update last_used timestamp."""
+    if not api_key:
+        return False
+    
+    key_record = db.query(APIKey).filter(
+        APIKey.key == api_key, 
+        APIKey.is_active == True
+    ).first()
+    
+    if key_record:
+        # Update last_used timestamp
+        key_record.last_used = datetime.utcnow()
+        db.commit()
+        return True
+    
+    return False
+
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[str]:
     """Verify JWT token and return username if valid."""
     if not ENABLE_AUTH:
@@ -137,9 +156,12 @@ def format_session_response(session: Session) -> dict:
         "questions": [
             {
                 "id": q.id,
+                "session_id": q.session_id,
                 "text": q.text,
                 "upvotes": q.upvotes,
-                "created_at": q.created_at
+                "is_answered": q.is_answered,
+                "created_at": q.created_at,
+                "answered_at": q.answered_at
             }
             for q in session.questions
         ]
@@ -154,6 +176,27 @@ templates = Jinja2Templates(directory="templates")
 @app.on_event("startup")
 def startup_event():
     init_db()
+    
+    # Check if any API keys exist
+    db = next(get_db())
+    try:
+        key_count = db.query(APIKey).count()
+        if key_count == 0:
+            print("\n" + "="*70)
+            print("⚠️  WARNING: No API keys found in database!")
+            print("="*70)
+            print("Instructors need an API key to create sessions.")
+            print("\nTo create a default API key, run:")
+            print("  python init_database.py --create-key")
+            print("\nOr create one via the admin panel:")
+            print("  1. Go to http://localhost:8000/admin-login")
+            print("  2. Login (default: admin/changeme123)")
+            print("  3. Create an API key in the 'API Keys' section")
+            print("="*70 + "\n")
+        else:
+            print(f"\n✓ Database initialized with {key_count} API key(s)\n")
+    finally:
+        db.close()
 
 
 # WebSocket connection manager
@@ -192,8 +235,20 @@ manager = ConnectionManager()
 
 # Session endpoints
 @app.post("/api/sessions", response_model=SessionResponse)
-def create_session(session: SessionCreate, db: DBSession = Depends(get_db)):
-    """Create a new Q&A session."""
+def create_session(
+    session: SessionCreate, 
+    request: Request,
+    api_key: Optional[str] = None,
+    db: DBSession = Depends(get_db)
+):
+    """Create a new Q&A session (requires valid API key)."""
+    # Get API key from query parameter if not in body
+    if not api_key:
+        api_key = request.query_params.get('api_key')
+    
+    # Verify API key
+    if not verify_api_key(api_key, db):
+        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
     password_hash = None
     if session.password:
         password_hash = get_password_hash(session.password)
@@ -220,6 +275,55 @@ def create_session(session: SessionCreate, db: DBSession = Depends(get_db)):
         "is_active": db_session.is_active
     }
     return response_data
+
+
+@app.get("/api/sessions/my-sessions")
+@limiter.limit("60/minute")
+def get_my_sessions(
+    request: Request,
+    api_key: Optional[str] = None,
+    db: DBSession = Depends(get_db)
+):
+    """Get all sessions created with this API key."""
+    # Get API key from query parameter if not provided
+    if not api_key:
+        api_key = request.query_params.get('api_key')
+    
+    # Verify API key and get the key record
+    key_record = db.query(APIKey).filter(
+        APIKey.key == api_key,
+        APIKey.is_active == True
+    ).first()
+    
+    if not key_record:
+        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    
+    # Update last used timestamp
+    key_record.last_used = datetime.utcnow()
+    db.commit()
+    
+    # Get all sessions (we don't track which API key created which session currently)
+    # For now, return all sessions - you could add an api_key_id field to Session model to track this
+    sessions = db.query(Session).order_by(Session.created_at.desc()).all()
+    
+    # Format sessions with stats
+    result = []
+    for session in sessions:
+        questions = session.questions
+        result.append({
+            "id": session.id,
+            "title": session.title,
+            "session_code": session.session_code,
+            "instructor_code": session.instructor_code,
+            "created_at": session.created_at,
+            "ended_at": session.ended_at,
+            "is_active": session.is_active,
+            "question_count": len(questions),
+            "unanswered_count": sum(1 for q in questions if not q.is_answered),
+            "total_upvotes": sum(q.upvotes for q in questions)
+        })
+    
+    return result
 
 
 @app.get("/api/sessions/{session_code}", response_model=SessionWithQuestions)
@@ -249,8 +353,21 @@ def verify_session_password(session_code: str, password_data: SessionPasswordVer
 
 @app.get("/api/instructor/sessions/{instructor_code}", response_model=SessionWithQuestions)
 @limiter.limit("30/minute")
-def get_instructor_session(request: Request, instructor_code: str, db: DBSession = Depends(get_db)):
-    """Get a session by instructor code with all its questions."""
+def get_instructor_session(
+    request: Request, 
+    instructor_code: str, 
+    api_key: Optional[str] = None, 
+    db: DBSession = Depends(get_db)
+):
+    """Get a session by instructor code with all its questions (requires valid API key)."""
+    # Get API key from query parameter if not provided
+    if not api_key:
+        api_key = request.query_params.get('api_key')
+    
+    # Verify API key
+    if not verify_api_key(api_key, db):
+        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -259,8 +376,20 @@ def get_instructor_session(request: Request, instructor_code: str, db: DBSession
 
 @app.post("/api/sessions/{instructor_code}/end")
 @limiter.limit("10/minute")
-def end_session(request: Request, instructor_code: str, db: DBSession = Depends(get_db)):
-    """End a session (instructor only)."""
+def end_session(
+    request: Request, 
+    instructor_code: str, 
+    api_key: Optional[str] = None, 
+    db: DBSession = Depends(get_db)
+):
+    """End a session (requires valid API key)."""
+    # Get API key from query parameter if not provided
+    if not api_key:
+        api_key = request.query_params.get('api_key')
+    
+    # Verify API key
+    if not verify_api_key(api_key, db):
+        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -273,8 +402,20 @@ def end_session(request: Request, instructor_code: str, db: DBSession = Depends(
 
 @app.post("/api/sessions/{instructor_code}/restart")
 @limiter.limit("10/minute")
-def restart_session(request: Request, instructor_code: str, db: DBSession = Depends(get_db)):
-    """Restart an ended session (instructor only)."""
+def restart_session(
+    request: Request, 
+    instructor_code: str, 
+    api_key: Optional[str] = None, 
+    db: DBSession = Depends(get_db)
+):
+    """Restart an ended session (requires valid API key)."""
+    # Get API key from query parameter if not provided
+    if not api_key:
+        api_key = request.query_params.get('api_key')
+    
+    # Verify API key
+    if not verify_api_key(api_key, db):
+        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -287,8 +428,21 @@ def restart_session(request: Request, instructor_code: str, db: DBSession = Depe
 
 @app.get("/api/sessions/{instructor_code}/report")
 @limiter.limit("20/minute")
-async def get_session_report(request: Request, instructor_code: str, format: str = "json", db: DBSession = Depends(get_db)):
-    """Generate a report for a session (instructor only)."""
+async def get_session_report(
+    request: Request, 
+    instructor_code: str, 
+    format: str = "json", 
+    api_key: Optional[str] = None, 
+    db: DBSession = Depends(get_db)
+):
+    """Generate a report for a session (requires valid API key)."""
+    # Get API key from query parameter if not provided
+    if not api_key:
+        api_key = request.query_params.get('api_key')
+    
+    # Verify API key
+    if not api_key or not verify_api_key(api_key, db):
+        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -455,13 +609,25 @@ async def websocket_endpoint(websocket: WebSocket, session_code: str):
 # HTML page routes
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    """Home page for creating sessions."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    """Home page with marketing content."""
+    return templates.TemplateResponse("home.html", {"request": request})
+
+
+@app.get("/student-login", response_class=HTMLResponse)
+async def student_login_view(request: Request):
+    """Student login page - enter session code or scan QR."""
+    return templates.TemplateResponse("student-login.html", {"request": request})
+
+
+@app.get("/instructor-login", response_class=HTMLResponse)
+async def instructor_login_view(request: Request):
+    """Instructor login page - enter API key or create session."""
+    return templates.TemplateResponse("instructor-login.html", {"request": request})
 
 
 @app.get("/instructor", response_class=HTMLResponse)
 async def instructor_view(request: Request):
-    """Instructor dashboard."""
+    """Instructor dashboard (authentication handled by frontend JavaScript)."""
     return templates.TemplateResponse("instructor.html", {"request": request})
 
 
@@ -470,6 +636,50 @@ async def student_view(request: Request):
     """Student question submission page."""
     return templates.TemplateResponse("student.html", {"request": request})
 
+
+@app.get("/sessions", response_class=HTMLResponse)
+async def sessions_dashboard(request: Request):
+    """Sessions dashboard - view all sessions for an API key."""
+    return templates.TemplateResponse("sessions.html", {"request": request})
+
+
+# API Key Management endpoints (admin only)
+@app.post("/api/admin/api-keys", response_model=APIKeyResponse)
+def create_api_key(key_data: APIKeyCreate, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """Create a new API key for instructor authentication (admin only)."""
+    api_key = APIKey(
+        key=APIKey.generate_key(),
+        name=key_data.name
+    )
+    db.add(api_key)
+    db.commit()
+    db.refresh(api_key)
+    return api_key
+
+@app.get("/api/admin/api-keys", response_model=list[APIKeyResponse])
+def list_api_keys(username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """List all API keys (admin only)."""
+    return db.query(APIKey).order_by(APIKey.created_at.desc()).all()
+
+@app.delete("/api/admin/api-keys/{key_id}")
+def delete_api_key(key_id: int, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """Deactivate an API key (admin only)."""
+    api_key = db.query(APIKey).filter(APIKey.id == key_id).first()
+    if not api_key:
+        raise HTTPException(status_code=404, detail="API key not found")
+    
+    api_key.is_active = False
+    db.commit()
+    return {"message": "API key deactivated successfully"}
+
+@app.post("/api/instructor/auth")
+def instructor_auth(auth_data: InstructorAuth, db: DBSession = Depends(get_db)):
+    """Authenticate instructor with API key and return session cookie data."""
+    if not verify_api_key(auth_data.api_key, db):
+        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    
+    # Return success with API key validation
+    return {"authenticated": True, "message": "API key is valid"}
 
 # Authentication endpoints
 @app.post("/api/admin/login", response_model=Token)
@@ -500,15 +710,20 @@ def verify_admin_token(username: str = Depends(verify_token)):
     return {"username": username, "valid": True}
 
 
-@app.get("/admin/login", response_class=HTMLResponse)
+@app.get("/admin-login", response_class=HTMLResponse)
 async def admin_login_view(request: Request):
     """Admin login page."""
     return templates.TemplateResponse("admin-login.html", {"request": request})
 
+@app.get("/admin/login", response_class=HTMLResponse)
+async def admin_login_view_alt(request: Request):
+    """Admin login page (alternative route)."""
+    return templates.TemplateResponse("admin-login.html", {"request": request})
+
 
 @app.get("/admin", response_class=HTMLResponse)
-async def admin_view(request: Request, username: str = Depends(verify_token)):
-    """Admin dashboard (requires authentication)."""
+async def admin_view(request: Request):
+    """Admin dashboard (authentication handled by frontend JavaScript)."""
     return templates.TemplateResponse("admin.html", {"request": request})
 
 

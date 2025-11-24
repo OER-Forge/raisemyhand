@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - RaiseMyHand</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .login-container {
+            max-width: 500px;
+            margin: 60px auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .form-divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .form-divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .form-divider span {
+            background: var(--card-bg);
+            padding: 0 15px;
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .qr-section {
+            text-align: center;
+            padding: 30px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            background: white;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link a:hover {
+            color: var(--primary-color);
+        }
+
+        #password-section {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--bg-color);
+            border-radius: 8px;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3a3;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>✋ RaiseMyHand</h1>
+            <p class="subtitle">Student Access</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="login-container">
+            <div class="login-header">
+                <h2>👨‍🎓 Join a Session</h2>
+                <p>Enter your session code or scan the QR code</p>
+            </div>
+
+            <div class="error-message" id="error-message"></div>
+            <div class="success-message" id="success-message"></div>
+
+            <form id="code-form">
+                <div class="form-group">
+                    <label for="session-code">Session Code</label>
+                    <input
+                        type="text"
+                        id="session-code"
+                        placeholder="Enter session code"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div id="password-section">
+                    <label for="session-password">Session Password</label>
+                    <input
+                        type="password"
+                        id="session-password"
+                        placeholder="This session requires a password"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Join Session</button>
+            </form>
+
+            <div class="form-divider">
+                <span>OR</span>
+            </div>
+
+            <div class="qr-section">
+                <p><strong>Scan QR Code</strong></p>
+                <div class="qr-placeholder">
+                    <div>
+                        <div style="font-size: 3rem;">📷</div>
+                        <div>Camera access required</div>
+                    </div>
+                </div>
+                <button class="btn" onclick="enableCamera()">Enable Camera</button>
+            </div>
+
+            <div class="back-link">
+                <a href="/">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const errorMsg = document.getElementById('error-message');
+        const successMsg = document.getElementById('success-message');
+        const passwordSection = document.getElementById('password-section');
+        let currentSessionCode = null;
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            successMsg.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+        }
+
+        async function checkSession(code) {
+            try {
+                const response = await fetch(`/api/sessions/${code}`);
+                if (!response.ok) {
+                    throw new Error('Session not found');
+                }
+                const session = await response.json();
+                return session;
+            } catch (error) {
+                throw new Error('Invalid session code');
+            }
+        }
+
+        async function verifyPassword(code, password) {
+            try {
+                const response = await fetch(`/api/sessions/${code}/verify-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                
+                if (!response.ok) {
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        document.getElementById('code-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+
+            const code = document.getElementById('session-code').value.trim();
+            const password = document.getElementById('session-password').value;
+
+            if (!code) {
+                showError('Please enter a session code');
+                return;
+            }
+
+            try {
+                // Check if session exists
+                const session = await checkSession(code);
+                
+                // Check if session is active
+                if (!session.is_active) {
+                    showError('This session has ended');
+                    return;
+                }
+
+                // If session requires password and we haven't shown the password field yet
+                if (session.password_protected && !currentSessionCode) {
+                    currentSessionCode = code;
+                    passwordSection.style.display = 'block';
+                    document.getElementById('session-password').focus();
+                    showSuccess('This session requires a password');
+                    return;
+                }
+
+                // If password is required, verify it
+                if (session.password_protected) {
+                    if (!password) {
+                        showError('Please enter the session password');
+                        return;
+                    }
+
+                    const isValid = await verifyPassword(code, password);
+                    if (!isValid) {
+                        showError('Invalid password');
+                        return;
+                    }
+                }
+
+                // Redirect to student page
+                window.location.href = `/student?code=${code}`;
+            } catch (error) {
+                showError(error.message);
+                currentSessionCode = null;
+                passwordSection.style.display = 'none';
+            }
+        });
+
+        function enableCamera() {
+            alert('QR code scanning will be implemented here. For now, please use the session code to join.');
+        }
+
+        // Check if code is in URL (from QR redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeFromUrl = urlParams.get('code');
+        if (codeFromUrl) {
+            document.getElementById('session-code').value = codeFromUrl;
+            document.getElementById('code-form').dispatchEvent(new Event('submit'));
+        }
+    </script>
+</body>
+</html>

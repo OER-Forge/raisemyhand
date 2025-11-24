@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Login - RaiseMyHand</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .login-container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link a:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .help-text {
+            background: var(--bg-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3a3;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .optional-badge {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>✋ RaiseMyHand</h1>
+            <p class="subtitle">Instructor Access</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="login-container">
+            <div class="login-header">
+                <h2>👨‍🏫 Instructor Portal</h2>
+                <p>View your sessions or create a new one</p>
+            </div>
+
+            <div class="tab-container">
+                <button class="tab active" onclick="switchTab('view')">View Sessions</button>
+                <button class="tab" onclick="switchTab('create')">Create New Session</button>
+            </div>
+
+            <div class="error-message" id="error-message"></div>
+            <div class="success-message" id="success-message"></div>
+
+            <!-- View Sessions Tab -->
+            <div id="view-tab" class="tab-content active">
+                <div class="help-text">
+                    Enter your API key to view all your sessions. Don't have an API key? Contact your administrator.
+                </div>
+
+                <form id="view-form">
+                    <div class="form-group">
+                        <label for="view-api-key">API Key</label>
+                        <input
+                            type="text"
+                            id="view-api-key"
+                            placeholder="rmh_..."
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">View My Sessions</button>
+                </form>
+            </div>
+
+            <!-- Create Session Tab -->
+            <div id="create-tab" class="tab-content">
+                <div class="help-text">
+                    Create a new session to start collecting student questions. Password protection is optional.
+                </div>
+
+                <form id="create-form">
+                    <div class="form-group">
+                        <label for="create-api-key">API Key</label>
+                        <input
+                            type="text"
+                            id="create-api-key"
+                            placeholder="rmh_..."
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="session-title">Session Name</label>
+                        <input
+                            type="text"
+                            id="session-title"
+                            placeholder="e.g., Biology 101 - Lecture 5"
+                            required
+                            maxlength="200"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="session-password">
+                            Session Password 
+                            <span class="optional-badge">(optional)</span>
+                        </label>
+                        <input
+                            type="password"
+                            id="session-password"
+                            placeholder="Leave blank for no password"
+                            autocomplete="new-password"
+                        >
+                        <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                            Students will need this password to join the session
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Create Session</button>
+                </form>
+            </div>
+
+            <div class="back-link">
+                <a href="/">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const errorMsg = document.getElementById('error-message');
+        const successMsg = document.getElementById('success-message');
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            successMsg.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+        }
+
+        function switchTab(tab) {
+            hideMessages();
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'view') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('view-tab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('create-tab').classList.add('active');
+            }
+        }
+
+        // View Sessions Form
+        document.getElementById('view-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+
+            const apiKey = document.getElementById('view-api-key').value.trim();
+
+            if (!apiKey) {
+                showError('Please enter your API key');
+                return;
+            }
+
+            // Store API key and redirect to sessions page
+            localStorage.setItem('instructor_api_key', apiKey);
+            document.cookie = `instructor_api_key=${apiKey}; path=/; max-age=2592000`;
+            window.location.href = '/sessions';
+        });
+
+        // Create Session Form
+        document.getElementById('create-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+
+            const apiKey = document.getElementById('create-api-key').value.trim();
+            const title = document.getElementById('session-title').value.trim();
+            const password = document.getElementById('session-password').value;
+
+            if (!apiKey) {
+                showError('Please enter your API key');
+                return;
+            }
+
+            if (!title) {
+                showError('Please enter a session name');
+                return;
+            }
+
+            try {
+                const payload = { title };
+                if (password) {
+                    payload.password = password;
+                }
+
+                const response = await fetch(`/api/sessions?api_key=${encodeURIComponent(apiKey)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 401) {
+                    showError('Invalid API key');
+                    return;
+                }
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showError(error.detail || 'Failed to create session');
+                    return;
+                }
+
+                const session = await response.json();
+
+                // Store API key
+                localStorage.setItem('instructor_api_key', apiKey);
+                document.cookie = `instructor_api_key=${apiKey}; path=/; max-age=2592000`;
+
+                // Redirect to instructor dashboard
+                window.location.href = `/instructor?code=${session.instructor_code}`;
+            } catch (error) {
+                showError('Failed to create session. Please try again.');
+            }
+        });
+
+        // Pre-fill API key if stored
+        const storedKey = localStorage.getItem('instructor_api_key');
+        if (storedKey) {
+            document.getElementById('view-api-key').value = storedKey;
+            document.getElementById('create-api-key').value = storedKey;
+        }
+    </script>
+</body>
+</html>

@@ -15,7 +15,7 @@ function getAuthHeaders() {
 function handleAuthError(response) {
     if (response.status === 401) {
         localStorage.removeItem('admin_token');
-        window.location.href = '/admin/login';
+        window.location.href = '/admin-login';
         return true;
     }
     return false;
@@ -336,6 +336,184 @@ setInterval(() => {
     loadSessions();
 }, 30000);
 
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin-login';
+    }
+}
+
 // Initialize
 loadStats();
 loadSessions();
+loadApiKeys();
+
+// API Key Management Functions
+async function loadApiKeys() {
+    try {
+        const response = await fetch('/api/admin/api-keys', {
+            headers: getAuthHeaders()
+        });
+        
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to load API keys');
+
+        const apiKeys = await response.json();
+        renderApiKeys(apiKeys);
+    } catch (error) {
+        console.error('Error loading API keys:', error);
+        showNotification('Failed to load API keys', 'error');
+    }
+}
+
+function renderApiKeys(apiKeys) {
+    const tbody = document.getElementById('api-keys-tbody');
+    
+    if (apiKeys.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                    No API keys found. Create one to allow instructors to create sessions.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = apiKeys.map(key => {
+        const createdDate = new Date(key.created_at);
+        const lastUsedDate = key.last_used ? new Date(key.last_used) : null;
+        const statusBadge = key.is_active
+            ? '<span class="badge badge-active">Active</span>'
+            : '<span class="badge badge-ended">Inactive</span>';
+
+        return `
+            <tr>
+                <td><strong>${escapeHtml(key.name)}</strong></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <code class="code-snippet" style="flex: 1; user-select: all;" id="key-${key.id}">
+                            ${escapeHtml(key.key)}
+                        </code>
+                        <button class="btn-view" style="padding: 4px 8px; min-width: 70px;" onclick="copyApiKeyById(${key.id}, '${key.key}', this)">📋 Copy</button>
+                    </div>
+                </td>
+                <td>${createdDate.toLocaleString()}</td>
+                <td>${lastUsedDate ? lastUsedDate.toLocaleString() : 'Never'}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn-delete" onclick="deleteApiKey(${key.id}, '${escapeHtml(key.name)}')">🗑️ Delete</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function showCreateApiKeyModal() {
+    const name = prompt('Enter a name for this API key (e.g., "Math Department", "Prof. Smith"):');
+    if (name && name.trim()) {
+        createApiKey(name.trim());
+    }
+}
+
+async function createApiKey(name) {
+    try {
+        const response = await fetch('/api/admin/api-keys', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ name: name })
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to create API key');
+
+        const newKey = await response.json();
+        
+        // Copy to clipboard automatically
+        await copyToClipboard(newKey.key);
+        
+        showNotification(`API key "${newKey.name}" created and copied to clipboard!`, 'success');
+        loadApiKeys(); // Refresh the list
+    } catch (error) {
+        console.error('Error creating API key:', error);
+        showNotification('Failed to create API key', 'error');
+    }
+}
+
+async function deleteApiKey(keyId, keyName) {
+    if (!confirm(`Are you sure you want to delete the API key "${keyName}"?\n\nThis will prevent anyone using this key from creating new sessions.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/api-keys/${keyId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to delete API key');
+
+        showNotification('API key deleted successfully', 'success');
+        loadApiKeys(); // Refresh the list
+    } catch (error) {
+        console.error('Error deleting API key:', error);
+        showNotification('Failed to delete API key', 'error');
+    }
+}
+
+function copyApiKeyById(keyId, keyText, button) {
+    navigator.clipboard.writeText(keyText).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✓ Copied!';
+        button.style.background = '#28a745';
+        showNotification('API key copied to clipboard', 'success');
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = '';
+        }, 2000);
+    }).catch(err => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = keyText;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showNotification('API key copied to clipboard', 'success');
+            button.textContent = '✓ Copied!';
+            setTimeout(() => {
+                button.textContent = '📋 Copy';
+            }, 2000);
+        } catch (err) {
+            showNotification('Failed to copy. Please select and copy manually.', 'error');
+        }
+        document.body.removeChild(textArea);
+    });
+}
+
+async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch (err) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return true;
+        } catch (err) {
+            document.body.removeChild(textArea);
+            return false;
+        }
+    }
+}

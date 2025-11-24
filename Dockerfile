@@ -19,6 +19,9 @@ COPY . .
 # Create directory for database
 RUN mkdir -p /app/data
 
+# Make entrypoint script executable
+RUN chmod +x docker-entrypoint.sh
+
 # Expose port
 EXPOSE 8000
 
@@ -28,6 +31,7 @@ ENV PORT=8000
 ENV DATABASE_URL=sqlite:///./data/raisemyhand.db
 ENV BASE_URL=http://localhost:8000
 ENV TIMEZONE=UTC
+ENV CREATE_DEFAULT_API_KEY=false
 
-# Run the application
-CMD ["python", "main.py"]
+# Use entrypoint script
+ENTRYPOINT ["./docker-entrypoint.sh"]

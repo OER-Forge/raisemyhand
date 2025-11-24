@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   raisemyhand:
     build: .
@@ -26,6 +24,10 @@ services:
       # Admin Authentication - CHANGE THESE BEFORE DEPLOYING TO PRODUCTION!
       - ADMIN_USERNAME=admin
       - ADMIN_PASSWORD=changeme123
+
+      # API Key Creation - Set to true to create a default API key on first run
+      # The key will be displayed in docker logs
+      - CREATE_DEFAULT_API_KEY=true
 
       # Other examples:
       #   - BASE_URL=http://localhost:8000  (laptop only, default)

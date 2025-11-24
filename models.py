@@ -7,6 +7,23 @@ import secrets
 Base = declarative_base()
 
 
+class APIKey(Base):
+    """API keys for instructor authentication."""
+    __tablename__ = "api_keys"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)  # Human-readable name for the key
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_used = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
+
+    @staticmethod
+    def generate_key():
+        """Generate a secure API key."""
+        return f"rmh_{secrets.token_urlsafe(32)}"
+
+
 class Session(Base):
     """A Q&A session for a class."""
     __tablename__ = "sessions"

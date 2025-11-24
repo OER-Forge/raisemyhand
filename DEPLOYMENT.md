@@ -21,14 +21,20 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Initialize database with a default API key (optional but recommended)
+python init_database.py --create-key
+
 # Run the server
 python main.py
 ```
 
 **Access:**
 - Open browser to `http://localhost:8000`
-- Create session, share student URL with class
+- Login to admin panel: `http://localhost:8000/admin-login` (default: admin/changeme123)
+- Create or use the generated API key to create sessions
 - Sessions persist in local `raisemyhand.db` file
+
+**Note:** Save the API key displayed during initialization - you'll need it to create sessions!
 
 **Network Access (Optional):**
 To let students connect from their devices:
@@ -52,24 +58,43 @@ Students connect to: `http://YOUR_LOCAL_IP:8000`
 **1. Install Docker:**
 - Follow instructions at https://docs.docker.com/get-docker/
 
-**2. Deploy:**
+**2. Configure:**
+Edit `docker-compose.yml`:
+```yaml
+environment:
+  - BASE_URL=http://your-server-address:8000  # Change to your actual URL
+  - CREATE_DEFAULT_API_KEY=true  # Creates a default key on first run
+  - ADMIN_USERNAME=admin  # Change for production!
+  - ADMIN_PASSWORD=changeme123  # Change for production!
+```
+
+**3. Deploy:**
 ```bash
 cd raisemyhand
 docker-compose up -d
 ```
 
-**3. Access:**
+**4. Get the default API key:**
+```bash
+# View container logs to see the generated API key
+docker-compose logs raisemyhand | grep "Key:"
+```
+
+**5. Access:**
 - Navigate to `http://your-server-address:8000`
-- All instructors can create independent sessions
+- Login to admin panel: `http://your-server-address:8000/admin-login`
+- Use the API key from logs or create new ones in the admin panel
+- Distribute API keys to instructors for creating sessions
 
 **Advantages:**
 - Automatic restarts
 - Database persists in Docker volume
 - Easy updates (`docker-compose pull && docker-compose up -d`)
 - Isolated from system Python
+- Default API key created automatically
 
 **Configuration:**
-Edit `docker-compose.yml` to change port or database location:
+Edit `docker-compose.yml` to change port:
 ```yaml
 ports:
   - "80:8000"  # Use port 80 for production

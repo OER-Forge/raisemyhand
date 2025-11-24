@@ -1,12 +1,64 @@
+// API Key authentication helper functions
+function getApiKey() {
+    // Check for API key in localStorage (persistent)
+    let apiKey = localStorage.getItem('instructor_api_key');
+    
+    // If not found, check for cookie (session)
+    if (!apiKey) {
+        apiKey = getCookie('instructor_api_key');
+    }
+    
+    return apiKey;
+}
+
+function setApiKey(apiKey, persistent = false) {
+    if (persistent) {
+        localStorage.setItem('instructor_api_key', apiKey);
+    } else {
+        setCookie('instructor_api_key', apiKey, 1); // 1 day
+    }
+}
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+function setCookie(name, value, days) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+}
+
+function clearApiKey() {
+    localStorage.removeItem('instructor_api_key');
+    document.cookie = 'instructor_api_key=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+}
+
+function handleAuthError() {
+    alert('Invalid or expired API key. Please enter a valid API key.');
+    clearApiKey();
+    promptForApiKey();
+}
+
+function promptForApiKey() {
+    const apiKey = prompt('Please enter your instructor API key:');
+    if (apiKey) {
+        setApiKey(apiKey, true); // Store persistently
+        // Retry loading the session
+        loadSession();
+    } else {
+        alert('API key is required to access instructor features.');
+        window.location.href = '/';
+    }
+}
+
 const instructorCode = new URLSearchParams(window.location.search).get('code');
 let sessionData = null;
 let ws = null;
 let config = null;
-
-if (!instructorCode) {
-    alert('Invalid instructor code');
-    window.location.href = '/';
-}
 
 // Load configuration
 async function loadConfig() {
@@ -24,11 +76,31 @@ async function loadSession() {
     try {
         await loadConfig(); // Load config first
 
-        const response = await fetch(`/api/instructor/sessions/${instructorCode}`);
+        const apiKey = getApiKey();
+        if (!apiKey) {
+            console.error('No API key found');
+            promptForApiKey();
+            return;
+        }
+
+        console.log('Loading session with code:', instructorCode);
+        const response = await fetch(`/api/instructor/sessions/${instructorCode}?api_key=${encodeURIComponent(apiKey)}`);
+        
+        console.log('Response status:', response.status);
+        
+        if (response.status === 401) {
+            console.error('Authentication failed - invalid API key');
+            handleAuthError();
+            return;
+        }
+        
         if (!response.ok) {
-            throw new Error('Session not found');
+            const errorText = await response.text();
+            console.error('Failed to load session:', response.status, errorText);
+            throw new Error(`Session not found: ${response.status}`);
         }
         sessionData = await response.json();
+        console.log('Session loaded successfully:', sessionData.title);
 
         // Update UI
         document.getElementById('session-title').textContent = sessionData.title;
@@ -65,7 +137,11 @@ async function loadSession() {
         connectWebSocket();
     } catch (error) {
         console.error('Error loading session:', error);
-        alert('Failed to load session');
+        alert(`Failed to load session: ${error.message}`);
+        // Redirect to home page after error
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 2000);
     }
 }
 
@@ -196,7 +272,14 @@ function hideQRCode() {
 
 async function downloadReport(format) {
     try {
-        const response = await fetch(`/api/sessions/${instructorCode}/report?format=${format}`);
+        const apiKey = getApiKey();
+        const response = await fetch(`/api/sessions/${instructorCode}/report?format=${format}&api_key=${encodeURIComponent(apiKey)}`);
+        
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
+        
         if (!response.ok) {
             throw new Error('Failed to generate report');
         }
@@ -224,10 +307,17 @@ async function endSession() {
     }
 
     try {
-        const response = await fetch(`/api/sessions/${instructorCode}/end`, {
-            method: 'POST'
+        const apiKey = getApiKey();
+        const response = await fetch(`/api/sessions/${instructorCode}/end?api_key=${encodeURIComponent(apiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
         });
 
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
+        
         if (!response.ok) {
             throw new Error('Failed to end session');
         }
@@ -260,10 +350,17 @@ async function restartSession() {
     }
 
     try {
-        const response = await fetch(`/api/sessions/${instructorCode}/restart`, {
-            method: 'POST'
+        const apiKey = getApiKey();
+        const response = await fetch(`/api/sessions/${instructorCode}/restart?api_key=${encodeURIComponent(apiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
         });
 
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
+        
         if (!response.ok) {
             throw new Error('Failed to restart session');
         }
@@ -305,5 +402,22 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        clearApiKey();
+        window.location.href = '/';
+    }
+}
+
 // Initialize
-loadSession();
+if (!instructorCode) {
+    alert('Invalid instructor code');
+    window.location.href = '/';
+} else if (!getApiKey()) {
+    // Prompt for API key if not found
+    promptForApiKey();
+} else {
+    // Load session immediately if we have both code and API key
+    loadSession();
+}

@@ -194,6 +194,9 @@
                 // Store the token
                 localStorage.setItem('admin_token', data.access_token);
                 
+                // Add small delay to ensure token is stored
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
                 // Redirect to admin dashboard
                 window.location.href = '/admin';
 

@@ -25,11 +25,18 @@ python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
+# Initialize database (optional - creates default API key)
+python init_database.py --create-key
+
 # Run the server
 python main.py
 ```
 
 Open [http://localhost:8000](http://localhost:8000) and start your session!
+
+**Important**: The database initialization creates an API key that you'll need to create sessions. Save the displayed key or generate new ones via the admin panel at `/admin-login` (default: admin/changeme123).
+
+See [DATABASE_SETUP.md](DATABASE_SETUP.md) for detailed database configuration.
 
 ### For Departments/Colleges (Shared Server)
 

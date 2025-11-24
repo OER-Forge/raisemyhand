@@ -3,6 +3,26 @@ from datetime import datetime
 from typing import Optional
 
 
+class APIKeyCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+
+
+class APIKeyResponse(BaseModel):
+    id: int
+    key: str
+    name: str
+    created_at: datetime
+    last_used: Optional[datetime]
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class InstructorAuth(BaseModel):
+    api_key: str
+
+
 class SessionCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     password: Optional[str] = Field(None, min_length=4, max_length=50)

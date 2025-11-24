@@ -131,13 +131,40 @@
             border-radius: 3px;
             font-size: 0.9rem;
         }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
-            <h1>🔧 RaiseMyHand - Admin Dashboard</h1>
-            <p class="subtitle">System overview and management</p>
+            <div class="header-content">
+                <div>
+                    <h1>🔧 RaiseMyHand - Admin Dashboard</h1>
+                    <p class="subtitle">System overview and management</p>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
         </div>
     </header>
 
@@ -169,6 +196,32 @@
                 <div class="stat-label">Ended Sessions</div>
                 <div class="stat-value" id="ended-sessions">-</div>
             </div>
+        </div>
+
+        <!-- API Key Management -->
+        <div class="section-header">
+            <h2>Instructor API Keys</h2>
+            <button class="btn btn-primary" onclick="showCreateApiKeyModal()">➕ Create New API Key</button>
+        </div>
+        
+        <div class="sessions-table" style="margin-bottom: 40px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Key</th>
+                        <th>Created</th>
+                        <th>Last Used</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="api-keys-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px;">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- Sessions List -->
