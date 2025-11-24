@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login - RaiseMyHand</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         .login-container {
             max-width: 500px;
@@ -58,8 +59,9 @@
         }
 
         .qr-placeholder {
-            width: 200px;
-            height: 200px;
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
             margin: 20px auto;
             background: white;
             border: 2px dashed var(--border-color);
@@ -68,6 +70,36 @@
             align-items: center;
             justify-content: center;
             color: var(--text-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #qr-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        #qr-video.active {
+            display: block;
+        }
+
+        .qr-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 3px solid var(--primary-color);
+            border-radius: 12px;
+            pointer-events: none;
+            display: none;
+        }
+
+        #qr-video.active ~ .qr-overlay {
+            display: block;
         }
 
         .back-link {
@@ -161,12 +193,15 @@
             <div class="qr-section">
                 <p><strong>Scan QR Code</strong></p>
                 <div class="qr-placeholder">
-                    <div>
+                    <div id="camera-prompt">
                         <div style="font-size: 3rem;">📷</div>
                         <div>Camera access required</div>
                     </div>
+                    <video id="qr-video" playsinline></video>
+                    <div class="qr-overlay"></div>
+                    <canvas id="qr-canvas" style="display: none;"></canvas>
                 </div>
-                <button class="btn" onclick="enableCamera()">Enable Camera</button>
+                <button class="btn" id="camera-btn" onclick="toggleCamera()">Enable Camera</button>
             </div>
 
             <div class="back-link">
@@ -180,6 +215,8 @@
         const successMsg = document.getElementById('success-message');
         const passwordSection = document.getElementById('password-section');
         let currentSessionCode = null;
+        let cameraStream = null;
+        let scanning = false;
 
         function showError(message) {
             errorMsg.textContent = message;
@@ -282,8 +319,153 @@
             }
         });
 
-        function enableCamera() {
-            alert('QR code scanning will be implemented here. For now, please use the session code to join.');
+        async function toggleCamera() {
+            const video = document.getElementById('qr-video');
+            const cameraBtn = document.getElementById('camera-btn');
+            const cameraPrompt = document.getElementById('camera-prompt');
+
+            if (cameraStream) {
+                // Stop camera
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+                scanning = false;
+                video.classList.remove('active');
+                cameraPrompt.style.display = 'block';
+                cameraBtn.textContent = 'Enable Camera';
+                hideMessages();
+            } else {
+                // Start camera
+                try {
+                    // Check if mediaDevices is supported
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        // Check if it's because of HTTP (not HTTPS)
+                        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                            showError('Camera requires HTTPS. Please use the session code instead, or access via https://');
+                        } else {
+                            showError('Camera not supported by your browser. Please enter session code manually.');
+                        }
+                        return;
+                    }
+
+                    hideMessages();
+                    cameraBtn.textContent = 'Starting camera...';
+                    cameraBtn.disabled = true;
+
+                    // Try rear camera first, fall back to any camera
+                    let constraints = {
+                        video: { 
+                            facingMode: { ideal: 'environment' },
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    };
+
+                    try {
+                        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    } catch (err) {
+                        // Fallback: try without facingMode
+                        console.log('Trying fallback camera constraints');
+                        constraints = { video: true };
+                        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    }
+                    
+                    video.srcObject = cameraStream;
+                    
+                    // Wait for video to be ready
+                    video.onloadedmetadata = () => {
+                        video.play().then(() => {
+                            video.classList.add('active');
+                            cameraPrompt.style.display = 'none';
+                            cameraBtn.textContent = 'Stop Camera';
+                            cameraBtn.disabled = false;
+                            scanning = true;
+                            showSuccess('Point camera at QR code');
+                            
+                            // Start scanning after a short delay
+                            setTimeout(() => scanQRCode(), 100);
+                        }).catch(err => {
+                            console.error('Play error:', err);
+                            showError('Could not start camera playback');
+                            cameraBtn.textContent = 'Enable Camera';
+                            cameraBtn.disabled = false;
+                        });
+                    };
+                    
+                } catch (error) {
+                    console.error('Camera error:', error);
+                    cameraBtn.textContent = 'Enable Camera';
+                    cameraBtn.disabled = false;
+                    
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        showError('Camera permission denied. Please allow camera access in your browser settings.');
+                    } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                        showError('No camera found on this device.');
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        showError('Camera is already in use by another app.');
+                    } else {
+                        showError('Could not access camera: ' + error.name + '. Please enter session code manually.');
+                    }
+                }
+            }
+        }
+
+        function scanQRCode() {
+            if (!scanning) return;
+
+            const video = document.getElementById('qr-video');
+            const canvas = document.getElementById('qr-canvas');
+            const context = canvas.getContext('2d');
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw current video frame to canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Get image data
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Try to decode QR code using jsQR library
+            if (window.jsQR) {
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    // QR code detected
+                    scanning = false;
+                    
+                    // Stop camera
+                    if (cameraStream) {
+                        cameraStream.getTracks().forEach(track => track.stop());
+                        cameraStream = null;
+                    }
+                    
+                    // Extract session code from URL
+                    try {
+                        const url = new URL(code.data);
+                        const sessionCode = url.searchParams.get('code');
+                        
+                        if (sessionCode) {
+                            document.getElementById('session-code').value = sessionCode;
+                            showSuccess('QR code scanned! Joining session...');
+                            setTimeout(() => {
+                                document.getElementById('code-form').dispatchEvent(new Event('submit'));
+                            }, 500);
+                        } else {
+                            showError('Invalid QR code format');
+                            scanning = true;
+                        }
+                    } catch (e) {
+                        showError('Could not read QR code');
+                        scanning = true;
+                    }
+                }
+            }
+
+            // Continue scanning
+            if (scanning) {
+                requestAnimationFrame(scanQRCode);
+            }
         }
 
         // Check if code is in URL (from QR redirect)
