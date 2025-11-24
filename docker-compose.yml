@@ -1,38 +1,29 @@
 services:
-  raisemyhand:
+  app:
     build: .
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:${PORT:-8000}"
     volumes:
-      - raisemyhand-data:/app/data
+      - app-data:/app/data
+    env_file:
+      - .env
+    secrets:
+      - admin_password
     environment:
-      # Internal server binding (keep as 0.0.0.0)
-      - HOST=0.0.0.0
-      - PORT=8000
-      - DATABASE_URL=sqlite:///./data/raisemyhand.db
-
-      # External URL for QR codes and shared links
-      # Change this to your actual network IP for phone access
-      # Find your IP: ifconfig (Mac/Linux) or ipconfig (Windows)
-      - BASE_URL=http://192.168.90.24:8000
-
-      # Timezone for displaying timestamps (uses IANA timezone names)
-      # Examples: America/New_York, America/Los_Angeles, Europe/London, Asia/Tokyo
-      # Default: UTC
-      - TIMEZONE=UTC
-
-      # Admin Authentication - CHANGE THESE BEFORE DEPLOYING TO PRODUCTION!
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=changeme123
-
-      # API Key Creation - Set to true to create a default API key on first run
-      # The key will be displayed in docker logs
-      - CREATE_DEFAULT_API_KEY=true
-
-      # Other examples:
-      #   - BASE_URL=http://localhost:8000  (laptop only, default)
-      #   - BASE_URL=https://raisemyhand.university.edu  (production)
+      # Override password with Docker secret
+      - ADMIN_PASSWORD_FILE=/run/secrets/admin_password
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8000}').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
-  raisemyhand-data:
+  app-data:
+    driver: local
+
+secrets:
+  admin_password:
+    file: ./secrets/admin_password.txt

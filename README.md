@@ -43,7 +43,10 @@ See [DATABASE_SETUP.md](DATABASE_SETUP.md) for detailed database configuration.
 **Using Docker (Recommended):**
 ```bash
 cd raisemyhand
-docker-compose up -d
+cp .env.example .env
+# Edit .env with your settings
+echo "YourSecurePassword" > secrets/admin_password.txt
+docker compose up -d
 ```
 
 Server available at `http://your-server:8000`

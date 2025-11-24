@@ -22,16 +22,8 @@ RUN mkdir -p /app/data
 # Make entrypoint script executable
 RUN chmod +x docker-entrypoint.sh
 
-# Expose port
-EXPOSE 8000
-
-# Set environment variables
-ENV HOST=0.0.0.0
-ENV PORT=8000
-ENV DATABASE_URL=sqlite:///./data/raisemyhand.db
-ENV BASE_URL=http://localhost:8000
-ENV TIMEZONE=UTC
-ENV CREATE_DEFAULT_API_KEY=false
+# Note: Port is configured via docker-compose.yml and .env
+# No EXPOSE needed as port mapping is explicit in compose file
 
 # Use entrypoint script
 ENTRYPOINT ["./docker-entrypoint.sh"]

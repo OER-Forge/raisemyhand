@@ -15,3 +15,6 @@ ENV/
 .vscode/
 *.swp
 *.swo
+
+# Docker secrets
+secrets/admin_password.txt

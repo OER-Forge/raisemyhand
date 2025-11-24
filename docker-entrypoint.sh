@@ -6,6 +6,12 @@ set -e
 
 echo "Starting RaiseMyHand..."
 
+# Load admin password from Docker secret if available
+if [ -f "/run/secrets/admin_password" ]; then
+    export ADMIN_PASSWORD=$(cat /run/secrets/admin_password)
+    echo "Loaded admin password from Docker secret"
+fi
+
 # Always run migrations first (safe - they check if needed)
 echo "Running database migrations..."
 python migrate_db.py 2>/dev/null || true
