@@ -1,7 +1,34 @@
+// Authentication helper functions
+function getAuthHeaders() {
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    }
+    return {
+        'Content-Type': 'application/json'
+    };
+}
+
+function handleAuthError(response) {
+    if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin/login';
+        return true;
+    }
+    return false;
+}
+
 // Load stats on page load
 async function loadStats() {
     try {
-        const response = await fetch('/api/admin/stats');
+        const response = await fetch('/api/admin/stats', {
+            headers: getAuthHeaders()
+        });
+        
+        if (handleAuthError(response)) return;
         if (!response.ok) throw new Error('Failed to load stats');
 
         const stats = await response.json();
@@ -23,7 +50,11 @@ async function loadSessions() {
     const tbody = document.getElementById('sessions-tbody');
 
     try {
-        const response = await fetch(`/api/admin/sessions?active_only=${activeOnly}&limit=100`);
+        const response = await fetch(`/api/admin/sessions?active_only=${activeOnly}&limit=100`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (handleAuthError(response)) return;
         if (!response.ok) throw new Error('Failed to load sessions');
 
         const sessions = await response.json();
@@ -102,7 +133,8 @@ async function deleteSession(sessionId, sessionTitle) {
 
     try {
         const response = await fetch(`/api/admin/sessions/${sessionId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) throw new Error('Failed to delete session');
@@ -207,7 +239,7 @@ async function bulkEndSessions() {
     try {
         const response = await fetch('/api/admin/sessions/bulk/end', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(sessionIds)
         });
 
@@ -237,7 +269,7 @@ async function bulkRestartSessions() {
     try {
         const response = await fetch('/api/admin/sessions/bulk/restart', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(sessionIds)
         });
 
@@ -267,7 +299,7 @@ async function bulkDeleteSessions() {
     try {
         const response = await fetch('/api/admin/sessions/bulk/delete', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(sessionIds)
         });
 

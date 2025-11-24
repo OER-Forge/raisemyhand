@@ -34,6 +34,12 @@ async function loadSession() {
         document.getElementById('session-title').textContent = sessionData.title;
         document.getElementById('session-code').textContent = sessionData.session_code;
 
+        // Show password protection status
+        const passwordInfo = document.getElementById('password-info');
+        if (sessionData.has_password) {
+            passwordInfo.style.display = 'block';
+        }
+
         const baseUrl = config.base_url;
         const studentUrl = `${baseUrl}/student?code=${sessionData.session_code}`;
         document.getElementById('student-url').textContent = studentUrl;

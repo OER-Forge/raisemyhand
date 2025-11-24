@@ -16,6 +16,31 @@ async function loadSession() {
         }
         sessionData = await response.json();
 
+        // Check if session requires password
+        if (sessionData.has_password) {
+            const password = prompt('This session is password protected. Please enter the password:');
+            if (!password) {
+                alert('Password required to access this session');
+                window.location.href = '/';
+                return;
+            }
+
+            // Verify password
+            const verifyResponse = await fetch(`/api/sessions/${sessionCode}/verify-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password })
+            });
+
+            if (!verifyResponse.ok) {
+                alert('Incorrect password');
+                window.location.href = '/';
+                return;
+            }
+        }
+
         // Update UI
         document.getElementById('session-title').textContent = sessionData.title;
         document.getElementById('session-code').textContent = sessionData.session_code;

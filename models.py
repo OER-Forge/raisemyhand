@@ -15,6 +15,7 @@ class Session(Base):
     session_code = Column(String, unique=True, index=True, nullable=False)
     instructor_code = Column(String, unique=True, index=True, nullable=False)
     title = Column(String, nullable=False)
+    password_hash = Column(String, nullable=True)  # Optional session password
     created_at = Column(DateTime, default=datetime.utcnow)
     ended_at = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True)

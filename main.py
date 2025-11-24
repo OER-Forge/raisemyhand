@@ -2,10 +2,10 @@ from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconn
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session as DBSession
-from datetime import datetime
-from typing import List
+from datetime import datetime, timedelta
+from typing import List, Optional
 import json
 import qrcode
 from io import BytesIO
@@ -18,13 +18,18 @@ import secrets
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 # Load environment variables from .env file
 load_dotenv()
 
 from database import get_db, init_db
 from models import Session, Question
-from schemas import SessionCreate, SessionResponse, QuestionCreate, QuestionResponse, SessionWithQuestions
+from schemas import (
+    SessionCreate, SessionResponse, QuestionCreate, QuestionResponse, 
+    SessionWithQuestions, AdminLogin, Token, SessionPasswordVerify
+)
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -32,14 +37,21 @@ app = FastAPI(title="RaiseMyHand - Student Question Aggregator")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Security
-security = HTTPBasic()
+# Security Configuration
+security = HTTPBearer(auto_error=False)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Configuration
+# JWT Configuration
+SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))  # 8 hours default
+
+# App Configuration
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 TIMEZONE = os.getenv("TIMEZONE", "UTC")
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme123")
+ENABLE_AUTH = os.getenv("ENABLE_AUTH", "true").lower() == "true"
 
 # Initialize timezone
 try:
@@ -50,18 +62,52 @@ except pytz.exceptions.UnknownTimeZoneError:
 
 
 # Security helper functions
-def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
-    """Verify admin credentials using HTTP Basic Auth."""
-    correct_username = secrets.compare_digest(credentials.username, ADMIN_USERNAME)
-    correct_password = secrets.compare_digest(credentials.password, ADMIN_PASSWORD)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash."""
+    return pwd_context.verify(plain_password, hashed_password)
 
-    if not (correct_username and correct_password):
+
+def get_password_hash(password: str) -> str:
+    """Hash a password."""
+    return pwd_context.hash(password)
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """Create a JWT access token."""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[str]:
+    """Verify JWT token and return username if valid."""
+    if not ENABLE_AUTH:
+        return "admin"  # Skip auth if disabled
+    
+    if not credentials:
         raise HTTPException(
             status_code=401,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Basic"},
+            detail="Missing authorization token",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-    return credentials.username
+    
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return username
+    except JWTError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 # Timezone utility function
@@ -75,6 +121,29 @@ def to_local_time(utc_dt: datetime) -> str:
     # Convert to local timezone
     local_dt = utc_dt.astimezone(LOCAL_TZ)
     return local_dt.isoformat()
+
+
+def format_session_response(session: Session) -> dict:
+    """Format a session object for API response."""
+    return {
+        "id": session.id,
+        "session_code": session.session_code,
+        "instructor_code": session.instructor_code,
+        "title": session.title,
+        "has_password": session.password_hash is not None,
+        "created_at": session.created_at,
+        "ended_at": session.ended_at,
+        "is_active": session.is_active,
+        "questions": [
+            {
+                "id": q.id,
+                "text": q.text,
+                "upvotes": q.upvotes,
+                "created_at": q.created_at
+            }
+            for q in session.questions
+        ]
+    }
 
 
 # Mount static files and templates
@@ -125,15 +194,32 @@ manager = ConnectionManager()
 @app.post("/api/sessions", response_model=SessionResponse)
 def create_session(session: SessionCreate, db: DBSession = Depends(get_db)):
     """Create a new Q&A session."""
+    password_hash = None
+    if session.password:
+        password_hash = get_password_hash(session.password)
+    
     db_session = Session(
         session_code=Session.generate_code(),
         instructor_code=Session.generate_code(),
-        title=session.title
+        title=session.title,
+        password_hash=password_hash
     )
     db.add(db_session)
     db.commit()
     db.refresh(db_session)
-    return db_session
+    
+    # Create response with has_password field
+    response_data = {
+        "id": db_session.id,
+        "session_code": db_session.session_code,
+        "instructor_code": db_session.instructor_code,
+        "title": db_session.title,
+        "has_password": password_hash is not None,
+        "created_at": db_session.created_at,
+        "ended_at": db_session.ended_at,
+        "is_active": db_session.is_active
+    }
+    return response_data
 
 
 @app.get("/api/sessions/{session_code}", response_model=SessionWithQuestions)
@@ -142,7 +228,23 @@ def get_session(session_code: str, db: DBSession = Depends(get_db)):
     session = db.query(Session).filter(Session.session_code == session_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    return session
+    return format_session_response(session)
+
+
+@app.post("/api/sessions/{session_code}/verify-password")
+def verify_session_password(session_code: str, password_data: SessionPasswordVerify, db: DBSession = Depends(get_db)):
+    """Verify session password for protected sessions."""
+    session = db.query(Session).filter(Session.session_code == session_code).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    if not session.password_hash:
+        return {"verified": True, "message": "Session is not password protected"}
+    
+    if verify_password(password_data.password, session.password_hash):
+        return {"verified": True, "message": "Password correct"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid password")
 
 
 @app.get("/api/instructor/sessions/{instructor_code}", response_model=SessionWithQuestions)
@@ -152,7 +254,7 @@ def get_instructor_session(request: Request, instructor_code: str, db: DBSession
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    return session
+    return format_session_response(session)
 
 
 @app.post("/api/sessions/{instructor_code}/end")
@@ -369,8 +471,43 @@ async def student_view(request: Request):
     return templates.TemplateResponse("student.html", {"request": request})
 
 
+# Authentication endpoints
+@app.post("/api/admin/login", response_model=Token)
+def admin_login(login_data: AdminLogin):
+    """Admin login endpoint."""
+    if not ENABLE_AUTH:
+        # If auth is disabled, always return a valid token
+        access_token = create_access_token(data={"sub": "admin"})
+        return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Verify admin credentials
+    correct_username = secrets.compare_digest(login_data.username, ADMIN_USERNAME)
+    correct_password = secrets.compare_digest(login_data.password, ADMIN_PASSWORD)
+    
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password"
+        )
+    
+    access_token = create_access_token(data={"sub": login_data.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.get("/api/admin/verify")
+def verify_admin_token(username: str = Depends(verify_token)):
+    """Verify if the current token is valid."""
+    return {"username": username, "valid": True}
+
+
+@app.get("/admin/login", response_class=HTMLResponse)
+async def admin_login_view(request: Request):
+    """Admin login page."""
+    return templates.TemplateResponse("admin-login.html", {"request": request})
+
+
 @app.get("/admin", response_class=HTMLResponse)
-async def admin_view(request: Request, username: str = Depends(verify_admin)):
+async def admin_view(request: Request, username: str = Depends(verify_token)):
     """Admin dashboard (requires authentication)."""
     return templates.TemplateResponse("admin.html", {"request": request})
 
@@ -384,16 +521,17 @@ def health_check():
 # Configuration endpoint
 @app.get("/api/config")
 def get_config():
-    """Get client configuration including base URL and timezone."""
+    """Get client configuration including base URL, timezone, and auth status."""
     return {
         "base_url": BASE_URL,
-        "timezone": TIMEZONE
+        "timezone": TIMEZONE,
+        "auth_enabled": ENABLE_AUTH
     }
 
 
 # Admin API endpoints
 @app.get("/api/admin/stats")
-def get_admin_stats(db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
+def get_admin_stats(db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
     """Get overall system statistics."""
     from sqlalchemy import func
     from datetime import timedelta
@@ -423,7 +561,7 @@ def get_all_sessions(
     limit: int = 50,
     active_only: bool = False,
     db: DBSession = Depends(get_db),
-    username: str = Depends(verify_admin)
+    username: str = Depends(verify_token)
 ):
     """Get all sessions with pagination."""
     from sqlalchemy import func
@@ -454,7 +592,7 @@ def get_all_sessions(
 
 
 @app.delete("/api/admin/sessions/{session_id}")
-def delete_session_admin(session_id: int, db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
+def delete_session_admin(session_id: int, db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
     """Delete a session (admin only)."""
     session = db.query(Session).filter(Session.id == session_id).first()
     if not session:
@@ -469,7 +607,7 @@ def delete_session_admin(session_id: int, db: DBSession = Depends(get_db), usern
 
 
 @app.post("/api/admin/sessions/bulk/end")
-def bulk_end_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
+def bulk_end_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
     """End multiple sessions at once (admin only)."""
     sessions = db.query(Session).filter(Session.id.in_(session_ids)).all()
 
@@ -482,7 +620,7 @@ def bulk_end_sessions(session_ids: List[int], db: DBSession = Depends(get_db), u
 
 
 @app.post("/api/admin/sessions/bulk/restart")
-def bulk_restart_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
+def bulk_restart_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
     """Restart multiple sessions at once (admin only)."""
     sessions = db.query(Session).filter(Session.id.in_(session_ids)).all()
 
@@ -495,7 +633,7 @@ def bulk_restart_sessions(session_ids: List[int], db: DBSession = Depends(get_db
 
 
 @app.post("/api/admin/sessions/bulk/delete")
-def bulk_delete_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
+def bulk_delete_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
     """Delete multiple sessions at once (admin only)."""
     # Delete associated questions first
     db.query(Question).filter(Question.session_id.in_(session_ids)).delete(synchronize_session=False)

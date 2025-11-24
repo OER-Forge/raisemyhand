@@ -89,6 +89,19 @@
                         required
                     >
                 </div>
+                <div class="form-group">
+                    <label for="password">Session Password (Optional)</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Leave empty for no password protection"
+                        maxlength="50"
+                    >
+                    <small style="color: #666; font-size: 0.9rem; margin-top: 5px; display: block;">
+                        If set, students will need this password to join the session
+                    </small>
+                </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Create Session</button>
             </form>
         </div>
@@ -133,10 +146,16 @@
 
             const formData = new FormData(e.target);
             const title = formData.get('title').trim();
+            const password = formData.get('password').trim();
 
             if (!title) {
                 alert('Please enter a session title');
                 return;
+            }
+
+            const sessionData = { title };
+            if (password) {
+                sessionData.password = password;
             }
 
             try {
@@ -145,7 +164,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ title })
+                    body: JSON.stringify(sessionData)
                 });
 
                 if (!response.ok) {
