@@ -22,7 +22,7 @@ class Session(Base):
     questions = relationship("Question", back_populates="session", cascade="all, delete-orphan")
 
     @staticmethod
-    def generate_code(length=8):
+    def generate_code(length=32):
         """Generate a random alphanumeric code."""
         return secrets.token_urlsafe(length)[:length]
 

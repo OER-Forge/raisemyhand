@@ -23,6 +23,10 @@ services:
       # Default: UTC
       - TIMEZONE=UTC
 
+      # Admin Authentication - CHANGE THESE BEFORE DEPLOYING TO PRODUCTION!
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=changeme123
+
       # Other examples:
       #   - BASE_URL=http://localhost:8000  (laptop only, default)
       #   - BASE_URL=https://raisemyhand.university.edu  (production)

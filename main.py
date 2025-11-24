@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconn
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session as DBSession
 from datetime import datetime
 from typing import List
@@ -13,6 +14,10 @@ from io import StringIO
 import os
 from dotenv import load_dotenv
 import pytz
+import secrets
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,11 +26,20 @@ from database import get_db, init_db
 from models import Session, Question
 from schemas import SessionCreate, SessionResponse, QuestionCreate, QuestionResponse, SessionWithQuestions
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="RaiseMyHand - Student Question Aggregator")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Security
+security = HTTPBasic()
 
 # Configuration
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 TIMEZONE = os.getenv("TIMEZONE", "UTC")
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
 
 # Initialize timezone
 try:
@@ -33,6 +47,21 @@ try:
 except pytz.exceptions.UnknownTimeZoneError:
     print(f"Warning: Unknown timezone '{TIMEZONE}', falling back to UTC")
     LOCAL_TZ = pytz.UTC
+
+
+# Security helper functions
+def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
+    """Verify admin credentials using HTTP Basic Auth."""
+    correct_username = secrets.compare_digest(credentials.username, ADMIN_USERNAME)
+    correct_password = secrets.compare_digest(credentials.password, ADMIN_PASSWORD)
+
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
 
 
 # Timezone utility function
@@ -117,7 +146,8 @@ def get_session(session_code: str, db: DBSession = Depends(get_db)):
 
 
 @app.get("/api/instructor/sessions/{instructor_code}", response_model=SessionWithQuestions)
-def get_instructor_session(instructor_code: str, db: DBSession = Depends(get_db)):
+@limiter.limit("30/minute")
+def get_instructor_session(request: Request, instructor_code: str, db: DBSession = Depends(get_db)):
     """Get a session by instructor code with all its questions."""
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
@@ -126,7 +156,8 @@ def get_instructor_session(instructor_code: str, db: DBSession = Depends(get_db)
 
 
 @app.post("/api/sessions/{instructor_code}/end")
-def end_session(instructor_code: str, db: DBSession = Depends(get_db)):
+@limiter.limit("10/minute")
+def end_session(request: Request, instructor_code: str, db: DBSession = Depends(get_db)):
     """End a session (instructor only)."""
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
@@ -139,7 +170,8 @@ def end_session(instructor_code: str, db: DBSession = Depends(get_db)):
 
 
 @app.post("/api/sessions/{instructor_code}/restart")
-def restart_session(instructor_code: str, db: DBSession = Depends(get_db)):
+@limiter.limit("10/minute")
+def restart_session(request: Request, instructor_code: str, db: DBSession = Depends(get_db)):
     """Restart an ended session (instructor only)."""
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
@@ -152,7 +184,8 @@ def restart_session(instructor_code: str, db: DBSession = Depends(get_db)):
 
 
 @app.get("/api/sessions/{instructor_code}/report")
-async def get_session_report(instructor_code: str, format: str = "json", db: DBSession = Depends(get_db)):
+@limiter.limit("20/minute")
+async def get_session_report(request: Request, instructor_code: str, format: str = "json", db: DBSession = Depends(get_db)):
     """Generate a report for a session (instructor only)."""
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
@@ -337,8 +370,8 @@ async def student_view(request: Request):
 
 
 @app.get("/admin", response_class=HTMLResponse)
-async def admin_view(request: Request):
-    """Admin dashboard."""
+async def admin_view(request: Request, username: str = Depends(verify_admin)):
+    """Admin dashboard (requires authentication)."""
     return templates.TemplateResponse("admin.html", {"request": request})
 
 
@@ -360,7 +393,7 @@ def get_config():
 
 # Admin API endpoints
 @app.get("/api/admin/stats")
-def get_admin_stats(db: DBSession = Depends(get_db)):
+def get_admin_stats(db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
     """Get overall system statistics."""
     from sqlalchemy import func
     from datetime import timedelta
@@ -389,7 +422,8 @@ def get_all_sessions(
     skip: int = 0,
     limit: int = 50,
     active_only: bool = False,
-    db: DBSession = Depends(get_db)
+    db: DBSession = Depends(get_db),
+    username: str = Depends(verify_admin)
 ):
     """Get all sessions with pagination."""
     from sqlalchemy import func
@@ -420,7 +454,7 @@ def get_all_sessions(
 
 
 @app.delete("/api/admin/sessions/{session_id}")
-def delete_session_admin(session_id: int, db: DBSession = Depends(get_db)):
+def delete_session_admin(session_id: int, db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
     """Delete a session (admin only)."""
     session = db.query(Session).filter(Session.id == session_id).first()
     if not session:
@@ -435,7 +469,7 @@ def delete_session_admin(session_id: int, db: DBSession = Depends(get_db)):
 
 
 @app.post("/api/admin/sessions/bulk/end")
-def bulk_end_sessions(session_ids: List[int], db: DBSession = Depends(get_db)):
+def bulk_end_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
     """End multiple sessions at once (admin only)."""
     sessions = db.query(Session).filter(Session.id.in_(session_ids)).all()
 
@@ -448,7 +482,7 @@ def bulk_end_sessions(session_ids: List[int], db: DBSession = Depends(get_db)):
 
 
 @app.post("/api/admin/sessions/bulk/restart")
-def bulk_restart_sessions(session_ids: List[int], db: DBSession = Depends(get_db)):
+def bulk_restart_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
     """Restart multiple sessions at once (admin only)."""
     sessions = db.query(Session).filter(Session.id.in_(session_ids)).all()
 
@@ -461,7 +495,7 @@ def bulk_restart_sessions(session_ids: List[int], db: DBSession = Depends(get_db
 
 
 @app.post("/api/admin/sessions/bulk/delete")
-def bulk_delete_sessions(session_ids: List[int], db: DBSession = Depends(get_db)):
+def bulk_delete_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_admin)):
     """Delete multiple sessions at once (admin only)."""
     # Delete associated questions first
     db.query(Question).filter(Question.session_id.in_(session_ids)).delete(synchronize_session=False)
