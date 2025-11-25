@@ -51,6 +51,7 @@ class Question(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False)
+    question_number = Column(Integer, nullable=False)  # Permanent display number (e.g., Q1, Q2, Q3)
     text = Column(Text, nullable=False)
     upvotes = Column(Integer, default=0)
     is_answered = Column(Boolean, default=False)

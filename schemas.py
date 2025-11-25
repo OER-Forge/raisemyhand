@@ -49,6 +49,7 @@ class QuestionCreate(BaseModel):
 class QuestionResponse(BaseModel):
     id: int
     session_id: int
+    question_number: int
     text: str
     upvotes: int
     is_answered: bool

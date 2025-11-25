@@ -503,8 +503,13 @@ async def create_question(session_code: str, question: QuestionCreate, db: DBSes
     if not session:
         raise HTTPException(status_code=404, detail="Session not found or inactive")
 
+    # Get the next question number for this session
+    max_number = db.query(func.max(Question.question_number)).filter(Question.session_id == session.id).scalar()
+    next_number = (max_number or 0) + 1
+
     db_question = Question(
         session_id=session.id,
+        question_number=next_number,
         text=question.text
     )
     db.add(db_question)
@@ -516,6 +521,7 @@ async def create_question(session_code: str, question: QuestionCreate, db: DBSes
         "type": "new_question",
         "question": {
             "id": db_question.id,
+            "question_number": db_question.question_number,
             "text": db_question.text,
             "upvotes": db_question.upvotes,
             "is_answered": db_question.is_answered,
@@ -526,9 +532,9 @@ async def create_question(session_code: str, question: QuestionCreate, db: DBSes
     return db_question
 
 
-@app.post("/api/questions/{question_id}/upvote")
-async def upvote_question(question_id: int, db: DBSession = Depends(get_db)):
-    """Upvote a question."""
+@app.post("/api/questions/{question_id}/vote")
+async def toggle_vote(question_id: int, action: str, db: DBSession = Depends(get_db)):
+    """Toggle vote on a question (upvote or remove vote)."""
     question = db.query(Question).filter(Question.id == question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
@@ -537,17 +543,30 @@ async def upvote_question(question_id: int, db: DBSession = Depends(get_db)):
     if not session.is_active:
         raise HTTPException(status_code=400, detail="Session is inactive")
 
-    question.upvotes += 1
+    if action == "add":
+        question.upvotes += 1
+    elif action == "remove":
+        question.upvotes = max(0, question.upvotes - 1)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+    
     db.commit()
 
-    # Broadcast upvote to all connected clients
+    # Broadcast vote change to all connected clients
     await manager.broadcast({
-        "type": "upvote",
+        "type": "vote_update",
         "question_id": question.id,
         "upvotes": question.upvotes
     }, session.session_code)
 
     return {"upvotes": question.upvotes}
+
+
+# Keep old endpoint for backwards compatibility
+@app.post("/api/questions/{question_id}/upvote")
+async def upvote_question(question_id: int, db: DBSession = Depends(get_db)):
+    """Upvote a question (deprecated - use /vote instead)."""
+    return await toggle_vote(question_id, "add", db)
 
 
 @app.post("/api/questions/{question_id}/answer")
@@ -618,6 +637,7 @@ async def get_session_stats(request: Request, session_code: str, db: DBSession =
         "questions_by_votes": [
             {
                 "question_id": q.id,
+                "question_number": q.question_number,
                 "votes": q.upvotes,
                 "answered": q.is_answered,
                 "created_at": q.created_at.isoformat(),

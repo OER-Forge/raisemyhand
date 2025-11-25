@@ -172,8 +172,8 @@ function handleWebSocketMessage(message) {
         sessionData.questions.push(message.question);
         renderQuestions();
         showNotification('New question received!', 'success');
-    } else if (message.type === 'upvote') {
-        // Update upvote count
+    } else if (message.type === 'upvote' || message.type === 'vote_update') {
+        // Update vote count
         const question = sessionData.questions.find(q => q.id === message.question_id);
         if (question) {
             question.upvotes = message.upvotes;
@@ -218,10 +218,12 @@ function renderQuestions() {
     questionsList.innerHTML = sortedQuestions.map(q => {
         const createdTime = new Date(q.created_at).toLocaleTimeString();
         const answeredClass = q.is_answered ? 'answered' : '';
+        const questionNumber = q.question_number || '?';
 
         return `
             <div class="question-card ${answeredClass}">
                 <div class="question-header">
+                    <div class="question-badge">Q${questionNumber}</div>
                     <div class="question-content">
                         <div class="question-text">${escapeHtml(q.text)}</div>
                         <div class="question-meta">Asked at ${createdTime}</div>

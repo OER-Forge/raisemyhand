@@ -113,14 +113,14 @@ function handleWebSocketMessage(message) {
         // Add new question to session data
         sessionData.questions.push(message.question);
         renderQuestions();
-    } else if (message.type === 'upvote') {
-        // Update upvote count
+    } else if (message.type === 'upvote' || message.type === 'vote_update') {
+        // Update vote count
         const question = sessionData.questions.find(q => q.id === message.question_id);
         if (question) {
             question.upvotes = message.upvotes;
             renderQuestions();
         }
-    } else if (message.type === 'answer_status') {
+    } else if (message.type === 'answer') {
         // Update answer status
         const question = sessionData.questions.find(q => q.id === message.question_id);
         if (question) {
@@ -161,10 +161,12 @@ function renderQuestions() {
         const answeredClass = q.is_answered ? 'answered' : '';
         const hasUpvoted = upvotedQuestions.has(q.id);
         const upvotedClass = hasUpvoted ? 'upvoted' : '';
+        const questionNumber = q.question_number || '?';
 
         return `
             <div class="question-card ${answeredClass}">
                 <div class="question-header">
+                    <div class="question-badge">Q${questionNumber}</div>
                     <div class="question-content">
                         <div class="question-text">${escapeHtml(q.text)}</div>
                         <div class="question-meta">
@@ -174,8 +176,8 @@ function renderQuestions() {
                     </div>
                     <div class="question-actions">
                         <button class="upvote-btn ${upvotedClass}"
-                                onclick="upvoteQuestion(${q.id})"
-                                ${!sessionData.is_active || hasUpvoted ? 'disabled' : ''}>
+                                onclick="toggleVote(${q.id})"
+                                ${!sessionData.is_active ? 'disabled' : ''}>
                             <span class="upvote-icon">⬆️</span>
                             <span class="upvote-count">${q.upvotes}</span>
                         </button>
@@ -186,31 +188,33 @@ function renderQuestions() {
     }).join('');
 }
 
-async function upvoteQuestion(questionId) {
-    if (upvotedQuestions.has(questionId)) {
-        showNotification('You have already upvoted this question', 'error');
-        return;
-    }
+async function toggleVote(questionId) {
+    const hasVoted = upvotedQuestions.has(questionId);
+    const action = hasVoted ? 'remove' : 'add';
 
     try {
-        const response = await fetch(`/api/questions/${questionId}/upvote`, {
+        const response = await fetch(`/api/questions/${questionId}/vote?action=${action}`, {
             method: 'POST'
         });
 
         if (!response.ok) {
-            throw new Error('Failed to upvote question');
+            throw new Error('Failed to update vote');
         }
 
-        // Mark as upvoted locally
-        upvotedQuestions.add(questionId);
+        // Update local storage
+        if (hasVoted) {
+            upvotedQuestions.delete(questionId);
+            showNotification('Vote removed', 'success');
+        } else {
+            upvotedQuestions.add(questionId);
+            showNotification('Question upvoted!', 'success');
+        }
         localStorage.setItem(`upvoted_${sessionCode}`, JSON.stringify([...upvotedQuestions]));
-
-        showNotification('Question upvoted!', 'success');
 
         // WebSocket will handle the UI update
     } catch (error) {
-        console.error('Error upvoting question:', error);
-        showNotification('Failed to upvote question', 'error');
+        console.error('Error toggling vote:', error);
+        showNotification('Failed to update vote', 'error');
     }
 }
 

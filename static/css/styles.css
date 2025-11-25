@@ -248,6 +248,18 @@ header .subtitle {
     gap: 15px;
 }
 
+.question-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    min-width: 45px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
 .question-content {
     flex-grow: 1;
 }

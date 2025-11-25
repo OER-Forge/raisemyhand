@@ -17,6 +17,7 @@ echo "Running database migrations..."
 python migrate_db.py 2>/dev/null || true
 python migrate_api_keys.py 2>/dev/null || true
 python migrate_questions.py 2>/dev/null || true
+python migrate_question_numbers.py 2>/dev/null || true
 
 # Check if we should create a default API key
 if [ "$CREATE_DEFAULT_API_KEY" = "true" ] || [ "$CREATE_DEFAULT_API_KEY" = "1" ]; then

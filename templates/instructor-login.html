@@ -254,10 +254,27 @@
                 return;
             }
 
-            // Store API key and redirect to sessions page
-            localStorage.setItem('instructor_api_key', apiKey);
-            document.cookie = `instructor_api_key=${apiKey}; path=/; max-age=2592000`;
-            window.location.href = '/sessions';
+            // Verify API key before redirecting
+            try {
+                const response = await fetch(`/api/sessions/my-sessions?api_key=${encodeURIComponent(apiKey)}`);
+                
+                if (response.status === 401) {
+                    showError('Invalid API key. Please check your key and try again.');
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error('Failed to verify API key');
+                }
+
+                // API key is valid - store and redirect
+                localStorage.setItem('instructor_api_key', apiKey);
+                document.cookie = `instructor_api_key=${apiKey}; path=/; max-age=2592000`;
+                window.location.href = '/sessions';
+            } catch (error) {
+                console.error('Error verifying API key:', error);
+                showError('Failed to verify API key. Please try again.');
+            }
         });
 
         // Create Session Form

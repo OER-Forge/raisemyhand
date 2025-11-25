@@ -192,6 +192,37 @@
             background: #f8f9fa;
             border-radius: 8px;
         }
+
+        .qr-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .qr-container img {
+            max-width: 250px;
+            height: auto;
+            border: 4px solid #3498db;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+
+        .qr-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .qr-instruction {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -209,6 +240,13 @@
         <div id="error" class="error-message" style="display: none;"></div>
 
         <div id="stats-content" style="display: none;">
+            <!-- QR Code Section -->
+            <div class="qr-container">
+                <div class="qr-title">📱 Scan to Join Session</div>
+                <img id="qr-code" alt="Session QR Code" style="display: none;">
+                <div class="qr-instruction">Students can scan this code to join and ask questions</div>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="total-questions">0</div>
@@ -283,6 +321,14 @@
             statusBadge.className = `status-badge ${data.is_active ? 'status-active' : 'status-ended'}`;
             statusBadge.textContent = data.is_active ? '🟢 Active' : '🔴 Ended';
 
+            // Load QR code (only once)
+            const qrImg = document.getElementById('qr-code');
+            if (!qrImg.src) {
+                const baseUrl = '{{ base_url }}';
+                qrImg.src = `/api/sessions/${sessionCode}/qr?url_base=${encodeURIComponent(baseUrl)}`;
+                qrImg.style.display = 'block';
+            }
+
             // Update stats
             document.getElementById('total-questions').textContent = data.total_questions;
             document.getElementById('answered-questions').textContent = data.answered_questions;
@@ -302,11 +348,12 @@
             } else {
                 const maxVotes = Math.max(...data.questions_by_votes.map(q => q.votes), 1);
                 
-                chartContainer.innerHTML = data.questions_by_votes.map((q, index) => {
+                chartContainer.innerHTML = data.questions_by_votes.map((q) => {
                     const percentage = (q.votes / maxVotes) * 100;
+                    const questionNum = q.question_number || '?';
                     return `
                         <div class="question-bar">
-                            <div class="question-number">Question #${index + 1}</div>
+                            <div class="question-number">Q${questionNum}</div>
                             <div class="bar-container">
                                 <div class="bar-fill ${q.answered ? 'answered' : ''}" 
                                      style="width: ${percentage}%">
