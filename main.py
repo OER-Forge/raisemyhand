@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session as DBSession
+from sqlalchemy import func
 from datetime import datetime, timedelta
 from typing import List, Optional
 import json
@@ -17,6 +18,7 @@ import pytz
 import secrets
 import hmac
 import hashlib
+import logging
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -33,6 +35,13 @@ from schemas import (
     SessionWithQuestions, AdminLogin, Token, SessionPasswordVerify,
     APIKeyCreate, APIKeyResponse, InstructorAuth
 )
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -339,7 +348,8 @@ class ConnectionManager:
             for connection in self.active_connections[session_code]:
                 try:
                     await connection.send_json(message)
-                except:
+                except (WebSocketDisconnect, RuntimeError, ConnectionError) as e:
+                    logger.warning(f"WebSocket connection error for session {session_code}: {e}")
                     disconnected.append(connection)
 
             # Clean up disconnected clients
@@ -780,8 +790,9 @@ async def sessions_dashboard(request: Request):
 
 # API Key Management endpoints (admin only)
 @app.post("/api/admin/api-keys", response_model=APIKeyResponse)
-def create_api_key(key_data: APIKeyCreate, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
-    """Create a new API key for instructor authentication (admin only)."""
+@limiter.limit("10/minute")
+def create_api_key(request: Request, key_data: APIKeyCreate, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """Create a new API key for instructor authentication (admin only, rate limited: 10/min)."""
     api_key = APIKey(
         key=APIKey.generate_key(),
         name=key_data.name
@@ -792,13 +803,15 @@ def create_api_key(key_data: APIKeyCreate, username: str = Depends(verify_token)
     return api_key
 
 @app.get("/api/admin/api-keys", response_model=list[APIKeyResponse])
-def list_api_keys(username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
-    """List all API keys (admin only)."""
+@limiter.limit("60/minute")
+def list_api_keys(request: Request, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """List all API keys (admin only, rate limited: 60/min)."""
     return db.query(APIKey).order_by(APIKey.created_at.desc()).all()
 
 @app.delete("/api/admin/api-keys/{key_id}")
-def delete_api_key(key_id: int, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
-    """Deactivate an API key (admin only)."""
+@limiter.limit("20/minute")
+def delete_api_key(request: Request, key_id: int, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """Deactivate an API key (admin only, rate limited: 20/min)."""
     api_key = db.query(APIKey).filter(APIKey.id == key_id).first()
     if not api_key:
         raise HTTPException(status_code=404, detail="API key not found")
@@ -818,7 +831,8 @@ def instructor_auth(auth_data: InstructorAuth, db: DBSession = Depends(get_db)):
 
 # Authentication endpoints
 @app.post("/api/admin/login", response_model=Token)
-def admin_login(login_data: AdminLogin):
+@limiter.limit("5/minute")
+def admin_login(request: Request, login_data: AdminLogin):
     """Admin login endpoint."""
     if not ENABLE_AUTH:
         # If auth is disabled, always return a valid token
@@ -840,7 +854,8 @@ def admin_login(login_data: AdminLogin):
 
 
 @app.get("/api/admin/verify")
-def verify_admin_token(username: str = Depends(verify_token)):
+@limiter.limit("60/minute")
+def verify_admin_token(request: Request, username: str = Depends(verify_token)):
     """Verify if the current token is valid."""
     return {"username": username, "valid": True}
 
@@ -888,7 +903,8 @@ def get_csrf_token_endpoint():
 
 # Admin API endpoints
 @app.get("/api/admin/stats")
-def get_admin_stats(db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
+@limiter.limit("60/minute")
+def get_admin_stats(request: Request, db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
     """Get overall system statistics."""
     from sqlalchemy import func
     from datetime import timedelta
@@ -913,7 +929,9 @@ def get_admin_stats(db: DBSession = Depends(get_db), username: str = Depends(ver
 
 
 @app.get("/api/admin/sessions")
+@limiter.limit("60/minute")
 def get_all_sessions(
+    request: Request,
     skip: int = 0,
     limit: int = 50,
     active_only: bool = False,
@@ -949,7 +967,8 @@ def get_all_sessions(
 
 
 @app.delete("/api/admin/sessions/{session_id}")
-def delete_session_admin(session_id: int, db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
+@limiter.limit("20/minute")
+def delete_session_admin(request: Request, session_id: int, db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
     """Delete a session (admin only)."""
     session = db.query(Session).filter(Session.id == session_id).first()
     if not session:
@@ -964,7 +983,13 @@ def delete_session_admin(session_id: int, db: DBSession = Depends(get_db), usern
 
 
 @app.post("/api/admin/sessions/bulk/end")
-def bulk_end_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
+@limiter.limit("10/minute")
+def bulk_end_sessions(
+    request: Request,
+    session_ids: List[int],
+    db: DBSession = Depends(get_db),
+    username: str = Depends(verify_token)
+):
     """End multiple sessions at once (admin only)."""
     sessions = db.query(Session).filter(Session.id.in_(session_ids)).all()
 
@@ -977,7 +1002,13 @@ def bulk_end_sessions(session_ids: List[int], db: DBSession = Depends(get_db), u
 
 
 @app.post("/api/admin/sessions/bulk/restart")
-def bulk_restart_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
+@limiter.limit("10/minute")
+def bulk_restart_sessions(
+    request: Request,
+    session_ids: List[int],
+    db: DBSession = Depends(get_db),
+    username: str = Depends(verify_token)
+):
     """Restart multiple sessions at once (admin only)."""
     sessions = db.query(Session).filter(Session.id.in_(session_ids)).all()
 
@@ -990,7 +1021,13 @@ def bulk_restart_sessions(session_ids: List[int], db: DBSession = Depends(get_db
 
 
 @app.post("/api/admin/sessions/bulk/delete")
-def bulk_delete_sessions(session_ids: List[int], db: DBSession = Depends(get_db), username: str = Depends(verify_token)):
+@limiter.limit("10/minute")
+def bulk_delete_sessions(
+    request: Request,
+    session_ids: List[int],
+    db: DBSession = Depends(get_db),
+    username: str = Depends(verify_token)
+):
     """Delete multiple sessions at once (admin only)."""
     # Delete associated questions first
     db.query(Question).filter(Question.session_id.in_(session_ids)).delete(synchronize_session=False)
