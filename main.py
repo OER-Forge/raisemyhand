@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Request, Header
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -15,6 +15,8 @@ import os
 from dotenv import load_dotenv
 import pytz
 import secrets
+import hmac
+import hashlib
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -51,8 +53,29 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 TIMEZONE = os.getenv("TIMEZONE", "UTC")
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme123")
+
+# SECURITY: Admin password MUST be set via environment variable or Docker secret
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+if not ADMIN_PASSWORD:
+    # Try to read from Docker secret file
+    secret_file = "/run/secrets/admin_password"
+    if os.path.exists(secret_file):
+        with open(secret_file, 'r') as f:
+            ADMIN_PASSWORD = f.read().strip()
+
+    # If still not set, raise an error
+    if not ADMIN_PASSWORD:
+        raise ValueError(
+            "ADMIN_PASSWORD environment variable must be set! "
+            "For Docker: create secrets/admin_password.txt or use Docker secrets. "
+            "For local: set ADMIN_PASSWORD in .env file."
+        )
+
 ENABLE_AUTH = os.getenv("ENABLE_AUTH", "true").lower() == "true"
+
+# CSRF Protection Configuration
+CSRF_SECRET = os.getenv("CSRF_SECRET", secrets.token_urlsafe(32))
+CSRF_TOKEN_EXPIRY = 3600  # 1 hour
 
 # Initialize timezone
 try:
@@ -89,19 +112,112 @@ def verify_api_key(api_key: Optional[str], db) -> bool:
     """Verify API key and update last_used timestamp."""
     if not api_key:
         return False
-    
+
     key_record = db.query(APIKey).filter(
-        APIKey.key == api_key, 
+        APIKey.key == api_key,
         APIKey.is_active == True
     ).first()
-    
+
     if key_record:
         # Update last_used timestamp
         key_record.last_used = datetime.utcnow()
         db.commit()
         return True
-    
+
     return False
+
+
+def get_api_key(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: DBSession = Depends(get_db)
+) -> str:
+    """
+    Extract and verify API key from Authorization header or query parameter (deprecated).
+    Preferred: Authorization: Bearer <api_key>
+    Fallback: ?api_key=<api_key> (for backward compatibility, will be removed in future versions)
+    """
+    api_key = None
+
+    # Try to get from Authorization header (preferred)
+    if credentials:
+        api_key = credentials.credentials
+
+    # Fallback to query parameter (deprecated but supported for backward compatibility)
+    if not api_key:
+        api_key = request.query_params.get('api_key')
+        if api_key:
+            print("Warning: API key in query parameter is deprecated. Use Authorization header instead.")
+
+    # Verify the API key
+    if not api_key or not verify_api_key(api_key, db):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or inactive API key",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    return api_key
+
+
+def generate_csrf_token(session_identifier: str = "") -> str:
+    """
+    Generate a CSRF token.
+    Token format: timestamp:signature
+    """
+    timestamp = str(int(datetime.utcnow().timestamp()))
+    message = f"{timestamp}:{session_identifier}"
+    signature = hmac.new(
+        CSRF_SECRET.encode(),
+        message.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    return f"{timestamp}:{signature}"
+
+
+def verify_csrf_token(token: str, session_identifier: str = "") -> bool:
+    """Verify a CSRF token."""
+    try:
+        if not token:
+            return False
+
+        parts = token.split(":")
+        if len(parts) != 2:
+            return False
+
+        timestamp_str, provided_signature = parts
+        timestamp = int(timestamp_str)
+
+        # Check if token has expired
+        current_time = int(datetime.utcnow().timestamp())
+        if current_time - timestamp > CSRF_TOKEN_EXPIRY:
+            return False
+
+        # Verify signature
+        message = f"{timestamp_str}:{session_identifier}"
+        expected_signature = hmac.new(
+            CSRF_SECRET.encode(),
+            message.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        # Use constant-time comparison to prevent timing attacks
+        return hmac.compare_digest(provided_signature, expected_signature)
+    except (ValueError, AttributeError):
+        return False
+
+
+def get_csrf_token(x_csrf_token: Optional[str] = Header(None)) -> str:
+    """
+    Dependency to extract and verify CSRF token from X-CSRF-Token header.
+    """
+    if not x_csrf_token or not verify_csrf_token(x_csrf_token):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid or missing CSRF token"
+        )
+    return x_csrf_token
+
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[str]:
     """Verify JWT token and return username if valid."""
@@ -191,7 +307,7 @@ def startup_event():
             print("  python init_database.py --create-key")
             print("\nOr create one via the admin panel:")
             print("  1. Go to http://localhost:8000/admin-login")
-            print("  2. Login (default: admin/changeme123)")
+            print("  2. Login with your admin credentials")
             print("  3. Create an API key in the 'API Keys' section")
             print("="*70 + "\n")
         else:
@@ -237,19 +353,12 @@ manager = ConnectionManager()
 # Session endpoints
 @app.post("/api/sessions", response_model=SessionResponse)
 def create_session(
-    session: SessionCreate, 
-    request: Request,
-    api_key: Optional[str] = None,
+    session: SessionCreate,
+    api_key: str = Depends(get_api_key),
+    csrf_token: str = Depends(get_csrf_token),
     db: DBSession = Depends(get_db)
 ):
-    """Create a new Q&A session (requires valid API key)."""
-    # Get API key from query parameter if not in body
-    if not api_key:
-        api_key = request.query_params.get('api_key')
-    
-    # Verify API key
-    if not verify_api_key(api_key, db):
-        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    """Create a new Q&A session (requires valid API key and CSRF token)."""
     password_hash = None
     if session.password:
         password_hash = get_password_hash(session.password)
@@ -282,26 +391,11 @@ def create_session(
 @limiter.limit("60/minute")
 def get_my_sessions(
     request: Request,
-    api_key: Optional[str] = None,
+    api_key: str = Depends(get_api_key),
     db: DBSession = Depends(get_db)
 ):
     """Get all sessions created with this API key."""
-    # Get API key from query parameter if not provided
-    if not api_key:
-        api_key = request.query_params.get('api_key')
-    
-    # Verify API key and get the key record
-    key_record = db.query(APIKey).filter(
-        APIKey.key == api_key,
-        APIKey.is_active == True
-    ).first()
-    
-    if not key_record:
-        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
-    
-    # Update last used timestamp
-    key_record.last_used = datetime.utcnow()
-    db.commit()
+    # API key is already verified by the dependency
     
     # Get all sessions (we don't track which API key created which session currently)
     # For now, return all sessions - you could add an api_key_id field to Session model to track this
@@ -355,19 +449,13 @@ def verify_session_password(session_code: str, password_data: SessionPasswordVer
 @app.get("/api/instructor/sessions/{instructor_code}", response_model=SessionWithQuestions)
 @limiter.limit("30/minute")
 def get_instructor_session(
-    request: Request, 
-    instructor_code: str, 
-    api_key: Optional[str] = None, 
+    request: Request,
+    instructor_code: str,
+    api_key: str = Depends(get_api_key),
     db: DBSession = Depends(get_db)
 ):
     """Get a session by instructor code with all its questions (requires valid API key)."""
-    # Get API key from query parameter if not provided
-    if not api_key:
-        api_key = request.query_params.get('api_key')
-    
-    # Verify API key
-    if not verify_api_key(api_key, db):
-        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    # API key is already verified by the dependency
     
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
@@ -378,19 +466,14 @@ def get_instructor_session(
 @app.post("/api/sessions/{instructor_code}/end")
 @limiter.limit("10/minute")
 def end_session(
-    request: Request, 
-    instructor_code: str, 
-    api_key: Optional[str] = None, 
+    request: Request,
+    instructor_code: str,
+    api_key: str = Depends(get_api_key),
+    csrf_token: str = Depends(get_csrf_token),
     db: DBSession = Depends(get_db)
 ):
-    """End a session (requires valid API key)."""
-    # Get API key from query parameter if not provided
-    if not api_key:
-        api_key = request.query_params.get('api_key')
-    
-    # Verify API key
-    if not verify_api_key(api_key, db):
-        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    """End a session (requires valid API key and CSRF token)."""
+    # API key and CSRF token are already verified by the dependencies
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -404,19 +487,14 @@ def end_session(
 @app.post("/api/sessions/{instructor_code}/restart")
 @limiter.limit("10/minute")
 def restart_session(
-    request: Request, 
-    instructor_code: str, 
-    api_key: Optional[str] = None, 
+    request: Request,
+    instructor_code: str,
+    api_key: str = Depends(get_api_key),
+    csrf_token: str = Depends(get_csrf_token),
     db: DBSession = Depends(get_db)
 ):
-    """Restart an ended session (requires valid API key)."""
-    # Get API key from query parameter if not provided
-    if not api_key:
-        api_key = request.query_params.get('api_key')
-    
-    # Verify API key
-    if not verify_api_key(api_key, db):
-        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    """Restart an ended session (requires valid API key and CSRF token)."""
+    # API key and CSRF token are already verified by the dependencies
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -430,20 +508,14 @@ def restart_session(
 @app.get("/api/sessions/{instructor_code}/report")
 @limiter.limit("20/minute")
 async def get_session_report(
-    request: Request, 
-    instructor_code: str, 
-    format: str = "json", 
-    api_key: Optional[str] = None, 
+    request: Request,
+    instructor_code: str,
+    format: str = "json",
+    api_key: str = Depends(get_api_key),
     db: DBSession = Depends(get_db)
 ):
     """Generate a report for a session (requires valid API key)."""
-    # Get API key from query parameter if not provided
-    if not api_key:
-        api_key = request.query_params.get('api_key')
-    
-    # Verify API key
-    if not api_key or not verify_api_key(api_key, db):
-        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+    # API key is already verified by the dependency
     session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -805,6 +877,13 @@ def get_config():
         "timezone": TIMEZONE,
         "auth_enabled": ENABLE_AUTH
     }
+
+
+@app.get("/api/csrf-token")
+def get_csrf_token_endpoint():
+    """Generate and return a CSRF token for form submissions."""
+    token = generate_csrf_token()
+    return {"csrf_token": token}
 
 
 # Admin API endpoints

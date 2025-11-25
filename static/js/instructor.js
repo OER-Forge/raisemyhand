@@ -1,59 +1,6 @@
-// API Key authentication helper functions
-function getApiKey() {
-    // Check for API key in localStorage (persistent)
-    let apiKey = localStorage.getItem('instructor_api_key');
-    
-    // If not found, check for cookie (session)
-    if (!apiKey) {
-        apiKey = getCookie('instructor_api_key');
-    }
-    
-    return apiKey;
-}
-
-function setApiKey(apiKey, persistent = false) {
-    if (persistent) {
-        localStorage.setItem('instructor_api_key', apiKey);
-    } else {
-        setCookie('instructor_api_key', apiKey, 1); // 1 day
-    }
-}
-
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-}
-
-function setCookie(name, value, days) {
-    const expires = new Date();
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
-}
-
-function clearApiKey() {
-    localStorage.removeItem('instructor_api_key');
-    document.cookie = 'instructor_api_key=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-}
-
-function handleAuthError() {
-    alert('Invalid or expired API key. Please enter a valid API key.');
-    clearApiKey();
-    promptForApiKey();
-}
-
-function promptForApiKey() {
-    const apiKey = prompt('Please enter your instructor API key:');
-    if (apiKey) {
-        setApiKey(apiKey, true); // Store persistently
-        // Retry loading the session
-        loadSession();
-    } else {
-        alert('API key is required to access instructor features.');
-        window.location.href = '/';
-    }
-}
+// NOTE: Authentication utilities are now in shared.js
+// This file uses: getApiKey(), setApiKey(), clearApiKey(), handleAuthError(),
+// promptForApiKey(), authenticatedFetch(), escapeHtml(), showNotification()
 
 const instructorCode = new URLSearchParams(window.location.search).get('code');
 let sessionData = null;
@@ -84,8 +31,8 @@ async function loadSession() {
         }
 
         console.log('Loading session with code:', instructorCode);
-        const response = await fetch(`/api/instructor/sessions/${instructorCode}?api_key=${encodeURIComponent(apiKey)}`);
-        
+        const response = await authenticatedFetch(`/api/instructor/sessions/${instructorCode}`);
+
         console.log('Response status:', response.status);
         
         if (response.status === 401) {
@@ -289,8 +236,7 @@ function openPublicStats() {
 
 async function downloadReport(format) {
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/sessions/${instructorCode}/report?format=${format}&api_key=${encodeURIComponent(apiKey)}`);
+        const response = await authenticatedFetch(`/api/sessions/${instructorCode}/report?format=${format}`);
         
         if (response.status === 401) {
             handleAuthError();
@@ -324,8 +270,7 @@ async function endSession() {
     }
 
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/sessions/${instructorCode}/end?api_key=${encodeURIComponent(apiKey)}`, {
+        const response = await authenticatedFetch(`/api/sessions/${instructorCode}/end`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -367,8 +312,7 @@ async function restartSession() {
     }
 
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/sessions/${instructorCode}/restart?api_key=${encodeURIComponent(apiKey)}`, {
+        const response = await authenticatedFetch(`/api/sessions/${instructorCode}/restart`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -402,22 +346,7 @@ async function restartSession() {
     }
 }
 
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// Utility functions (showNotification, escapeHtml) are now in shared.js
 
 // Logout function
 function logout() {

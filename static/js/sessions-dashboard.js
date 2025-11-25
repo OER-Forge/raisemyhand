@@ -1,33 +1,15 @@
 // Sessions Dashboard JavaScript - View all sessions for an API key
+// NOTE: Uses shared.js for authentication utilities
 
 let allSessions = [];
-let apiKey = null;
-
-// Get API key from storage
-function getApiKey() {
-    return localStorage.getItem('instructor_api_key') || getCookie('instructor_api_key');
-}
-
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-}
-
-function clearApiKey() {
-    localStorage.removeItem('instructor_api_key');
-    document.cookie = 'instructor_api_key=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-}
 
 // Check authentication on load
 function checkAuth() {
-    apiKey = getApiKey();
+    const apiKey = getApiKey();
     if (!apiKey) {
         const key = prompt('Please enter your API key to view your sessions:');
         if (key) {
-            localStorage.setItem('instructor_api_key', key);
-            apiKey = key;
+            setApiKey(key);
             loadSessions();
         } else {
             alert('API key is required to view sessions.');
@@ -41,7 +23,7 @@ function checkAuth() {
 // Load all sessions for this API key
 async function loadSessions() {
     try {
-        const response = await fetch(`/api/sessions/my-sessions?api_key=${encodeURIComponent(apiKey)}`);
+        const response = await authenticatedFetch(`/api/sessions/my-sessions`);
         
         if (response.status === 401) {
             clearApiKey();
@@ -160,7 +142,7 @@ async function endSession(instructorCode) {
     }
     
     try {
-        const response = await fetch(`/api/sessions/${instructorCode}/end?api_key=${encodeURIComponent(apiKey)}`, {
+        const response = await authenticatedFetch(`/api/sessions/${instructorCode}/end`, {
             method: 'POST'
         });
         
@@ -190,22 +172,7 @@ function formatDate(dateString) {
     return date.toLocaleString();
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
+// Utility functions (escapeHtml, showNotification) are in shared.js
 
 // Auto-refresh every 30 seconds
 setInterval(loadSessions, 30000);
