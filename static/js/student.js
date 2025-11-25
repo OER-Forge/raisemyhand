@@ -59,16 +59,7 @@ async function loadSession() {
             // Show prominent message
             const formContainer = document.querySelector('.question-form');
             const endedMessage = document.createElement('div');
-            endedMessage.style.cssText = `
-                background: #f8d7da;
-                color: #721c24;
-                padding: 15px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-                text-align: center;
-                font-weight: bold;
-                border: 2px solid #f5c6cb;
-            `;
+            endedMessage.className = 'session-ended-warning';
             endedMessage.innerHTML = '⚠️ This session has ended. No new questions can be submitted.';
             formContainer.insertBefore(endedMessage, form);
         }
@@ -82,7 +73,6 @@ async function loadSession() {
             upvotedQuestions = new Set(JSON.parse(stored));
         }
     } catch (error) {
-        console.error('Error loading session:', error);
         alert('Failed to load session');
     }
 }
@@ -99,11 +89,11 @@ function connectWebSocket() {
     };
 
     ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        // WebSocket error - will attempt reconnection on close
     };
 
     ws.onclose = () => {
-        console.log('WebSocket closed, reconnecting...');
+        // Reconnect after 3 seconds
         setTimeout(connectWebSocket, 3000);
     };
 }
@@ -213,7 +203,6 @@ async function toggleVote(questionId) {
 
         // WebSocket will handle the UI update
     } catch (error) {
-        console.error('Error toggling vote:', error);
         showNotification('Failed to update vote', 'error');
     }
 }
@@ -252,27 +241,11 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
 
         // WebSocket will handle adding the question to the UI
     } catch (error) {
-        console.error('Error submitting question:', error);
         showNotification('Failed to submit question', 'error');
     }
 });
 
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// showNotification() and escapeHtml() are provided by shared.js
 
 // Initialize
 loadSession();

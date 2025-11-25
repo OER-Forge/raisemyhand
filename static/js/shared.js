@@ -196,9 +196,10 @@ function showNotification(message, type = 'success') {
     notification.textContent = message;
     document.body.appendChild(notification);
 
-    // Auto-remove after 3 seconds
+    // Auto-remove after 3 seconds with slide-out animation
     setTimeout(() => {
-        notification.remove();
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
     }, 3000);
 }
 

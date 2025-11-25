@@ -424,11 +424,12 @@ header .subtitle {
     top: 20px;
     right: 20px;
     padding: 15px 20px;
-    background: var(--card-bg);
-    border-radius: 6px;
+    border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 2000;
+    z-index: 10000;
     animation: slideIn 0.3s ease;
+    color: white;
+    font-weight: 500;
 }
 
 @keyframes slideIn {
@@ -442,10 +443,37 @@ header .subtitle {
     }
 }
 
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
 .notification.success {
-    border-left: 4px solid var(--success-color);
+    background: #28a745;
 }
 
 .notification.error {
-    border-left: 4px solid var(--danger-color);
+    background: #dc3545;
+}
+
+.notification.info {
+    background: #17a2b8;
+}
+
+/* Session ended warning message */
+.session-ended-warning {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+    border: 2px solid #f5c6cb;
 }

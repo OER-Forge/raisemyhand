@@ -1,4 +1,5 @@
-// Authentication helper functions
+// Admin-specific authentication helper functions
+// Note: Admin uses admin_token (JWT), different from instructor API keys
 function getAuthHeaders() {
     const token = localStorage.getItem('admin_token');
     if (token) {
@@ -154,29 +155,7 @@ function refreshSessions() {
     showNotification('Data refreshed', 'success');
 }
 
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 8px;
-        background: ${type === 'success' ? '#28a745' : '#dc3545'};
-        color: white;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
+// showNotification() is provided by shared.js
 
 async function endSessionAdmin(sessionId, instructorCode, sessionTitle) {
     if (!confirm(`Are you sure you want to end the session "${sessionTitle}"?\n\nStudents will no longer be able to submit questions.`)) {
@@ -321,11 +300,7 @@ function toggleSelectAll() {
     checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// escapeHtml() is provided by shared.js
 
 // Event listeners
 document.getElementById('active-only').addEventListener('change', loadSessions);
