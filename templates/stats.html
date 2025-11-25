@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Stats - RaiseMyHand</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .stats-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .stats-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .stats-header h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .session-code {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-ended {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .question-number {
+            min-width: 80px;
+            font-weight: 600;
+            color: #7f8c8d;
+            font-size: 0.875rem;
+        }
+
+        .bar-container {
+            flex: 1;
+            background: #ecf0f1;
+            border-radius: 8px;
+            height: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            border-radius: 8px;
+            transition: width 0.6s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 0.75rem;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .bar-fill.answered {
+            background: linear-gradient(90deg, #27ae60, #229954);
+        }
+
+        .question-meta {
+            min-width: 100px;
+            text-align: right;
+            font-size: 0.875rem;
+            color: #7f8c8d;
+        }
+
+        .answered-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .badge-answered {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #7f8c8d;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #7f8c8d;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .refresh-info {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.875rem;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-container">
+        <div class="stats-header">
+            <h1 id="session-title">Loading...</h1>
+            <div class="session-code" id="session-code"></div>
+            <div id="status-badge"></div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div>📊 Loading session statistics...</div>
+        </div>
+
+        <div id="error" class="error-message" style="display: none;"></div>
+
+        <div id="stats-content" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-questions">0</div>
+                    <div class="stat-label">Total Questions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="answered-questions" style="color: #27ae60;">0</div>
+                    <div class="stat-label">Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="unanswered-questions" style="color: #f39c12;">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-votes" style="color: #e74c3c;">0</div>
+                    <div class="stat-label">Total Votes</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Questions by Vote Count</div>
+                <div id="questions-chart"></div>
+            </div>
+
+            <div class="refresh-info">
+                📡 This page updates automatically every 5 seconds
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionCode = urlParams.get('code');
+
+        if (!sessionCode) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').textContent = 'No session code provided';
+            document.getElementById('error').style.display = 'block';
+        } else {
+            loadStats();
+            // Auto-refresh every 5 seconds
+            setInterval(loadStats, 5000);
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`/api/sessions/${sessionCode}/stats`);
+                if (!response.ok) {
+                    throw new Error('Session not found');
+                }
+
+                const data = await response.json();
+                displayStats(data);
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('stats-content').style.display = 'block';
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('stats-content').style.display = 'none';
+            }
+        }
+
+        function displayStats(data) {
+            // Update header
+            document.getElementById('session-title').textContent = data.session_title;
+            document.getElementById('session-code').textContent = `Session Code: ${data.session_code}`;
+            
+            const statusBadge = document.getElementById('status-badge');
+            statusBadge.className = `status-badge ${data.is_active ? 'status-active' : 'status-ended'}`;
+            statusBadge.textContent = data.is_active ? '🟢 Active' : '🔴 Ended';
+
+            // Update stats
+            document.getElementById('total-questions').textContent = data.total_questions;
+            document.getElementById('answered-questions').textContent = data.answered_questions;
+            document.getElementById('unanswered-questions').textContent = data.unanswered_questions;
+            document.getElementById('total-votes').textContent = data.total_votes;
+
+            // Update chart
+            const chartContainer = document.getElementById('questions-chart');
+            
+            if (data.questions_by_votes.length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💭</div>
+                        <div>No questions submitted yet</div>
+                    </div>
+                `;
+            } else {
+                const maxVotes = Math.max(...data.questions_by_votes.map(q => q.votes), 1);
+                
+                chartContainer.innerHTML = data.questions_by_votes.map((q, index) => {
+                    const percentage = (q.votes / maxVotes) * 100;
+                    return `
+                        <div class="question-bar">
+                            <div class="question-number">Question #${index + 1}</div>
+                            <div class="bar-container">
+                                <div class="bar-fill ${q.answered ? 'answered' : ''}" 
+                                     style="width: ${percentage}%">
+                                    ${q.votes > 0 ? q.votes : ''}
+                                </div>
+                            </div>
+                            <div class="question-meta">
+                                ${q.votes} vote${q.votes !== 1 ? 's' : ''}
+                                <span class="answered-badge ${q.answered ? 'badge-answered' : 'badge-pending'}">
+                                    ${q.answered ? '✓ Answered' : '⏳ Pending'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    </script>
+</body>
+</html>

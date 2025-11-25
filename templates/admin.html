@@ -265,6 +265,73 @@
         </div>
     </div>
 
+    <!-- Create API Key Modal -->
+    <div class="modal" id="create-api-key-modal">
+        <div class="modal-content">
+            <h2>Create New API Key</h2>
+            <p style="color: #7f8c8d; margin-bottom: 1.5rem;">API keys allow instructors to create and manage sessions. Give this key a descriptive name.</p>
+            <form id="create-api-key-form" onsubmit="handleCreateApiKey(event)">
+                <div class="form-group">
+                    <label for="api-key-name">Key Name</label>
+                    <input 
+                        type="text" 
+                        id="api-key-name" 
+                        name="name" 
+                        placeholder="e.g., Math Department, Prof. Smith"
+                        required
+                        autofocus
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;"
+                    >
+                    <small style="color: #7f8c8d; display: block; margin-top: 0.5rem;">
+                        This name helps you identify the key later
+                    </small>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Create Key</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideCreateApiKeyModal()" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- API Key Created Success Modal -->
+    <div class="modal" id="api-key-success-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="color: #27ae60;">✓ API Key Created!</h2>
+            <p style="color: #7f8c8d; margin-bottom: 1rem;">Your new API key has been created. Copy it now - you won't be able to see it again!</p>
+            
+            <div style="background: #f8f9fa; border: 2px solid #27ae60; border-radius: 8px; padding: 1rem; margin: 1.5rem 0;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #2c3e50;">API Key:</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input 
+                        type="text" 
+                        id="new-api-key-value" 
+                        readonly 
+                        style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 0.9rem; background: white;"
+                    >
+                    <button 
+                        class="btn btn-primary" 
+                        onclick="copyNewApiKey()"
+                        id="copy-new-key-btn"
+                        style="min-width: 120px;">
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                <strong style="color: #856404;">⚠️ Important:</strong>
+                <p style="color: #856404; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                    Store this key securely. You won't be able to see it again after closing this dialog.
+                </p>
+            </div>
+
+            <button class="btn btn-success" onclick="hideApiKeySuccessModal()" style="width: 100%; margin-top: 1rem;">
+                Done - I've Saved the Key
+            </button>
+        </div>
+    </div>
+
     <script src="/static/js/admin.js"></script>
 </body>
 </html>

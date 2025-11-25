@@ -127,6 +127,16 @@ header .subtitle {
     transform: translateY(-1px);
 }
 
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+    transform: translateY(-1px);
+}
+
 .btn-danger {
     background: var(--danger-color);
     color: white;

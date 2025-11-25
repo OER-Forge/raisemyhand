@@ -594,6 +594,48 @@ def get_qr_code(session_code: str, url_base: str):
     return StreamingResponse(buf, media_type="image/png")
 
 
+# Public stats endpoint - no authentication required
+@app.get("/api/sessions/{session_code}/stats")
+@limiter.limit("30/minute")
+async def get_session_stats(request: Request, session_code: str, db: DBSession = Depends(get_db)):
+    """Get public stats for a session - question count, answered count, votes per question (no text)."""
+    session = db.query(Session).filter(Session.session_code == session_code).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    questions = db.query(Question).filter(Question.session_id == session.id).all()
+    
+    stats = {
+        "session_title": session.title,
+        "session_code": session.session_code,
+        "is_active": session.is_active,
+        "created_at": session.created_at.isoformat(),
+        "ended_at": session.ended_at.isoformat() if session.ended_at else None,
+        "total_questions": len(questions),
+        "answered_questions": sum(1 for q in questions if q.is_answered),
+        "unanswered_questions": sum(1 for q in questions if not q.is_answered),
+        "total_votes": sum(q.upvotes for q in questions),
+        "questions_by_votes": [
+            {
+                "question_id": q.id,
+                "votes": q.upvotes,
+                "answered": q.is_answered,
+                "created_at": q.created_at.isoformat(),
+                "answered_at": q.answered_at.isoformat() if q.answered_at else None
+            }
+            for q in sorted(questions, key=lambda x: x.upvotes, reverse=True)
+        ]
+    }
+    
+    return stats
+
+
+@app.get("/stats", response_class=HTMLResponse)
+async def stats_page(request: Request):
+    """Public stats page."""
+    return templates.TemplateResponse("stats.html", {"request": request, "base_url": BASE_URL})
+
+
 # WebSocket endpoint
 @app.websocket("/ws/{session_code}")
 async def websocket_endpoint(websocket: WebSocket, session_code: str):

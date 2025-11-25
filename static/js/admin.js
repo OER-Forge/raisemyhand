@@ -411,13 +411,56 @@ function renderApiKeys(apiKeys) {
 }
 
 function showCreateApiKeyModal() {
-    const name = prompt('Enter a name for this API key (e.g., "Math Department", "Prof. Smith"):');
-    if (name && name.trim()) {
-        createApiKey(name.trim());
-    }
+    document.getElementById('create-api-key-modal').classList.add('active');
+    document.getElementById('api-key-name').value = '';
+    // Focus the input after a short delay to ensure modal is visible
+    setTimeout(() => {
+        document.getElementById('api-key-name').focus();
+    }, 100);
 }
 
-async function createApiKey(name) {
+function hideCreateApiKeyModal() {
+    document.getElementById('create-api-key-modal').classList.remove('active');
+    document.getElementById('api-key-name').value = '';
+}
+
+function hideApiKeySuccessModal() {
+    document.getElementById('api-key-success-modal').classList.remove('active');
+    document.getElementById('new-api-key-value').value = '';
+}
+
+function copyNewApiKey() {
+    const keyInput = document.getElementById('new-api-key-value');
+    const copyBtn = document.getElementById('copy-new-key-btn');
+    
+    navigator.clipboard.writeText(keyInput.value).then(() => {
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '✓ Copied!';
+        copyBtn.style.background = '#27ae60';
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.style.background = '';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        // Fallback: select the text
+        keyInput.select();
+        showNotification('Please copy the key manually', 'warning');
+    });
+}
+
+async function handleCreateApiKey(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const name = form.name.value.trim();
+    
+    if (!name) {
+        showNotification('Please enter a name for the API key', 'error');
+        return;
+    }
+
     try {
         const response = await fetch('/api/admin/api-keys', {
             method: 'POST',
@@ -430,11 +473,18 @@ async function createApiKey(name) {
 
         const newKey = await response.json();
         
-        // Copy to clipboard automatically
+        // Hide create modal
+        hideCreateApiKeyModal();
+        
+        // Show success modal with the key
+        document.getElementById('new-api-key-value').value = newKey.key;
+        document.getElementById('api-key-success-modal').classList.add('active');
+        
+        // Auto-copy to clipboard
         await copyToClipboard(newKey.key);
         
-        showNotification(`API key "${newKey.name}" created and copied to clipboard!`, 'success');
-        loadApiKeys(); // Refresh the list
+        // Refresh the list
+        loadApiKeys();
     } catch (error) {
         console.error('Error creating API key:', error);
         showNotification('Failed to create API key', 'error');
