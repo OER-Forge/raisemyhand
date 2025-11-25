@@ -23,14 +23,24 @@ def migrate():
         cursor.execute("PRAGMA table_info(questions)")
         columns = [col[1] for col in cursor.fetchall()]
         
-        if 'question_number' in columns:
-            print("✓ question_number column already exists, skipping migration")
+        column_exists = 'question_number' in columns
+        
+        if not column_exists:
+            print("Adding question_number column to questions table...")
+            # Add the question_number column
+            cursor.execute("ALTER TABLE questions ADD COLUMN question_number INTEGER")
+        else:
+            print("question_number column already exists")
+        
+        # Check if there are any NULL question_numbers (from existing questions)
+        cursor.execute("SELECT COUNT(*) FROM questions WHERE question_number IS NULL")
+        null_count = cursor.fetchone()[0]
+        
+        if null_count == 0:
+            print("✓ All questions already have question numbers")
             return
         
-        print("Adding question_number column to questions table...")
-        
-        # Add the question_number column
-        cursor.execute("ALTER TABLE questions ADD COLUMN question_number INTEGER")
+        print(f"Assigning question numbers to {null_count} existing question(s)...")
         
         # Get all sessions and assign question numbers
         cursor.execute("SELECT DISTINCT session_id FROM questions ORDER BY session_id")

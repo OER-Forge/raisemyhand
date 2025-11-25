@@ -161,7 +161,8 @@ def format_session_response(session: Session) -> dict:
                 "upvotes": q.upvotes,
                 "is_answered": q.is_answered,
                 "created_at": q.created_at,
-                "answered_at": q.answered_at
+                "answered_at": q.answered_at,
+                "question_number": q.question_number
             }
             for q in session.questions
         ]

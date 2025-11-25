@@ -49,7 +49,7 @@ class QuestionCreate(BaseModel):
 class QuestionResponse(BaseModel):
     id: int
     session_id: int
-    question_number: int
+    question_number: Optional[int] = None  # Optional for backward compatibility
     text: str
     upvotes: int
     is_answered: bool
