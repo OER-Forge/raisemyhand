@@ -163,9 +163,23 @@ async function endSessionAdmin(sessionId, instructorCode, sessionTitle) {
     }
 
     try {
+        // Get CSRF token
+        const csrfToken = await getCsrfToken();
+
+        // FIXME: This endpoint requires API key, but admins use JWT tokens
+        // For now, we try without auth - the instructor_code serves as verification
+        // TODO: Create admin-specific endpoints that accept JWT tokens
         const response = await fetch(`/api/sessions/${instructorCode}/end`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': csrfToken
+            }
         });
+
+        if (response.status === 401) {
+            showNotification('Admin cannot end sessions - use bulk operations instead', 'error');
+            return;
+        }
 
         if (!response.ok) throw new Error('Failed to end session');
 
@@ -184,9 +198,23 @@ async function restartSessionAdmin(sessionId, instructorCode, sessionTitle) {
     }
 
     try {
+        // Get CSRF token
+        const csrfToken = await getCsrfToken();
+
+        // FIXME: This endpoint requires API key, but admins use JWT tokens
+        // For now, we try without auth - the instructor_code serves as verification
+        // TODO: Create admin-specific endpoints that accept JWT tokens
         const response = await fetch(`/api/sessions/${instructorCode}/restart`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': csrfToken
+            }
         });
+
+        if (response.status === 401) {
+            showNotification('Admin cannot restart sessions - use bulk operations instead', 'error');
+            return;
+        }
 
         if (!response.ok) throw new Error('Failed to restart session');
 

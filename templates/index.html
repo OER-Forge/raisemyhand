@@ -163,7 +163,7 @@
     <script>
         // Check for saved API key and populate field
         document.addEventListener('DOMContentLoaded', () => {
-            const savedApiKey = localStorage.getItem('instructor_api_key');
+            const savedApiKey = sessionStorage.getItem('instructor_api_key');
             if (savedApiKey) {
                 document.getElementById('api-key').value = savedApiKey;
             }
@@ -188,7 +188,7 @@
             }
 
             // Save API key for future use
-            localStorage.setItem('instructor_api_key', apiKey);
+            sessionStorage.setItem('instructor_api_key', apiKey);
 
             const sessionData = { title };
             if (password) {

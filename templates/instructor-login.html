@@ -268,7 +268,7 @@
                 }
 
                 // API key is valid - store and redirect
-                localStorage.setItem('instructor_api_key', apiKey);
+                sessionStorage.setItem('instructor_api_key', apiKey);
                 document.cookie = `instructor_api_key=${apiKey}; path=/; max-age=2592000`;
                 window.location.href = '/sessions';
             } catch (error) {
@@ -322,7 +322,7 @@
                 const session = await response.json();
 
                 // Store API key
-                localStorage.setItem('instructor_api_key', apiKey);
+                sessionStorage.setItem('instructor_api_key', apiKey);
                 document.cookie = `instructor_api_key=${apiKey}; path=/; max-age=2592000`;
 
                 // Redirect to instructor dashboard
@@ -333,7 +333,7 @@
         });
 
         // Pre-fill API key if stored
-        const storedKey = localStorage.getItem('instructor_api_key');
+        const storedKey = sessionStorage.getItem('instructor_api_key');
         if (storedKey) {
             document.getElementById('view-api-key').value = storedKey;
             document.getElementById('create-api-key').value = storedKey;

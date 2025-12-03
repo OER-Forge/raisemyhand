@@ -193,8 +193,14 @@ function renderQuestions() {
 
 async function toggleAnswered(questionId) {
     try {
+        // Get CSRF token for best practice (even though backend doesn't require it for this endpoint)
+        const csrfToken = await getCsrfToken();
+
         const response = await fetch(`/api/questions/${questionId}/answer?instructor_code=${instructorCode}`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': csrfToken
+            }
         });
 
         if (!response.ok) {
