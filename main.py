@@ -329,18 +329,69 @@ def startup_event():
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[str, list[WebSocket]] = {}
+        # Rate limiting: track message counts per connection
+        self.message_counts: dict[WebSocket, list[float]] = {}
+        # Connection timestamps for timeout tracking
+        self.connection_times: dict[WebSocket, float] = {}
 
     async def connect(self, websocket: WebSocket, session_code: str):
         await websocket.accept()
         if session_code not in self.active_connections:
             self.active_connections[session_code] = []
         self.active_connections[session_code].append(websocket)
+        # Initialize rate limiting and timeout tracking
+        self.message_counts[websocket] = []
+        self.connection_times[websocket] = datetime.utcnow().timestamp()
 
     def disconnect(self, websocket: WebSocket, session_code: str):
         if session_code in self.active_connections:
-            self.active_connections[session_code].remove(websocket)
+            if websocket in self.active_connections[session_code]:
+                self.active_connections[session_code].remove(websocket)
             if not self.active_connections[session_code]:
                 del self.active_connections[session_code]
+        # Clean up rate limiting data
+        if websocket in self.message_counts:
+            del self.message_counts[websocket]
+        if websocket in self.connection_times:
+            del self.connection_times[websocket]
+
+    def check_rate_limit(self, websocket: WebSocket, max_messages: int = 10, window_seconds: int = 1) -> bool:
+        """
+        Check if a WebSocket connection is within rate limits.
+        Returns True if within limits, False if rate limit exceeded.
+        """
+        current_time = datetime.utcnow().timestamp()
+
+        # Clean old timestamps outside the window
+        if websocket in self.message_counts:
+            self.message_counts[websocket] = [
+                ts for ts in self.message_counts[websocket]
+                if current_time - ts < window_seconds
+            ]
+
+            # Check if limit exceeded
+            if len(self.message_counts[websocket]) >= max_messages:
+                return False
+
+            # Add current timestamp
+            self.message_counts[websocket].append(current_time)
+
+        return True
+
+    def check_connection_timeout(self, websocket: WebSocket, timeout_seconds: int = 3600) -> bool:
+        """
+        Check if a WebSocket connection has been idle too long.
+        Returns True if connection should be closed, False if still valid.
+        """
+        if websocket in self.connection_times:
+            current_time = datetime.utcnow().timestamp()
+            elapsed = current_time - self.connection_times[websocket]
+            return elapsed > timeout_seconds
+        return False
+
+    def update_activity(self, websocket: WebSocket):
+        """Update the last activity timestamp for a connection."""
+        self.connection_times[websocket] = datetime.utcnow().timestamp()
 
     async def broadcast(self, message: dict, session_code: str):
         if session_code in self.active_connections:
@@ -586,18 +637,42 @@ async def create_question(session_code: str, question: QuestionCreate, db: DBSes
     if not session:
         raise HTTPException(status_code=404, detail="Session not found or inactive")
 
-    # Get the next question number for this session
-    max_number = db.query(func.max(Question.question_number)).filter(Question.session_id == session.id).scalar()
-    next_number = (max_number or 0) + 1
+    # Retry logic to handle race conditions with unique constraint
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # Get the next question number for this session with a lock
+            # Use SELECT FOR UPDATE to prevent concurrent reads
+            max_number = db.query(func.max(Question.question_number))\
+                .filter(Question.session_id == session.id)\
+                .with_for_update()\
+                .scalar()
+            next_number = (max_number or 0) + 1
 
-    db_question = Question(
-        session_id=session.id,
-        question_number=next_number,
-        text=question.text
-    )
-    db.add(db_question)
-    db.commit()
-    db.refresh(db_question)
+            db_question = Question(
+                session_id=session.id,
+                question_number=next_number,
+                text=question.text
+            )
+            db.add(db_question)
+            db.commit()
+            db.refresh(db_question)
+            break  # Success, exit retry loop
+        except Exception as e:
+            db.rollback()
+            # Check if it's a unique constraint violation
+            if "unique constraint" in str(e).lower() or "duplicate" in str(e).lower():
+                if attempt < max_retries - 1:
+                    # Retry with a new number
+                    continue
+                else:
+                    # Max retries exceeded
+                    logger.error(f"Failed to create question after {max_retries} attempts: {e}")
+                    raise HTTPException(status_code=500, detail="Failed to create question due to concurrent submissions")
+            else:
+                # Different error, don't retry
+                logger.error(f"Error creating question: {e}")
+                raise HTTPException(status_code=500, detail="Failed to create question")
 
     # Broadcast new question to all connected clients
     await manager.broadcast({
@@ -618,7 +693,8 @@ async def create_question(session_code: str, question: QuestionCreate, db: DBSes
 @app.post("/api/questions/{question_id}/vote")
 async def toggle_vote(question_id: int, action: str, db: DBSession = Depends(get_db)):
     """Toggle vote on a question (upvote or remove vote)."""
-    question = db.query(Question).filter(Question.id == question_id).first()
+    # Use SELECT FOR UPDATE to lock the row during the transaction
+    question = db.query(Question).filter(Question.id == question_id).with_for_update().first()
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
 
@@ -626,14 +702,23 @@ async def toggle_vote(question_id: int, action: str, db: DBSession = Depends(get
     if not session.is_active:
         raise HTTPException(status_code=400, detail="Session is inactive")
 
-    if action == "add":
-        question.upvotes += 1
-    elif action == "remove":
-        question.upvotes = max(0, question.upvotes - 1)
-    else:
-        raise HTTPException(status_code=400, detail="Invalid action")
-    
-    db.commit()
+    # Perform atomic update using database-level operations
+    try:
+        if action == "add":
+            # Use SQL expression to ensure atomic increment
+            question.upvotes = Question.upvotes + 1
+        elif action == "remove":
+            # Atomic decrement with lower bound check
+            question.upvotes = func.greatest(Question.upvotes - 1, 0)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid action")
+
+        db.commit()
+        db.refresh(question)  # Get the updated value
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating vote count: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update vote")
 
     # Broadcast vote change to all connected clients
     await manager.broadcast({
@@ -741,13 +826,73 @@ async def stats_page(request: Request):
 
 # WebSocket endpoint
 @app.websocket("/ws/{session_code}")
-async def websocket_endpoint(websocket: WebSocket, session_code: str):
+async def websocket_endpoint(websocket: WebSocket, session_code: str, db: DBSession = Depends(get_db)):
+    """
+    WebSocket endpoint for real-time updates.
+    Validates session existence and enforces rate limiting.
+    """
+    try:
+        # Validate that the session exists and is active BEFORE accepting connection
+        logger.info(f"WebSocket validation: checking session code {session_code}")
+        session = db.query(Session).filter(Session.session_code == session_code).first()
+        logger.info(f"WebSocket validation: query returned session={session}")
+    except Exception as e:
+        logger.error(f"WebSocket validation error: {e}", exc_info=True)
+        await websocket.accept()
+        await websocket.send_json({"type": "error", "message": "Internal server error"})
+        await websocket.close(code=1011, reason="Internal error")
+        return
+
+    if not session:
+        logger.warning(f"WebSocket connection rejected: invalid session code {session_code}")
+        await websocket.accept()
+        await websocket.send_json({"type": "error", "message": "Session not found"})
+        await websocket.close(code=4004, reason="Session not found")
+        return
+
+    if not session.is_active:
+        logger.warning(f"WebSocket connection rejected: inactive session {session_code}")
+        await websocket.accept()
+        await websocket.send_json({"type": "error", "message": "Session is not active"})
+        await websocket.close(code=4003, reason="Session is not active")
+        return
+
+    # Accept connection and register with manager
     await manager.connect(websocket, session_code)
+    logger.info(f"WebSocket connected to session {session_code}")
+
     try:
         while True:
-            # Keep connection alive
-            await websocket.receive_text()
+            # Receive messages (mostly ping/keepalive)
+            message = await websocket.receive_text()
+
+            # Update activity timestamp
+            manager.update_activity(websocket)
+
+            # Check rate limiting (10 messages per second)
+            if not manager.check_rate_limit(websocket, max_messages=10, window_seconds=1):
+                logger.warning(f"WebSocket rate limit exceeded for session {session_code}")
+                await websocket.send_json({
+                    "type": "error",
+                    "message": "Rate limit exceeded. Please slow down."
+                })
+                continue
+
+            # Check for connection timeout (1 hour of inactivity)
+            if manager.check_connection_timeout(websocket, timeout_seconds=3600):
+                logger.info(f"WebSocket timeout for session {session_code}")
+                await websocket.close(code=1000, reason="Connection timeout due to inactivity")
+                break
+
+            # Echo ping/pong for keepalive
+            if message.strip().lower() in ["ping", "keepalive"]:
+                await websocket.send_json({"type": "pong"})
+
     except WebSocketDisconnect:
+        logger.info(f"WebSocket disconnected from session {session_code}")
+    except Exception as e:
+        logger.error(f"WebSocket error for session {session_code}: {e}")
+    finally:
         manager.disconnect(websocket, session_code)
 
 

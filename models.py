@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, UniqueConstraint, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -50,7 +50,7 @@ class Question(Base):
     __tablename__ = "questions"
 
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False)
+    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False, index=True)
     question_number = Column(Integer, nullable=False)  # Permanent display number (e.g., Q1, Q2, Q3)
     text = Column(Text, nullable=False)
     upvotes = Column(Integer, default=0)
@@ -59,3 +59,9 @@ class Question(Base):
     answered_at = Column(DateTime, nullable=True)
 
     session = relationship("Session", back_populates="questions")
+
+    # Unique constraint to prevent duplicate question numbers in the same session
+    __table_args__ = (
+        UniqueConstraint('session_id', 'question_number', name='uq_session_question_number'),
+        Index('ix_questions_session_id_question_number', 'session_id', 'question_number'),
+    )
