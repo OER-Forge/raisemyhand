@@ -96,7 +96,7 @@ def toggle_vote(
         if existing_vote:
             # Remove vote
             db.delete(existing_vote)
-            question.upvotes = func.greatest(0, question.upvotes - 1)
+            question.upvotes = max(0, question.upvotes - 1)
             action = "removed"
         else:
             # Add vote

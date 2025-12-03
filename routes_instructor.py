@@ -1,7 +1,7 @@
 """
 Instructor management routes for v2 API
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session as DBSession
 from passlib.context import CryptContext
 from jose import jwt
@@ -48,7 +48,7 @@ def verify_instructor_token(token: str) -> dict:
 
 
 def get_current_instructor(
-    authorization: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ) -> Instructor:
     """Dependency to get current authenticated instructor."""

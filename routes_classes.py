@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List
 
 from database import get_db
-from models_v2 import Class, ClassMeeting, APIKey as APIKeyV2, Instructor
+from models_v2 import Class, ClassMeeting, APIKey as APIKeyV2, Instructor, Question
 from schemas_v2 import (
     ClassCreate, ClassUpdate, ClassResponse, ClassWithMeetings,
     ClassMeetingCreate, ClassMeetingResponse, ClassMeetingWithQuestions
@@ -239,6 +239,19 @@ def get_meeting_by_code(
 
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # Add computed fields
+    meeting.has_password = bool(meeting.password_hash)
+    meeting.student_url = f"{settings.base_url}/student?code={meeting.meeting_code}"
+    meeting.instructor_url = f"{settings.base_url}/instructor?code={meeting.instructor_code}"
+    meeting.question_count = db.query(func.count(Question.id)).filter(
+        Question.meeting_id == meeting.id
+    ).scalar()
+
+    # Load questions
+    meeting.questions = db.query(Question).filter(
+        Question.meeting_id == meeting.id
+    ).order_by(Question.created_at.desc()).all()
 
     return meeting
 
