@@ -74,6 +74,8 @@ Open **http://localhost:8000** and start your session!
 3. Create an API key in the dashboard
 4. Use the key to create instructor sessions
 
+📖 **New to RaiseMyHand?** See [GETTING_STARTED.md](GETTING_STARTED.md) for a complete step-by-step guide.
+
 📖 See [DATABASE_SETUP.md](DATABASE_SETUP.md) for detailed configuration.
 
 ---
@@ -105,6 +107,8 @@ Server available at `http://your-server:8000`
 ---
 
 ## 📖 Usage Guide
+
+📘 **First time using RaiseMyHand?** Check out [GETTING_STARTED.md](GETTING_STARTED.md) for a comprehensive step-by-step walkthrough.
 
 ### 👨‍🏫 For Instructors
 
@@ -222,6 +226,7 @@ CREATE_DEFAULT_API_KEY=false  # Set true for first run
 - [URL_CONFIGURATION.md](URL_CONFIGURATION.md) - URL and timezone setup
 - [DATABASE_SETUP.md](DATABASE_SETUP.md) - Database configuration
 - [SECURITY.md](SECURITY.md) - Security best practices
+- [LOGGING.md](LOGGING.md) - Logging system and monitoring
 
 ---
 

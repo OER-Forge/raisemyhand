@@ -286,3 +286,121 @@ function unmarkUpvoted(sessionCode, questionId) {
         localStorage.setItem(key, JSON.stringify(upvoted));
     }
 }
+
+// ============================================================================
+// Breadcrumb Navigation
+// ============================================================================
+
+/**
+ * Create breadcrumb navigation
+ * @param {Array} breadcrumbs - Array of {label, href} objects
+ * @returns {HTMLElement} Breadcrumb navigation element
+ */
+function createBreadcrumbs(breadcrumbs) {
+    const nav = document.createElement('nav');
+    nav.className = 'breadcrumbs';
+    nav.setAttribute('aria-label', 'Breadcrumb');
+
+    const ol = document.createElement('ol');
+
+    breadcrumbs.forEach((crumb, index) => {
+        const li = document.createElement('li');
+
+        if (index === breadcrumbs.length - 1) {
+            // Last item (current page)
+            const span = document.createElement('span');
+            span.textContent = crumb.label;
+            span.setAttribute('aria-current', 'page');
+            li.appendChild(span);
+        } else {
+            // Link to previous pages
+            const a = document.createElement('a');
+            a.href = crumb.href;
+            a.textContent = crumb.label;
+            li.appendChild(a);
+        }
+
+        ol.appendChild(li);
+    });
+
+    nav.appendChild(ol);
+    return nav;
+}
+
+/**
+ * Add breadcrumbs to the page
+ * @param {Array} breadcrumbs - Array of {label, href} objects
+ * @param {string} containerId - ID of container to prepend breadcrumbs to (default: first .container)
+ */
+function addBreadcrumbs(breadcrumbs, containerId = null) {
+    const breadcrumbNav = createBreadcrumbs(breadcrumbs);
+    const container = containerId
+        ? document.getElementById(containerId)
+        : document.querySelector('.container');
+
+    if (container) {
+        container.insertBefore(breadcrumbNav, container.firstChild);
+    }
+}
+
+// ============================================================================
+// Loading States
+// ============================================================================
+
+/**
+ * Show loading state on a button
+ * @param {HTMLElement} button - Button element
+ */
+function showButtonLoading(button) {
+    button.classList.add('loading');
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+}
+
+/**
+ * Hide loading state from a button
+ * @param {HTMLElement} button - Button element
+ */
+function hideButtonLoading(button) {
+    button.classList.remove('loading');
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+}
+
+/**
+ * Show full-screen loading overlay
+ * @param {string} message - Optional loading message
+ * @returns {HTMLElement} Loading overlay element
+ */
+function showLoadingOverlay(message = 'Loading...') {
+    const overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    overlay.id = 'loading-overlay';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner';
+
+    const text = document.createElement('p');
+    text.textContent = message;
+    text.style.color = 'white';
+    text.style.marginTop = '20px';
+    text.style.fontSize = '18px';
+
+    overlay.appendChild(spinner);
+    overlay.appendChild(text);
+    document.body.appendChild(overlay);
+
+    return overlay;
+}
+
+/**
+ * Hide loading overlay
+ */
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}

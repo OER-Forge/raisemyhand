@@ -29,5 +29,13 @@ ENV/
 *.swp
 *.swo
 
+# Logs
+logs/
+*.log
+
+# Alembic - keep migrations but not pycache
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
 # Docker secrets
 secrets/admin_password.txt

@@ -31,17 +31,15 @@ load_dotenv()
 from database import get_db, init_db
 from models import Session, Question, APIKey
 from schemas import (
-    SessionCreate, SessionResponse, QuestionCreate, QuestionResponse, 
+    SessionCreate, SessionResponse, QuestionCreate, QuestionResponse,
     SessionWithQuestions, AdminLogin, Token, SessionPasswordVerify,
     APIKeyCreate, APIKeyResponse, InstructorAuth
 )
+from logging_config import setup_logging, get_logger, log_request, log_database_operation, log_websocket_event, log_security_event
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Configure centralized logging
+setup_logging()
+logger = get_logger(__name__)
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -120,6 +118,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def verify_api_key(api_key: Optional[str], db) -> bool:
     """Verify API key and update last_used timestamp."""
     if not api_key:
+        log_security_event(logger, "INVALID_API_KEY", "API key missing", severity="warning")
         return False
 
     key_record = db.query(APIKey).filter(
@@ -131,8 +130,10 @@ def verify_api_key(api_key: Optional[str], db) -> bool:
         # Update last_used timestamp
         key_record.last_used = datetime.utcnow()
         db.commit()
+        log_database_operation(logger, "UPDATE", "api_keys", key_record.id, success=True)
         return True
 
+    log_security_event(logger, "INVALID_API_KEY", f"API key not found or inactive: {api_key[:10]}...", severity="warning")
     return False
 
 
@@ -301,8 +302,41 @@ templates = Jinja2Templates(directory="templates")
 # Initialize database on startup
 @app.on_event("startup")
 def startup_event():
+    """Initialize application on startup"""
+
+    # Validate configuration
+    from config import settings
+
+    print("\n" + "="*70)
+    print(f"🚀 RaiseMyHand Starting - Environment: {settings.env.upper()}")
+    print("="*70)
+
+    # Check production configuration
+    if settings.is_production:
+        errors, warnings = settings.validate_production_config()
+
+        if errors:
+            print("\n❌ CRITICAL CONFIGURATION ERRORS:")
+            for error in errors:
+                print(f"   • {error}")
+            print("\n⚠️  Application may not be secure in production!")
+            print("="*70 + "\n")
+
+        if warnings:
+            print("\n⚠️  CONFIGURATION WARNINGS:")
+            for warning in warnings:
+                print(f"   • {warning}")
+            print()
+    else:
+        print(f"✓ Running in {settings.env} mode")
+        print(f"✓ Debug mode: {settings.debug}")
+        print(f"✓ Base URL: {settings.base_url}")
+
+    print("="*70)
+
+    # Initialize database
     init_db()
-    
+
     # Check if any API keys exist
     db = next(get_db())
     try:
@@ -342,13 +376,16 @@ class ConnectionManager:
         # Initialize rate limiting and timeout tracking
         self.message_counts[websocket] = []
         self.connection_times[websocket] = datetime.utcnow().timestamp()
+        log_websocket_event(logger, "CONNECT", session_code, f"Active connections: {len(self.active_connections[session_code])}")
 
     def disconnect(self, websocket: WebSocket, session_code: str):
         if session_code in self.active_connections:
             if websocket in self.active_connections[session_code]:
                 self.active_connections[session_code].remove(websocket)
+            remaining = len(self.active_connections[session_code])
             if not self.active_connections[session_code]:
                 del self.active_connections[session_code]
+            log_websocket_event(logger, "DISCONNECT", session_code, f"Remaining connections: {remaining}")
         # Clean up rate limiting data
         if websocket in self.message_counts:
             del self.message_counts[websocket]
@@ -1030,18 +1067,26 @@ def admin_login(request: Request, login_data: AdminLogin):
     if not ENABLE_AUTH:
         # If auth is disabled, always return a valid token
         access_token = create_access_token(data={"sub": "admin"})
+        log_security_event(logger, "AUTH_DISABLED_LOGIN", "Admin login with auth disabled", severity="warning")
         return {"access_token": access_token, "token_type": "bearer"}
-    
+
     # Verify admin credentials
     correct_username = secrets.compare_digest(login_data.username, ADMIN_USERNAME)
     correct_password = secrets.compare_digest(login_data.password, ADMIN_PASSWORD)
-    
+
     if not (correct_username and correct_password):
+        log_security_event(
+            logger,
+            "AUTH_FAILED",
+            f"Failed admin login attempt for user: {login_data.username} from {request.client.host if request.client else 'unknown'}",
+            severity="warning"
+        )
         raise HTTPException(
             status_code=401,
             detail="Incorrect username or password"
         )
-    
+
+    log_security_event(logger, "AUTH_SUCCESS", f"Admin login successful: {login_data.username}", severity="info")
     access_token = create_access_token(data={"sub": login_data.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -1079,11 +1124,14 @@ def health_check():
 # Configuration endpoint
 @app.get("/api/config")
 def get_config():
-    """Get client configuration including base URL, timezone, and auth status."""
+    """Get client configuration including base URL, timezone, auth status, and environment."""
+    from config import settings
     return {
         "base_url": BASE_URL,
         "timezone": TIMEZONE,
-        "auth_enabled": ENABLE_AUTH
+        "auth_enabled": ENABLE_AUTH,
+        "environment": settings.env,
+        "debug": settings.debug
     }
 
 

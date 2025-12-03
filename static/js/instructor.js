@@ -30,24 +30,20 @@ async function loadSession() {
             return;
         }
 
-        console.log('Loading session with code:', instructorCode);
         const response = await authenticatedFetch(`/api/instructor/sessions/${instructorCode}`);
 
-        console.log('Response status:', response.status);
-        
         if (response.status === 401) {
             console.error('Authentication failed - invalid API key');
             handleAuthError();
             return;
         }
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Failed to load session:', response.status, errorText);
             throw new Error(`Session not found: ${response.status}`);
         }
         sessionData = await response.json();
-        console.log('Session loaded successfully:', sessionData.title);
 
         // Update UI
         document.getElementById('session-title').textContent = sessionData.title;
@@ -108,7 +104,6 @@ function connectWebSocket() {
     };
 
     ws.onclose = () => {
-        console.log('WebSocket closed, reconnecting...');
         setTimeout(connectWebSocket, 3000);
     };
 }

@@ -327,5 +327,12 @@
     
     <script src="/static/js/shared.js"></script>
     <script src="/static/js/sessions-dashboard.js"></script>
+    <script>
+        // Add breadcrumb navigation
+        addBreadcrumbs([
+            { label: 'Home', href: '/' },
+            { label: 'My Sessions', href: '/sessions' }
+        ]);
+    </script>
 </body>
 </html>

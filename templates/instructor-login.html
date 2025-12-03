@@ -350,6 +350,12 @@
             document.getElementById('view-api-key').value = storedKey;
             document.getElementById('create-api-key').value = storedKey;
         }
+
+        // Add breadcrumb navigation
+        addBreadcrumbs([
+            { label: 'Home', href: '/' },
+            { label: 'Instructor Login', href: '/instructor-login' }
+        ]);
     </script>
 </body>
 </html>

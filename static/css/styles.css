@@ -477,3 +477,373 @@ header .subtitle {
     font-weight: bold;
     border: 2px solid #f5c6cb;
 }
+
+/* ============================================================================
+   Breadcrumb Navigation
+   ============================================================================ */
+.breadcrumbs {
+    padding: 1rem 0;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.breadcrumbs ol {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+}
+
+.breadcrumbs li {
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumbs li:not(:last-child)::after {
+    content: "›";
+    margin-left: 0.5rem;
+    color: #666;
+    font-size: 1.2rem;
+}
+
+.breadcrumbs a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+    color: var(--secondary-color);
+}
+
+.breadcrumbs a:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.breadcrumbs [aria-current="page"] {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* ============================================================================
+   Loading States
+   ============================================================================ */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn.loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+}
+
+.btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.6s linear infinite;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-overlay .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ============================================================================
+   Mobile Responsiveness & Touch Targets
+   ============================================================================ */
+
+/* Minimum touch target: 44x44px per WCAG guidelines */
+.btn, .action-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 20px;
+    font-size: 16px; /* Prevent iOS zoom */
+}
+
+.upvote-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px;
+}
+
+/* Form inputs */
+input, select, textarea, button {
+    font-size: 16px; /* Prevent iOS zoom on focus */
+    min-height: 44px;
+}
+
+textarea {
+    min-height: 100px;
+}
+
+/* Increase spacing between interactive elements */
+.button-group {
+    gap: 12px;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    /* Stack buttons vertically on mobile */
+    .button-group {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    /* Question cards */
+    .question-card {
+        padding: 16px;
+    }
+
+    .question-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* Question actions */
+    .question-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .question-actions .btn {
+        width: 100%;
+    }
+
+    /* Info grid on mobile */
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    /* Breadcrumbs on mobile */
+    .breadcrumbs {
+        font-size: 0.85rem;
+        padding: 0.5rem 0;
+    }
+
+    /* Forms */
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    /* Modal close buttons */
+    .modal-close {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px;
+    }
+
+    /* Session info */
+    .session-info {
+        padding: 15px;
+    }
+
+    /* Questions list */
+    .questions-container {
+        padding: 15px;
+    }
+}
+
+/* Small phone screens */
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.25rem;
+    }
+
+    .btn {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+
+    .question-card {
+        padding: 12px;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ============================================================================
+   Accessibility (WCAG 2.1 AA Compliance)
+   ============================================================================ */
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* Skip to main content link */
+.skip-to-main {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 4px 0;
+    z-index: 10000;
+}
+
+.skip-to-main:focus {
+    top: 0;
+}
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Color contrast improvements */
+.btn-secondary {
+    background: #5a6c7d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4a5c6d;
+}
+
+/* Focus indicators for buttons */
+.btn:focus-visible,
+.upvote-btn:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 3px;
+}
+
+/* Form field focus */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+    border-color: var(--primary-color);
+}
+
+/* Link focus */
+a:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* Ensure sufficient color contrast */
+.text-muted {
+    color: #5a6c7d; /* WCAG AA compliant */
+}
+
+/* Error states with icons */
+.error-message::before {
+    content: "⚠️ ";
+}
+
+.success-message::before {
+    content: "✓ ";
+}
+
+/* Status indicators */
+.status-active::before {
+    content: "●";
+    color: var(--success-color);
+    margin-right: 0.5rem;
+}
+
+.status-inactive::before {
+    content: "●";
+    color: #999;
+    margin-right: 0.5rem;
+}

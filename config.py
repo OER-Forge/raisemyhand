@@ -18,10 +18,14 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    # Environment
+    env: str = "development"  # development, production, testing
+
     # Server Configuration
     host: str = "0.0.0.0"
     port: int = 8000
     base_url: str = "http://localhost:8000"
+    debug: bool = True
 
     # Database Configuration
     database_url: str = "sqlite:///./data/raisemyhand.db"
@@ -46,6 +50,43 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limit_enabled: bool = True
 
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production"""
+        return self.env.lower() == "production"
+
+    @property
+    def is_development(self) -> bool:
+        """Check if running in development"""
+        return self.env.lower() == "development"
+
+    def validate_production_config(self) -> tuple[list[str], list[str]]:
+        """Validate production configuration. Returns (errors, warnings)"""
+        errors = []
+        warnings = []
+
+        if self.is_production:
+            # Critical errors
+            if self.secret_key == secrets.token_urlsafe(32) or len(self.secret_key) < 32:
+                errors.append("SECRET_KEY must be explicitly set and at least 32 characters in production")
+
+            if self.csrf_secret == secrets.token_urlsafe(32) or len(self.csrf_secret) < 32:
+                errors.append("CSRF_SECRET must be explicitly set and at least 32 characters in production")
+
+            if not self.admin_password:
+                errors.append("ADMIN_PASSWORD must be set in production")
+
+            if "localhost" in self.base_url:
+                errors.append("BASE_URL should not contain 'localhost' in production")
+
+            if self.debug:
+                warnings.append("DEBUG is True in production - should be False for security")
+
+            if self.database_url.startswith("sqlite"):
+                warnings.append("Using SQLite in production - consider PostgreSQL for better performance")
+
+        return errors, warnings
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -55,10 +96,6 @@ class Settings(BaseSettings):
             if os.path.exists(secret_file):
                 with open(secret_file, 'r') as f:
                     self.admin_password = f.read().strip()
-
-    class Config:
-        """Pydantic config"""
-        env_prefix = ""  # No prefix for environment variables
 
 
 # Global settings instance
