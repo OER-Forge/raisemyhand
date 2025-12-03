@@ -29,12 +29,28 @@ from passlib.context import CryptContext
 load_dotenv()
 
 from database import get_db, init_db
-from models import Session, Question, APIKey
+# V2 Models - use Session and APIKey as aliases for compatibility
+from models_v2 import (
+    ClassMeeting as Session,  # Alias for backward compat
+    Question,
+    APIKey,  # V2 APIKey
+    Instructor,
+    Class,
+    Answer,
+    QuestionVote
+)
+# Keep v1 schemas for backward compat, but also import v2
 from schemas import (
     SessionCreate, SessionResponse, QuestionCreate, QuestionResponse,
     SessionWithQuestions, AdminLogin, Token, SessionPasswordVerify,
     APIKeyCreate, APIKeyResponse, InstructorAuth
 )
+import schemas_v2
+
+# Import v2 route modules
+from routes_instructor import router as instructor_router
+from routes_classes import router as classes_router
+from routes_questions import router as questions_router
 from logging_config import setup_logging, get_logger, log_request, log_database_operation, log_websocket_event, log_security_event
 
 # Configure centralized logging
@@ -46,6 +62,11 @@ limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="RaiseMyHand - Student Question Aggregator")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Include v2 routers
+app.include_router(instructor_router)
+app.include_router(classes_router)
+app.include_router(questions_router)
 
 # Security Configuration
 security = HTTPBearer(auto_error=False)
