@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session as DBSession
+from sqlalchemy.orm import Session as DBSession, joinedload, selectinload
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -420,32 +420,37 @@ def create_session(
     db: DBSession = Depends(get_db)
 ):
     """Create a new Q&A session (requires valid API key and CSRF token)."""
-    password_hash = None
-    if session.password:
-        password_hash = get_password_hash(session.password)
-    
-    db_session = Session(
-        session_code=Session.generate_code(),
-        instructor_code=Session.generate_code(),
-        title=session.title,
-        password_hash=password_hash
-    )
-    db.add(db_session)
-    db.commit()
-    db.refresh(db_session)
-    
-    # Create response with has_password field
-    response_data = {
-        "id": db_session.id,
-        "session_code": db_session.session_code,
-        "instructor_code": db_session.instructor_code,
-        "title": db_session.title,
-        "has_password": password_hash is not None,
-        "created_at": db_session.created_at,
-        "ended_at": db_session.ended_at,
-        "is_active": db_session.is_active
-    }
-    return response_data
+    try:
+        password_hash = None
+        if session.password:
+            password_hash = get_password_hash(session.password)
+
+        db_session = Session(
+            session_code=Session.generate_code(),
+            instructor_code=Session.generate_code(),
+            title=session.title,
+            password_hash=password_hash
+        )
+        db.add(db_session)
+        db.commit()
+        db.refresh(db_session)
+
+        # Create response with has_password field
+        response_data = {
+            "id": db_session.id,
+            "session_code": db_session.session_code,
+            "instructor_code": db_session.instructor_code,
+            "title": db_session.title,
+            "has_password": password_hash is not None,
+            "created_at": db_session.created_at,
+            "ended_at": db_session.ended_at,
+            "is_active": db_session.is_active
+        }
+        return response_data
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to create session: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to create session. Please try again.")
 
 
 @app.get("/api/sessions/my-sessions")
@@ -458,10 +463,13 @@ def get_my_sessions(
     """Get all sessions created with this API key."""
     # API key is already verified by the dependency
     
-    # Get all sessions (we don't track which API key created which session currently)
+    # Get all sessions with eager loading to avoid N+1 queries
     # For now, return all sessions - you could add an api_key_id field to Session model to track this
-    sessions = db.query(Session).order_by(Session.created_at.desc()).all()
-    
+    sessions = db.query(Session)\
+        .options(selectinload(Session.questions))\
+        .order_by(Session.created_at.desc())\
+        .all()
+
     # Format sessions with stats
     result = []
     for session in sessions:
@@ -478,14 +486,17 @@ def get_my_sessions(
             "unanswered_count": sum(1 for q in questions if not q.is_answered),
             "total_upvotes": sum(q.upvotes for q in questions)
         })
-    
+
     return result
 
 
 @app.get("/api/sessions/{session_code}", response_model=SessionWithQuestions)
 def get_session(session_code: str, db: DBSession = Depends(get_db)):
     """Get a session with all its questions."""
-    session = db.query(Session).filter(Session.session_code == session_code).first()
+    session = db.query(Session)\
+        .options(selectinload(Session.questions))\
+        .filter(Session.session_code == session_code)\
+        .first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return format_session_response(session)
@@ -517,8 +528,11 @@ def get_instructor_session(
 ):
     """Get a session by instructor code with all its questions (requires valid API key)."""
     # API key is already verified by the dependency
-    
-    session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
+
+    session = db.query(Session)\
+        .options(selectinload(Session.questions))\
+        .filter(Session.instructor_code == instructor_code)\
+        .first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return format_session_response(session)
@@ -534,15 +548,22 @@ def end_session(
     db: DBSession = Depends(get_db)
 ):
     """End a session (requires valid API key and CSRF token)."""
-    # API key and CSRF token are already verified by the dependencies
-    session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
+    try:
+        # API key and CSRF token are already verified by the dependencies
+        session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
 
-    session.is_active = False
-    session.ended_at = datetime.utcnow()
-    db.commit()
-    return {"message": "Session ended successfully"}
+        session.is_active = False
+        session.ended_at = datetime.utcnow()
+        db.commit()
+        return {"message": "Session ended successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to end session: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to end session. Please try again.")
 
 
 @app.post("/api/sessions/{instructor_code}/restart")
@@ -555,15 +576,22 @@ def restart_session(
     db: DBSession = Depends(get_db)
 ):
     """Restart an ended session (requires valid API key and CSRF token)."""
-    # API key and CSRF token are already verified by the dependencies
-    session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
+    try:
+        # API key and CSRF token are already verified by the dependencies
+        session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
 
-    session.is_active = True
-    session.ended_at = None
-    db.commit()
-    return {"message": "Session restarted successfully"}
+        session.is_active = True
+        session.ended_at = None
+        db.commit()
+        return {"message": "Session restarted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to restart session: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to restart session. Please try again.")
 
 
 @app.get("/api/sessions/{instructor_code}/report")
@@ -740,26 +768,34 @@ async def upvote_question(question_id: int, db: DBSession = Depends(get_db)):
 @app.post("/api/questions/{question_id}/answer")
 async def mark_answered(question_id: int, instructor_code: str, db: DBSession = Depends(get_db)):
     """Mark a question as answered (instructor only)."""
-    question = db.query(Question).filter(Question.id == question_id).first()
-    if not question:
-        raise HTTPException(status_code=404, detail="Question not found")
+    try:
+        question = db.query(Question).filter(Question.id == question_id).first()
+        if not question:
+            raise HTTPException(status_code=404, detail="Question not found")
 
-    session = db.query(Session).filter(Session.id == question.session_id).first()
-    if session.instructor_code != instructor_code:
-        raise HTTPException(status_code=403, detail="Unauthorized")
+        session = db.query(Session).filter(Session.id == question.session_id).first()
+        if session.instructor_code != instructor_code:
+            raise HTTPException(status_code=403, detail="Unauthorized")
 
-    question.is_answered = not question.is_answered
-    question.answered_at = datetime.utcnow() if question.is_answered else None
-    db.commit()
+        question.is_answered = not question.is_answered
+        question.answered_at = datetime.utcnow() if question.is_answered else None
+        db.commit()
 
-    # Broadcast answer status to all connected clients
-    await manager.broadcast({
-        "type": "answer_status",
-        "question_id": question.id,
-        "is_answered": question.is_answered
-    }, session.session_code)
+        # Broadcast answer status to all connected clients
+        await manager.broadcast({
+            "type": "answer_status",
+            "question_id": question.id,
+            "is_answered": question.is_answered
+        }, session.session_code)
 
-    return {"is_answered": question.is_answered}
+        return {"is_answered": question.is_answered}
+    except HTTPException:
+        # Re-raise HTTP exceptions (404, 403)
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to mark question as answered: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to update question status. Please try again.")
 
 
 # QR Code generation
@@ -938,14 +974,19 @@ async def sessions_dashboard(request: Request):
 @limiter.limit("10/minute")
 def create_api_key(request: Request, key_data: APIKeyCreate, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
     """Create a new API key for instructor authentication (admin only, rate limited: 10/min)."""
-    api_key = APIKey(
-        key=APIKey.generate_key(),
-        name=key_data.name
-    )
-    db.add(api_key)
-    db.commit()
-    db.refresh(api_key)
-    return api_key
+    try:
+        api_key = APIKey(
+            key=APIKey.generate_key(),
+            name=key_data.name
+        )
+        db.add(api_key)
+        db.commit()
+        db.refresh(api_key)
+        return api_key
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to create API key: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to create API key. Please try again.")
 
 @app.get("/api/admin/api-keys", response_model=list[APIKeyResponse])
 @limiter.limit("60/minute")
@@ -957,13 +998,20 @@ def list_api_keys(request: Request, username: str = Depends(verify_token), db: D
 @limiter.limit("20/minute")
 def delete_api_key(request: Request, key_id: int, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
     """Deactivate an API key (admin only, rate limited: 20/min)."""
-    api_key = db.query(APIKey).filter(APIKey.id == key_id).first()
-    if not api_key:
-        raise HTTPException(status_code=404, detail="API key not found")
-    
-    api_key.is_active = False
-    db.commit()
-    return {"message": "API key deactivated successfully"}
+    try:
+        api_key = db.query(APIKey).filter(APIKey.id == key_id).first()
+        if not api_key:
+            raise HTTPException(status_code=404, detail="API key not found")
+
+        api_key.is_active = False
+        db.commit()
+        return {"message": "API key deactivated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to deactivate API key: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to deactivate API key. Please try again.")
 
 @app.post("/api/instructor/auth")
 def instructor_auth(auth_data: InstructorAuth, db: DBSession = Depends(get_db)):
@@ -1091,12 +1139,18 @@ def get_all_sessions(
     if active_only:
         query = query.filter(Session.is_active == True)
 
-    sessions = query.order_by(Session.created_at.desc()).offset(skip).limit(limit).all()
+    # Use eager loading to avoid N+1 queries
+    sessions = query\
+        .options(selectinload(Session.questions))\
+        .order_by(Session.created_at.desc())\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
 
-    # Add question counts
+    # Add question counts using loaded questions
     result = []
     for session in sessions:
-        question_count = db.query(func.count(Question.id)).filter(Question.session_id == session.id).scalar()
+        question_count = len(session.questions)
         result.append({
             "id": session.id,
             "title": session.title,
