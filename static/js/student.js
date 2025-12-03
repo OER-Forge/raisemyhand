@@ -1,32 +1,46 @@
-const sessionCode = new URLSearchParams(window.location.search).get('code');
-let sessionData = null;
+// Get meeting code from URL (v2 API uses "meeting_code")
+const meetingCode = new URLSearchParams(window.location.search).get('code');
+let meetingData = null;
 let ws = null;
 let upvotedQuestions = new Set();
+let studentId = null; // Track student ID for vote tracking
 
-if (!sessionCode) {
-    alert('Invalid session code');
+if (!meetingCode) {
+    alert('Invalid meeting code');
     window.location.href = '/';
 }
 
+// Get or create student ID
+function getStudentId() {
+    let id = localStorage.getItem('student_id');
+    if (!id) {
+        id = 'student_' + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('student_id', id);
+    }
+    return id;
+}
+
+studentId = getStudentId();
+
 async function loadSession() {
     try {
-        const response = await fetch(`/api/sessions/${sessionCode}`);
+        const response = await fetch(`/api/meetings/${meetingCode}`);
         if (!response.ok) {
-            throw new Error('Session not found');
+            throw new Error('Meeting not found');
         }
-        sessionData = await response.json();
+        meetingData = await response.json();
 
-        // Check if session requires password
-        if (sessionData.has_password) {
-            const password = prompt('This session is password protected. Please enter the password:');
+        // Check if meeting requires password
+        if (meetingData.has_password) {
+            const password = prompt('This meeting is password protected. Please enter the password:');
             if (!password) {
-                alert('Password required to access this session');
+                alert('Password required to access this meeting');
                 window.location.href = '/';
                 return;
             }
 
             // Verify password
-            const verifyResponse = await fetch(`/api/sessions/${sessionCode}/verify-password`, {
+            const verifyResponse = await fetch(`/api/meetings/${meetingCode}/verify-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -42,25 +56,28 @@ async function loadSession() {
         }
 
         // Update UI
-        document.getElementById('session-title').textContent = sessionData.title;
-        document.getElementById('session-code').textContent = sessionData.session_code;
+        document.getElementById('session-title').textContent = meetingData.title;
+        document.getElementById('session-code').textContent = meetingData.meeting_code;
 
-        if (!sessionData.is_active) {
+        if (!meetingData.is_active) {
             // Disable question submission
             const form = document.getElementById('question-form');
             const textarea = document.getElementById('question-text');
             const submitBtn = form.querySelector('button[type="submit"]');
 
             textarea.disabled = true;
+            textarea.setAttribute('aria-disabled', 'true');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Session Ended';
+            submitBtn.setAttribute('aria-disabled', 'true');
+            submitBtn.textContent = 'Meeting Ended';
             submitBtn.style.cursor = 'not-allowed';
 
             // Show prominent message
             const formContainer = document.querySelector('.question-form');
             const endedMessage = document.createElement('div');
             endedMessage.className = 'session-ended-warning';
-            endedMessage.innerHTML = '⚠️ This session has ended. No new questions can be submitted.';
+            endedMessage.setAttribute('role', 'alert');
+            endedMessage.innerHTML = '⚠️ This meeting has ended. No new questions can be submitted.';
             formContainer.insertBefore(endedMessage, form);
         }
 
@@ -68,18 +85,18 @@ async function loadSession() {
         connectWebSocket();
 
         // Load upvoted questions from localStorage
-        const stored = localStorage.getItem(`upvoted_${sessionCode}`);
+        const stored = localStorage.getItem(`upvoted_${meetingCode}`);
         if (stored) {
             upvotedQuestions = new Set(JSON.parse(stored));
         }
     } catch (error) {
-        alert('Failed to load session');
+        alert('Failed to load meeting');
     }
 }
 
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/${sessionCode}`;
+    const wsUrl = `${protocol}//${window.location.host}/ws/${meetingCode}`;
 
     ws = new WebSocket(wsUrl);
 
@@ -100,21 +117,21 @@ function connectWebSocket() {
 
 function handleWebSocketMessage(message) {
     if (message.type === 'new_question') {
-        // Add new question to session data
-        sessionData.questions.push(message.question);
+        // Add new question to meeting data
+        meetingData.questions.push(message.question);
         renderQuestions();
     } else if (message.type === 'upvote' || message.type === 'vote_update') {
         // Update vote count
-        const question = sessionData.questions.find(q => q.id === message.question_id);
+        const question = meetingData.questions.find(q => q.id === message.question_id);
         if (question) {
             question.upvotes = message.upvotes;
             renderQuestions();
         }
     } else if (message.type === 'answer') {
-        // Update answer status
-        const question = sessionData.questions.find(q => q.id === message.question_id);
+        // Update answer status (v2 uses is_answered_in_class)
+        const question = meetingData.questions.find(q => q.id === message.question_id);
         if (question) {
-            question.is_answered = message.is_answered;
+            question.is_answered_in_class = message.is_answered_in_class || message.is_answered;
             renderQuestions();
         }
     }
@@ -122,7 +139,7 @@ function handleWebSocketMessage(message) {
 
 function renderQuestions() {
     const questionsList = document.getElementById('questions-list');
-    const questions = sessionData.questions || [];
+    const questions = meetingData.questions || [];
 
     // Update count
     document.getElementById('question-count').textContent =
@@ -130,8 +147,8 @@ function renderQuestions() {
 
     if (questions.length === 0) {
         questionsList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">💭</div>
+            <div class="empty-state" role="status">
+                <div class="empty-state-icon" aria-hidden="true">💭</div>
                 <div class="empty-state-text">No questions yet. Be the first to ask!</div>
             </div>
         `;
@@ -148,42 +165,46 @@ function renderQuestions() {
 
     questionsList.innerHTML = sortedQuestions.map(q => {
         const createdTime = new Date(q.created_at).toLocaleTimeString();
-        const answeredClass = q.is_answered ? 'answered' : '';
+        const isAnswered = q.is_answered_in_class || q.is_answered || false;
+        const answeredClass = isAnswered ? 'answered' : '';
         const hasUpvoted = upvotedQuestions.has(q.id);
         const upvotedClass = hasUpvoted ? 'upvoted' : '';
         const questionNumber = q.question_number || '?';
+        const voteLabel = hasUpvoted ? 'Remove upvote' : 'Upvote question';
 
         return `
-            <div class="question-card ${answeredClass}">
+            <article class="question-card ${answeredClass}" role="article">
                 <div class="question-header">
-                    <div class="question-badge">Q${questionNumber}</div>
+                    <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}</div>
                     <div class="question-content">
                         <div class="question-text">${escapeHtml(q.text)}</div>
                         <div class="question-meta">
-                            Asked at ${createdTime}
-                            ${q.is_answered ? '• <strong style="color: var(--success-color);">Answered ✓</strong>' : ''}
+                            <time datetime="${q.created_at}">Asked at ${createdTime}</time>
+                            ${isAnswered ? '• <strong style="color: var(--success-color);">Answered ✓</strong>' : ''}
                         </div>
                     </div>
                     <div class="question-actions">
                         <button class="upvote-btn ${upvotedClass}"
                                 onclick="toggleVote(${q.id})"
-                                ${!sessionData.is_active ? 'disabled' : ''}>
-                            <span class="upvote-icon">⬆️</span>
-                            <span class="upvote-count">${q.upvotes}</span>
+                                aria-label="${voteLabel}"
+                                aria-pressed="${hasUpvoted}"
+                                ${!meetingData.is_active ? 'disabled aria-disabled="true"' : ''}>
+                            <span class="upvote-icon" aria-hidden="true">⬆️</span>
+                            <span class="upvote-count" aria-label="${q.upvotes} upvotes">${q.upvotes}</span>
                         </button>
                     </div>
                 </div>
-            </div>
+            </article>
         `;
     }).join('');
 }
 
 async function toggleVote(questionId) {
     const hasVoted = upvotedQuestions.has(questionId);
-    const action = hasVoted ? 'remove' : 'add';
 
     try {
-        const response = await fetch(`/api/questions/${questionId}/vote?action=${action}`, {
+        // v2 API: toggle vote with student_id query param
+        const response = await fetch(`/api/questions/${questionId}/vote?student_id=${studentId}`, {
             method: 'POST'
         });
 
@@ -191,17 +212,24 @@ async function toggleVote(questionId) {
             throw new Error('Failed to update vote');
         }
 
-        // Update local storage
-        if (hasVoted) {
+        const data = await response.json();
+
+        // Update local storage based on server response
+        if (data.action === 'removed') {
             upvotedQuestions.delete(questionId);
             showNotification('Vote removed', 'success');
         } else {
             upvotedQuestions.add(questionId);
             showNotification('Question upvoted!', 'success');
         }
-        localStorage.setItem(`upvoted_${sessionCode}`, JSON.stringify([...upvotedQuestions]));
+        localStorage.setItem(`upvoted_${meetingCode}`, JSON.stringify([...upvotedQuestions]));
 
-        // WebSocket will handle the UI update
+        // Update UI with new count from server
+        const question = meetingData.questions.find(q => q.id === questionId);
+        if (question) {
+            question.upvotes = data.upvotes;
+            renderQuestions();
+        }
     } catch (error) {
         showNotification('Failed to update vote', 'error');
     }
@@ -210,8 +238,8 @@ async function toggleVote(questionId) {
 document.getElementById('question-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    if (!sessionData.is_active) {
-        showNotification('This session has ended', 'error');
+    if (!meetingData.is_active) {
+        showNotification('This meeting has ended', 'error');
         return;
     }
 
@@ -223,8 +251,12 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
         return;
     }
 
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    showButtonLoading(submitBtn);
+
     try {
-        const response = await fetch(`/api/sessions/${sessionCode}/questions`, {
+        // v2 API: POST to /api/meetings/{code}/questions
+        const response = await fetch(`/api/meetings/${meetingCode}/questions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -242,6 +274,8 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
         // WebSocket will handle adding the question to the UI
     } catch (error) {
         showNotification('Failed to submit question', 'error');
+    } finally {
+        hideButtonLoading(submitBtn);
     }
 });
 
