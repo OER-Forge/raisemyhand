@@ -11,7 +11,9 @@ from alembic import context
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Import models for autogenerate support
-from models import Base, Session, Question, APIKey
+# V2 models (new hierarchical schema)
+from models_v2 import Base, Instructor, Class, ClassMeeting, Answer, QuestionVote
+from models_v2 import APIKey, Question
 
 # Import settings to use database URL from config
 from dotenv import load_dotenv

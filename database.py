@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base
-import os
+from models_v2 import Base  # V2 schema
+from config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./raisemyhand.db")
+DATABASE_URL = settings.database_url
 
 engine = create_engine(
     DATABASE_URL,
