@@ -205,6 +205,7 @@
         </div>
     </div>
 
+    <script src="/static/js/shared.js"></script>
     <script>
         const errorMsg = document.getElementById('error-message');
         const successMsg = document.getElementById('success-message');
@@ -302,14 +303,25 @@
                     payload.password = password;
                 }
 
+                // Get CSRF token
+                const csrfToken = await getCsrfToken();
+
                 const response = await fetch(`/api/sessions?api_key=${encodeURIComponent(apiKey)}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
                     body: JSON.stringify(payload)
                 });
 
                 if (response.status === 401) {
                     showError('Invalid API key');
+                    return;
+                }
+
+                if (response.status === 403) {
+                    showError('Invalid or expired CSRF token. Please try again.');
                     return;
                 }
 
