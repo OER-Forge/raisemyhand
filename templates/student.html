@@ -16,6 +16,54 @@
             color: white;
         }
 
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-btn {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+        }
+
+        .header-btn:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .header-btn {
+                flex: 0 1 auto;
+            }
+        }
+
         .session-info {
             background: var(--card-bg);
             padding: 20px;
@@ -46,8 +94,15 @@
 <body>
     <header>
         <div class="container">
-            <h1>✋ RaiseMyHand</h1>
-            <p class="subtitle">Submit Questions</p>
+            <div class="header-content">
+                <div>
+                    <h1>✋ RaiseMyHand</h1>
+                    <p class="subtitle">Submit Questions</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/" class="header-btn">🏠 Home</a>
+                </div>
+            </div>
         </div>
     </header>
 

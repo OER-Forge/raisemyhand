@@ -180,10 +180,10 @@ function renderQuestions() {
                         <div class="question-text">${escapeHtml(q.text)}</div>
                         <div class="question-meta">
                             <time datetime="${q.created_at}">Asked at ${createdTime}</time>
-                            ${isAnswered ? '• <strong style="color: var(--success-color);">Answered ✓</strong>' : ''}
                         </div>
                     </div>
                     <div class="question-actions">
+                        ${isAnswered ? '<span class="answer-badge answered" title="This question was answered in class">✓ Answered</span>' : ''}
                         <button class="upvote-btn ${upvotedClass}"
                                 onclick="toggleVote(${q.id})"
                                 aria-label="${voteLabel}"
