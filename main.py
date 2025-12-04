@@ -29,23 +29,30 @@ from passlib.context import CryptContext
 load_dotenv()
 
 from database import get_db, init_db
-# V2 Models - use Session and APIKey as aliases for compatibility
+# V2 Models
 from models_v2 import (
-    ClassMeeting as Session,  # Alias for backward compat
+    ClassMeeting as Session,  # Alias for backward compat with old endpoints
     Question,
-    APIKey,  # V2 APIKey
+    APIKey,
     Instructor,
     Class,
     Answer,
     QuestionVote
 )
-# Keep v1 schemas for backward compat, but also import v2
-from schemas import (
-    SessionCreate, SessionResponse, QuestionCreate, QuestionResponse,
-    SessionWithQuestions, AdminLogin, Token, SessionPasswordVerify,
-    APIKeyCreate, APIKeyResponse, InstructorAuth
+# V2 Schemas
+from schemas_v2 import (
+    ClassMeetingCreate as SessionCreate,
+    ClassMeetingResponse as SessionResponse,
+    QuestionCreate,
+    QuestionResponse,
+    ClassMeetingWithQuestions as SessionWithQuestions,
+    AdminLogin,
+    Token,
+    SessionPasswordVerify,
+    APIKeyCreate,
+    APIKeyResponse,
+    InstructorAuth
 )
-import schemas_v2
 
 # Import v2 route modules
 from routes_instructor import router as instructor_router
@@ -1097,7 +1104,7 @@ def admin_login(request: Request, login_data: AdminLogin):
 
     # Verify admin credentials
     correct_username = secrets.compare_digest(login_data.username, ADMIN_USERNAME)
-    correct_password = secrets.compare_digest(login_data.password, ADMIN_PASSWORD)
+    correct_password = secrets.compare_digest(login_data.password, ADMIN_PASSWORD or "")
 
     if not (correct_username and correct_password):
         log_security_event(
