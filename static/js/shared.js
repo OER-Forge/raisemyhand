@@ -554,3 +554,14 @@ if (document.readyState === 'loading') {
 } else {
     initHamburgerMenu();
 }
+
+/**
+ * Logout function - clears auth tokens and redirects to login
+ */
+function logout() {
+    console.log('[SHARED] logout() called');
+    clearJwtToken();
+    localStorage.removeItem('instructor_api_key');
+    sessionStorage.removeItem('instructor_api_key');
+    window.location.href = '/instructor-login';
+}
