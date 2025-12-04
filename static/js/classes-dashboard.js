@@ -2,6 +2,7 @@
 
 let allClasses = [];
 let currentEditClassId = null;
+let showArchived = false;
 
 // Check authentication on load
 function checkAuth() {
@@ -24,7 +25,8 @@ function checkAuth() {
 async function loadClasses() {
     try {
         const apiKey = getApiKey();
-        const response = await fetch(`/api/classes?api_key=${apiKey}`);
+        // Always load ALL classes including archived to get accurate stats
+        const response = await fetch(`/api/classes?api_key=${apiKey}&include_archived=true`);
 
         if (response.status === 401) {
             clearApiKey();
@@ -51,11 +53,28 @@ async function loadClasses() {
 // Update statistics
 function updateStats() {
     const activeClasses = allClasses.filter(c => !c.is_archived);
+    const archivedClasses = allClasses.filter(c => c.is_archived);
     const totalMeetings = allClasses.reduce((sum, c) => sum + (c.meeting_count || 0), 0);
 
     document.getElementById('total-classes').textContent = allClasses.length;
     document.getElementById('active-classes').textContent = activeClasses.length;
     document.getElementById('total-meetings').textContent = totalMeetings;
+
+    // Update archived count
+    const archivedCountEl = document.getElementById('archived-classes');
+    if (archivedCountEl) {
+        archivedCountEl.textContent = archivedClasses.length;
+    }
+}
+
+// Toggle archived classes visibility
+function toggleArchivedClasses() {
+    showArchived = !showArchived;
+    const toggleBtn = document.getElementById('toggle-archived-btn');
+    if (toggleBtn) {
+        toggleBtn.textContent = showArchived ? 'Hide Archived' : 'Show Archived';
+    }
+    renderClasses();
 }
 
 // Render classes
@@ -64,23 +83,55 @@ function renderClasses() {
     const emptyState = document.getElementById('empty-state');
 
     const activeClasses = allClasses.filter(c => !c.is_archived);
+    const archivedClasses = allClasses.filter(c => c.is_archived);
+    const displayClasses = showArchived ? allClasses : activeClasses;
 
-    if (activeClasses.length === 0) {
+    if (displayClasses.length === 0) {
         container.style.display = 'none';
         emptyState.style.display = 'block';
+        emptyState.innerHTML = showArchived
+            ? '<p>No classes found (including archived).</p>'
+            : '<p>No active classes. <button onclick="toggleArchivedClasses()" class="btn btn-secondary">Show Archived</button></p>';
         return;
     }
 
     container.style.display = 'grid';
     emptyState.style.display = 'none';
 
-    container.innerHTML = activeClasses.map(cls => `
-        <div class="class-card">
+    // Separate archived classes if showing both
+    let html = '';
+
+    if (showArchived && activeClasses.length > 0) {
+        html += '<div style="grid-column: 1/-1; padding: 20px; background: #e3f2fd; border-radius: 8px; margin-bottom: 20px;">';
+        html += '<h2 style="margin: 0; font-size: 1.5rem;">Active Classes</h2>';
+        html += '</div>';
+        html += renderClassCards(activeClasses, false);
+    }
+
+    if (showArchived && archivedClasses.length > 0) {
+        html += '<div style="grid-column: 1/-1; padding: 20px; background: #fff3e0; border-radius: 8px; margin: 20px 0;">';
+        html += '<h2 style="margin: 0; font-size: 1.5rem;">Archived Classes</h2>';
+        html += '<p style="margin: 5px 0 0 0; color: #666;">These classes are hidden by default. Meetings remain accessible.</p>';
+        html += '</div>';
+        html += renderClassCards(archivedClasses, true);
+    }
+
+    if (!showArchived) {
+        html = renderClassCards(activeClasses, false);
+    }
+
+    container.innerHTML = html;
+}
+
+// Render class cards helper
+function renderClassCards(classes, isArchived) {
+    return classes.map(cls => `
+        <div class="class-card" style="${cls.is_archived ? 'opacity: 0.7; border: 2px solid #ff9800;' : ''}">
             <div class="class-header">
                 <div>
                     <h3 class="class-title">${escapeHtml(cls.name)}</h3>
                     <span class="badge ${cls.is_archived ? 'badge-archived' : 'badge-active'}">
-                        ${cls.is_archived ? 'Archived' : 'Active'}
+                        ${cls.is_archived ? '📦 Archived' : '✅ Active'}
                     </span>
                 </div>
             </div>
@@ -89,6 +140,7 @@ function renderClasses() {
 
             <div class="class-meta">
                 <span>📅 Created ${formatDate(cls.created_at)}</span>
+                ${cls.is_archived ? '<br><span style="color: #ff9800;">⚠️ This class is archived but meetings are still accessible</span>' : ''}
             </div>
 
             <div class="class-stats">
@@ -106,12 +158,18 @@ function renderClasses() {
                 <button onclick="viewClassMeetings(${cls.id})" class="btn btn-primary">
                     View Meetings
                 </button>
-                <button onclick="openEditClassModal(${cls.id})" class="btn btn-secondary">
-                    Edit
-                </button>
-                <button onclick="archiveClass(${cls.id})" class="btn" style="background: #f44336; color: white;">
-                    Archive
-                </button>
+                ${!cls.is_archived ? `
+                    <button onclick="openEditClassModal(${cls.id})" class="btn btn-secondary">
+                        Edit
+                    </button>
+                    <button onclick="archiveClass(${cls.id})" class="btn" style="background: #ff9800; color: white;">
+                        Archive
+                    </button>
+                ` : `
+                    <button onclick="unarchiveClass(${cls.id})" class="btn" style="background: #4caf50; color: white;">
+                        Unarchive
+                    </button>
+                `}
             </div>
         </div>
     `).join('');
@@ -210,7 +268,7 @@ async function saveClass(event) {
 
 // Archive a class
 async function archiveClass(classId) {
-    if (!confirm('Are you sure you want to archive this class? Meetings will remain accessible.')) {
+    if (!confirm('Are you sure you want to archive this class? The class will be hidden but meetings will remain accessible. You can unarchive it later.')) {
         return;
     }
 
@@ -224,11 +282,36 @@ async function archiveClass(classId) {
             throw new Error('Failed to archive class');
         }
 
-        showNotification('Class archived successfully', 'success');
+        showNotification('Class archived successfully. Use "Show Archived" to restore it.', 'success');
         loadClasses(); // Reload to update
     } catch (error) {
         console.error('Error archiving class:', error);
         showNotification('Failed to archive class', 'error');
+    }
+}
+
+// Unarchive a class
+async function unarchiveClass(classId) {
+    if (!confirm('Restore this class from the archive?')) {
+        return;
+    }
+
+    try {
+        const apiKey = getApiKey();
+        const response = await fetch(`/api/classes/${classId}/unarchive?api_key=${apiKey}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to unarchive class');
+        }
+
+        showNotification('Class restored successfully!', 'success');
+        loadClasses(); // Reload to update
+    } catch (error) {
+        console.error('Error unarchiving class:', error);
+        showNotification(error.message || 'Failed to unarchive class', 'error');
     }
 }
 

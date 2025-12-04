@@ -288,9 +288,19 @@
                 <div class="stat-value" id="active-classes">0</div>
             </div>
             <div class="stat-card">
+                <div class="stat-label">Archived Classes</div>
+                <div class="stat-value" id="archived-classes" style="color: #ff9800;">0</div>
+            </div>
+            <div class="stat-card">
                 <div class="stat-label">Total Meetings</div>
                 <div class="stat-value" id="total-meetings">0</div>
             </div>
+        </div>
+
+        <div style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="toggleArchivedClasses()" id="toggle-archived-btn" class="btn btn-secondary">
+                Show Archived
+            </button>
         </div>
 
         <div id="classes-list" class="classes-grid">

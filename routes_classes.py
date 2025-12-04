@@ -185,6 +185,39 @@ def archive_class(
         raise HTTPException(status_code=500, detail="Failed to archive class")
 
 
+@router.post("/api/classes/{class_id}/unarchive", response_model=ClassResponse)
+def unarchive_class(
+    class_id: int,
+    api_key: str,
+    db: DBSession = Depends(get_db)
+):
+    """Unarchive a class (restore from archive)."""
+    key_record = verify_api_key_v2(api_key, db)
+
+    cls = db.query(Class).filter(
+        Class.id == class_id,
+        Class.instructor_id == key_record.instructor_id
+    ).first()
+
+    if not cls:
+        raise HTTPException(status_code=404, detail="Class not found")
+
+    if not cls.is_archived:
+        raise HTTPException(status_code=400, detail="Class is not archived")
+
+    try:
+        cls.is_archived = False
+        cls.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(cls)
+        log_database_operation(logger, "UPDATE", "classes", cls.id, success=True)
+        return cls
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to unarchive class: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to unarchive class")
+
+
 @router.post("/api/classes/{class_id}/meetings", response_model=ClassMeetingResponse, status_code=status.HTTP_201_CREATED)
 def create_meeting(
     class_id: int,
