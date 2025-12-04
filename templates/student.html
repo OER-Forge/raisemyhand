@@ -92,18 +92,24 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
+    <header class="nav-header">
+        <nav class="nav-container" role="navigation" aria-label="Main navigation">
+            <div class="nav-brand">
                 <div>
                     <h1>✋ RaiseMyHand</h1>
-                    <p class="subtitle">Submit Questions</p>
-                </div>
-                <div class="header-actions">
-                    <a href="/" class="header-btn">🏠 Home</a>
+                    <p class="subtitle" aria-label="Current page">Submit Questions</p>
                 </div>
             </div>
-        </div>
+
+            <button id="hamburger-btn" class="hamburger-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+                ☰
+            </button>
+
+            <ul id="nav-menu" class="nav-menu" role="menu" aria-hidden="false">
+                <li role="none"><a href="/" class="nav-link" role="menuitem" aria-label="Home">🏠 Home</a></li>
+            </ul>
+        </nav>
+        <div id="nav-overlay" class="nav-overlay"></div>
     </header>
 
     <div class="container">

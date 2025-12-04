@@ -90,20 +90,26 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div>
+    <header class="nav-header">
+        <nav class="nav-container" role="navigation" aria-label="Main navigation">
+            <div class="nav-brand">
+                <a href="/classes" aria-label="Back to My Classes" style="text-decoration: none; color: white;">
                     <h1>✋ RaiseMyHand</h1>
-                    <p class="subtitle">Instructor Dashboard</p>
-                </div>
-                <div class="header-actions">
-                    <a href="/classes" class="header-btn">📚 My Classes</a>
-                    <a href="/sessions" class="header-btn">📊 All Meetings</a>
-                    <button class="header-btn logout-btn" onclick="logout()">Logout</button>
-                </div>
+                </a>
+                <p class="subtitle" aria-label="Current page">Instructor Dashboard</p>
             </div>
-        </div>
+
+            <button id="hamburger-btn" class="hamburger-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+                ☰
+            </button>
+
+            <ul id="nav-menu" class="nav-menu" role="menu" aria-hidden="false">
+                <li role="none"><a href="/classes" class="nav-link" role="menuitem" aria-label="My Classes">📚 My Classes</a></li>
+                <li role="none"><a href="/sessions" class="nav-link" role="menuitem" aria-label="All Meetings">📊 All Meetings</a></li>
+                <li role="none"><button onclick="logout()" class="nav-link logout-btn" role="menuitem" aria-label="Logout">Logout</button></li>
+            </ul>
+        </nav>
+        <div id="nav-overlay" class="nav-overlay"></div>
     </header>
 
     <div class="container">

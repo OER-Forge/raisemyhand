@@ -404,3 +404,87 @@ function hideLoadingOverlay() {
         overlay.remove();
     }
 }
+
+// ============================================================================
+// Hamburger Menu Navigation
+// ============================================================================
+
+/**
+ * Initialize hamburger menu functionality
+ * Call this on pages that use the navigation
+ */
+function initHamburgerMenu() {
+    const hamburger = document.getElementById('hamburger-btn');
+    const navMenu = document.getElementById('nav-menu');
+    const navOverlay = document.getElementById('nav-overlay');
+
+    if (!hamburger || !navMenu) {
+        return; // Navigation not present on this page
+    }
+
+    // Toggle menu
+    function toggleMenu() {
+        const isOpen = navMenu.classList.contains('open');
+        navMenu.classList.toggle('open');
+        if (navOverlay) {
+            navOverlay.classList.toggle('open');
+        }
+        
+        // Update ARIA attributes
+        hamburger.setAttribute('aria-expanded', !isOpen);
+        navMenu.setAttribute('aria-hidden', isOpen);
+        
+        // Prevent body scroll when menu is open
+        document.body.style.overflow = isOpen ? '' : 'hidden';
+    }
+
+    // Hamburger button click
+    hamburger.addEventListener('click', toggleMenu);
+
+    // Overlay click to close
+    if (navOverlay) {
+        navOverlay.addEventListener('click', toggleMenu);
+    }
+
+    // Close button (the ::before pseudo-element acts as close)
+    navMenu.addEventListener('click', (e) => {
+        if (e.target === navMenu) {
+            toggleMenu();
+        }
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navMenu.classList.contains('open')) {
+            toggleMenu();
+        }
+    });
+
+    // Close menu when clicking nav links
+    const navLinks = navMenu.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (navMenu.classList.contains('open')) {
+                toggleMenu();
+            }
+        });
+    });
+
+    // Close menu on window resize to desktop
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.innerWidth > 768 && navMenu.classList.contains('open')) {
+                toggleMenu();
+            }
+        }, 250);
+    });
+}
+
+// Auto-initialize on DOM load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHamburgerMenu);
+} else {
+    initHamburgerMenu();
+}
