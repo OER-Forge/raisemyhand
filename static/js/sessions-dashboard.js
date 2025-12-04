@@ -2,10 +2,16 @@
 // NOTE: Uses shared.js for authentication utilities
 
 let allMeetings = [];
+let filterClassId = null;
 
 // Check authentication on load
 function checkAuth() {
     const apiKey = getApiKey();
+
+    // Check for class_id filter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    filterClassId = urlParams.get('class_id');
+
     if (!apiKey) {
         const key = prompt('Please enter your API key to view your meetings:');
         if (key) {
@@ -73,15 +79,36 @@ function renderMeetings(filter = 'all') {
 
     let meetingsToShow = allMeetings;
 
+    // Filter by class_id if provided in URL
+    if (filterClassId) {
+        meetingsToShow = meetingsToShow.filter(m => m.class_id === parseInt(filterClassId));
+        // Show class filter info
+        const pageTitle = document.querySelector('header h1');
+        if (pageTitle && !pageTitle.dataset.filtered) {
+            const className = meetingsToShow.length > 0 ? (meetingsToShow[0].class_name || `Class ${filterClassId}`) : `Class ${filterClassId}`;
+            pageTitle.innerHTML = `Meetings for: ${escapeHtml(className)} <a href="/sessions" style="font-size: 0.6em; margin-left: 10px; color: white; text-decoration: underline;">View All</a>`;
+            pageTitle.dataset.filtered = 'true';
+        }
+    }
+
+    // Filter by status
     if (filter === 'active') {
-        meetingsToShow = allMeetings.filter(m => m.is_active);
+        meetingsToShow = meetingsToShow.filter(m => m.is_active);
     } else if (filter === 'ended') {
-        meetingsToShow = allMeetings.filter(m => !m.is_active);
+        meetingsToShow = meetingsToShow.filter(m => !m.is_active);
     }
 
     if (meetingsToShow.length === 0) {
         container.style.display = 'none';
         emptyState.style.display = 'block';
+        if (filterClassId) {
+            emptyState.innerHTML = `
+                <div class="empty-state-icon">📅</div>
+                <h2>No meetings for this class</h2>
+                <p>Create a meeting from the class page.</p>
+                <a href="/classes" class="btn btn-primary">Back to Classes</a>
+            `;
+        }
         return;
     }
 
