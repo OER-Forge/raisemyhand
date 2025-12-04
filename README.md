@@ -170,6 +170,7 @@ Server available at `http://your-server:8000`
 - 🔐 **JWT** - Secure admin authentication
 - 🛡️ **Bcrypt** - Password hashing
 - ⚖️ **SlowAPI** - Rate limiting
+- 📊 **Centralized Logging** - Structured logging with security/database/WebSocket event tracking
 
 ### Frontend
 

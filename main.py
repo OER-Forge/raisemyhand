@@ -599,17 +599,17 @@ async def get_session_stats(request: Request, session_code: str, db: DBSession =
         "created_at": session.created_at.isoformat(),
         "ended_at": session.ended_at.isoformat() if session.ended_at else None,
         "total_questions": len(questions),
-        "answered_questions": sum(1 for q in questions if q.is_answered),
-        "unanswered_questions": sum(1 for q in questions if not q.is_answered),
+        "answered_questions": sum(1 for q in questions if q.is_answered_in_class),
+        "unanswered_questions": sum(1 for q in questions if not q.is_answered_in_class),
         "total_votes": sum(q.upvotes for q in questions),
         "questions_by_votes": [
             {
                 "question_id": q.id,
                 "question_number": q.question_number,
                 "votes": q.upvotes,
-                "answered": q.is_answered,
+                "answered": q.is_answered_in_class,
                 "created_at": q.created_at.isoformat(),
-                "answered_at": q.answered_at.isoformat() if q.answered_at else None
+                "answered_at": None  # v2 model doesn't have answered_at, only reviewed_at
             }
             for q in sorted(questions, key=lambda x: x.upvotes, reverse=True)
         ]
