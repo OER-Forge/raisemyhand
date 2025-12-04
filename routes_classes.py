@@ -1,12 +1,12 @@
 """
 Class and ClassMeeting management routes for v2 API
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import func
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from io import BytesIO, StringIO
 import csv
 import qrcode
@@ -44,18 +44,50 @@ def verify_api_key_v2(api_key: str, db: DBSession) -> APIKeyV2:
     return key_record
 
 
+def get_instructor_from_token_optional(
+    authorization: Optional[str] = Header(None),
+    db: DBSession = Depends(get_db)
+) -> Optional[Instructor]:
+    """Get instructor from JWT token (optional, returns None if no valid token)."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+
+    try:
+        from routes_instructor import verify_instructor_token
+        token = authorization.split(" ")[1]
+        payload = verify_instructor_token(token)
+        instructor_id = int(payload.get("sub"))
+
+        instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
+        if not instructor or not instructor.is_active:
+            return None
+        
+        return instructor
+    except Exception:
+        return None
+
+
 @router.post("/api/classes", response_model=ClassResponse, status_code=status.HTTP_201_CREATED)
 def create_class(
     data: ClassCreate,
-    api_key: str,
+    api_key: Optional[str] = None,
+    instructor: Optional[Instructor] = Depends(get_instructor_from_token_optional),
     db: DBSession = Depends(get_db)
 ):
-    """Create a new class."""
-    key_record = verify_api_key_v2(api_key, db)
+    """Create a new class (supports both JWT token and API key auth)."""
+    # Try JWT token authentication first
+    if instructor:
+        instructor_id = instructor.id
+    elif api_key:
+        # Fallback to API key authentication
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    else:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     try:
         new_class = Class(
-            instructor_id=key_record.instructor_id,
+            instructor_id=instructor_id,
             name=data.name,
             description=data.description,
             created_at=datetime.utcnow(),
@@ -74,14 +106,23 @@ def create_class(
 
 @router.get("/api/classes", response_model=List[ClassResponse])
 def list_classes(
-    api_key: str,
     include_archived: bool = False,
+    api_key: Optional[str] = None,
+    instructor: Optional[Instructor] = Depends(get_instructor_from_token_optional),
     db: DBSession = Depends(get_db)
 ):
-    """List instructor's classes."""
-    key_record = verify_api_key_v2(api_key, db)
+    """List instructor's classes (supports both JWT token and API key auth)."""
+    # Try JWT token authentication first
+    if instructor:
+        instructor_id = instructor.id
+    elif api_key:
+        # Fallback to API key authentication
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    else:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
-    query = db.query(Class).filter(Class.instructor_id == key_record.instructor_id)
+    query = db.query(Class).filter(Class.instructor_id == instructor_id)
 
     if not include_archived:
         query = query.filter(Class.is_archived == False)
@@ -126,15 +167,24 @@ def get_class(
 def update_class(
     class_id: int,
     data: ClassUpdate,
-    api_key: str,
+    api_key: Optional[str] = None,
+    instructor: Optional[Instructor] = Depends(get_instructor_from_token_optional),
     db: DBSession = Depends(get_db)
 ):
-    """Update class information."""
-    key_record = verify_api_key_v2(api_key, db)
+    """Update class information (supports both JWT token and API key auth)."""
+    # Try JWT token authentication first
+    if instructor:
+        instructor_id = instructor.id
+    elif api_key:
+        # Fallback to API key authentication
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    else:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     cls = db.query(Class).filter(
         Class.id == class_id,
-        Class.instructor_id == key_record.instructor_id
+        Class.instructor_id == instructor_id
     ).first()
 
     if not cls:
@@ -160,15 +210,24 @@ def update_class(
 @router.delete("/api/classes/{class_id}", status_code=status.HTTP_204_NO_CONTENT)
 def archive_class(
     class_id: int,
-    api_key: str,
+    api_key: Optional[str] = None,
+    instructor: Optional[Instructor] = Depends(get_instructor_from_token_optional),
     db: DBSession = Depends(get_db)
 ):
-    """Archive a class (soft delete)."""
-    key_record = verify_api_key_v2(api_key, db)
+    """Archive a class (soft delete) - supports both JWT token and API key auth."""
+    # Try JWT token authentication first
+    if instructor:
+        instructor_id = instructor.id
+    elif api_key:
+        # Fallback to API key authentication
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    else:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     cls = db.query(Class).filter(
         Class.id == class_id,
-        Class.instructor_id == key_record.instructor_id
+        Class.instructor_id == instructor_id
     ).first()
 
     if not cls:
@@ -188,15 +247,24 @@ def archive_class(
 @router.post("/api/classes/{class_id}/unarchive", response_model=ClassResponse)
 def unarchive_class(
     class_id: int,
-    api_key: str,
+    api_key: Optional[str] = None,
+    instructor: Optional[Instructor] = Depends(get_instructor_from_token_optional),
     db: DBSession = Depends(get_db)
 ):
-    """Unarchive a class (restore from archive)."""
-    key_record = verify_api_key_v2(api_key, db)
+    """Unarchive a class (restore from archive) - supports both JWT token and API key auth."""
+    # Try JWT token authentication first
+    if instructor:
+        instructor_id = instructor.id
+    elif api_key:
+        # Fallback to API key authentication
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    else:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     cls = db.query(Class).filter(
         Class.id == class_id,
-        Class.instructor_id == key_record.instructor_id
+        Class.instructor_id == instructor_id
     ).first()
 
     if not cls:

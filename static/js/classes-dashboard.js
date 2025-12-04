@@ -6,34 +6,29 @@ let showArchived = false;
 
 // Check authentication on load
 function checkAuth() {
+    console.log('Checking authentication...');
+    const jwtToken = getJwtToken();
     const apiKey = getApiKey();
-    if (!apiKey) {
-        const key = prompt('Please enter your API key to view your classes:');
-        if (key) {
-            setApiKey(key);
-            loadClasses();
-        } else {
-            alert('API key is required to view classes.');
-            window.location.href = '/';
-        }
-    } else {
-        loadClasses();
+    console.log('JWT token:', jwtToken ? jwtToken.substring(0, 20) + '...' : 'None');
+    console.log('API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'None');
+    
+    if (!isAuthenticated()) {
+        console.error('No authentication found');
+        promptForApiKey();
+        return;
     }
+    console.log('Authentication found, loading classes...');
+    loadClasses();
 }
 
-// Load all classes for this API key (v2 API)
+// Load all classes for authenticated user (v2 API)
 async function loadClasses() {
     try {
-        const apiKey = getApiKey();
         // Always load ALL classes including archived to get accurate stats
-        const response = await fetch(`/api/classes?api_key=${apiKey}&include_archived=true`);
+        const response = await authenticatedFetch('/api/classes?include_archived=true');
 
         if (response.status === 401) {
-            clearApiKey();
-            showNotification('Invalid API key. Please log in again.', 'error');
-            setTimeout(() => {
-                checkAuth();
-            }, 2000);
+            handleAuthError();
             return;
         }
 
@@ -216,7 +211,6 @@ async function saveClass(event) {
     const classId = document.getElementById('class-id').value;
     const name = document.getElementById('class-name').value.trim();
     const description = document.getElementById('class-description').value.trim();
-    const apiKey = getApiKey();
 
     if (!name) {
         showNotification('Please enter a class name', 'error');
@@ -229,14 +223,14 @@ async function saveClass(event) {
 
         if (classId) {
             // Update existing class
-            response = await fetch(`/api/classes/${classId}?api_key=${apiKey}`, {
+            response = await authenticatedFetch(`/api/classes/${classId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
         } else {
             // Create new class
-            response = await fetch(`/api/classes?api_key=${apiKey}`, {
+            response = await authenticatedFetch('/api/classes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -244,9 +238,7 @@ async function saveClass(event) {
         }
 
         if (response.status === 401) {
-            clearApiKey();
-            showNotification('Invalid API key', 'error');
-            setTimeout(() => window.location.href = '/instructor-login', 2000);
+            handleAuthError();
             return;
         }
 
@@ -273,10 +265,14 @@ async function archiveClass(classId) {
     }
 
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/classes/${classId}?api_key=${apiKey}`, {
+        const response = await authenticatedFetch(`/api/classes/${classId}`, {
             method: 'DELETE'
         });
+
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
 
         if (!response.ok) {
             throw new Error('Failed to archive class');
@@ -297,10 +293,14 @@ async function unarchiveClass(classId) {
     }
 
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/classes/${classId}/unarchive?api_key=${apiKey}`, {
+        const response = await authenticatedFetch(`/api/classes/${classId}/unarchive`, {
             method: 'POST'
         });
+
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
 
         if (!response.ok) {
             const error = await response.json();

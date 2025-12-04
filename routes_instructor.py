@@ -106,15 +106,25 @@ def register_instructor(data: InstructorRegister, db: DBSession = Depends(get_db
 
 @router.post("/login", response_model=Token)
 def login_instructor(data: InstructorLogin, db: DBSession = Depends(get_db)):
-    """Login with username and password."""
+    """Login with username/email and password."""
+    # Try to find instructor by username first, then by email
     instructor = db.query(Instructor).filter(Instructor.username == data.username).first()
+    
+    if not instructor:
+        # Try email if username doesn't match
+        instructor = db.query(Instructor).filter(Instructor.email == data.username).first()
 
-    if not instructor or not pwd_context.verify(data.password, instructor.password_hash):
+    # Check if instructor found and password matches
+    if not instructor:
+        log_security_event(logger, "LOGIN_FAILED", f"No instructor found for: {data.username}", severity="warning")
+        raise HTTPException(status_code=401, detail="Incorrect username/email or password")
+    
+    if not pwd_context.verify(data.password, instructor.password_hash):
         log_security_event(logger, "LOGIN_FAILED", f"Failed login attempt for: {data.username}", severity="warning")
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
+        raise HTTPException(status_code=401, detail="Incorrect username/email or password")
 
     if not instructor.is_active:
-        log_security_event(logger, "LOGIN_FAILED", f"Inactive account login attempt: {data.username}", severity="warning")
+        log_security_event(logger, "LOGIN_FAILED", f"Inactive account login attempt: {instructor.username}", severity="warning")
         raise HTTPException(status_code=401, detail="Account is inactive")
 
     # Update last_login
@@ -123,7 +133,7 @@ def login_instructor(data: InstructorLogin, db: DBSession = Depends(get_db)):
 
     # Create token
     access_token = create_instructor_token(instructor.id, instructor.username)
-    log_security_event(logger, "LOGIN_SUCCESS", f"Instructor logged in: {data.username}", severity="info")
+    log_security_event(logger, "LOGIN_SUCCESS", f"Instructor logged in: {instructor.username}", severity="info")
 
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -140,11 +150,13 @@ def update_profile(
     instructor: Instructor = Depends(get_current_instructor),
     db: DBSession = Depends(get_db)
 ):
-    """Update instructor profile."""
+    """Update instructor profile (email, display name, password)."""
     try:
+        # Update display name
         if data.display_name is not None:
             instructor.display_name = data.display_name
 
+        # Update email
         if data.email is not None:
             # Check if email is already taken by another instructor
             existing = db.query(Instructor).filter(
@@ -154,6 +166,24 @@ def update_profile(
             if existing:
                 raise HTTPException(status_code=400, detail="Email already in use")
             instructor.email = data.email
+
+        # Update password
+        if data.new_password is not None:
+            # Verify current password
+            if not data.current_password:
+                raise HTTPException(status_code=400, detail="Current password required to change password")
+            
+            if not pwd_context.verify(data.current_password, instructor.password_hash):
+                log_security_event(logger, "PASSWORD_CHANGE_FAILED", f"Invalid current password for: {instructor.username}", severity="warning")
+                raise HTTPException(status_code=401, detail="Current password is incorrect")
+            
+            # Verify new password is different
+            if pwd_context.verify(data.new_password, instructor.password_hash):
+                raise HTTPException(status_code=400, detail="New password must be different from current password")
+            
+            # Update password
+            instructor.password_hash = pwd_context.hash(data.new_password)
+            log_security_event(logger, "PASSWORD_CHANGED", f"Password changed for: {instructor.username}", severity="info")
 
         db.commit()
         db.refresh(instructor)

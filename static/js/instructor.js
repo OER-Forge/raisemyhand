@@ -23,9 +23,9 @@ async function loadSession() {
     try {
         await loadConfig(); // Load config first
 
-        const apiKey = getApiKey();
-        if (!apiKey) {
-            console.error('No API key found');
+        // Check if user is authenticated (JWT token or API key)
+        if (!isAuthenticated()) {
+            console.error('No authentication found');
             promptForApiKey();
             return;
         }
@@ -34,7 +34,7 @@ async function loadSession() {
         const response = await authenticatedFetch(`/api/meetings/${instructorCode}`);
 
         if (response.status === 401) {
-            console.error('Authentication failed - invalid API key');
+            console.error('Authentication failed');
             handleAuthError();
             return;
         }

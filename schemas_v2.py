@@ -29,6 +29,8 @@ class InstructorUpdate(BaseModel):
     """Update instructor profile."""
     display_name: Optional[str] = Field(None, max_length=100)
     email: Optional[EmailStr] = None
+    current_password: Optional[str] = None  # Required if changing password
+    new_password: Optional[str] = Field(None, min_length=8, max_length=100)  # New password
 
 
 class InstructorResponse(BaseModel):

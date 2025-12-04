@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - RaiseMyHand</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .register-container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .register-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3a3;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .btn-width-full {
+            width: 100%;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link a:hover {
+            color: var(--primary-color);
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .loader.show {
+            display: block;
+        }
+
+        .loader::after {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            animation: pulse 1s infinite;
+            margin-left: 5px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .password-requirements {
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .requirement {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .requirement::before {
+            content: '○';
+            margin-right: 8px;
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+
+        .requirement.met::before {
+            content: '✓';
+            color: var(--success-color, #4caf50);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>✋ RaiseMyHand</h1>
+            <p class="subtitle">Instructor Registration</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="register-container">
+            <div class="register-header">
+                <h2>👨‍🏫 Create Your Account</h2>
+                <p>Register to start using RaiseMyHand</p>
+            </div>
+
+            <div class="error-message" id="error-message"></div>
+            <div class="success-message" id="success-message"></div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Choose a username"
+                        required
+                        minlength="3"
+                        maxlength="50"
+                        pattern="^[a-zA-Z0-9_-]+$"
+                        autocomplete="username"
+                    >
+                    <p class="form-hint">3-50 characters, letters, numbers, hyphens, underscores only</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address (Optional)</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="your.email@example.com"
+                        autocomplete="email"
+                    >
+                    <p class="form-hint">Used for notifications and account recovery</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="display-name">Display Name (Optional)</label>
+                    <input
+                        type="text"
+                        id="display-name"
+                        name="display_name"
+                        placeholder="Dr. Jane Smith"
+                        maxlength="100"
+                    >
+                    <p class="form-hint">How you'll appear to students</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Create a strong password"
+                        required
+                        minlength="8"
+                        maxlength="100"
+                        autocomplete="new-password"
+                    >
+                    <div class="password-requirements" id="password-requirements">
+                        <div class="requirement" id="req-length">At least 8 characters</div>
+                        <div class="requirement" id="req-uppercase">One uppercase letter</div>
+                        <div class="requirement" id="req-lowercase">One lowercase letter</div>
+                        <div class="requirement" id="req-number">One number</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password-confirm">Confirm Password</label>
+                    <input
+                        type="password"
+                        id="password-confirm"
+                        name="password_confirm"
+                        placeholder="Confirm your password"
+                        required
+                        autocomplete="new-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-width-full" id="register-btn">Create Account</button>
+                <div class="loader" id="loader">Registering...</div>
+            </form>
+
+            <div class="login-link">
+                Already have an account? <a href="/instructor-login">Login here</a>
+            </div>
+
+            <div class="back-link">
+                <a href="/">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/shared.js"></script>
+    <script>
+        const form = document.getElementById('register-form');
+        const errorMsg = document.getElementById('error-message');
+        const successMsg = document.getElementById('success-message');
+        const loader = document.getElementById('loader');
+        const registerBtn = document.getElementById('register-btn');
+        const passwordInput = document.getElementById('password');
+
+        // Password requirements checker
+        const requirements = {
+            length: document.getElementById('req-length'),
+            uppercase: document.getElementById('req-uppercase'),
+            lowercase: document.getElementById('req-lowercase'),
+            number: document.getElementById('req-number')
+        };
+
+        function checkPasswordRequirements(password) {
+            const checks = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password)
+            };
+
+            Object.keys(checks).forEach(key => {
+                if (checks[key]) {
+                    requirements[key].classList.add('met');
+                } else {
+                    requirements[key].classList.remove('met');
+                }
+            });
+
+            return Object.values(checks).every(check => check);
+        }
+
+        passwordInput.addEventListener('input', (e) => {
+            checkPasswordRequirements(e.target.value);
+        });
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            successMsg.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+        }
+
+        function showLoader(show) {
+            if (show) {
+                loader.classList.add('show');
+                registerBtn.disabled = true;
+            } else {
+                loader.classList.remove('show');
+                registerBtn.disabled = false;
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim() || null;
+            const displayName = document.getElementById('display-name').value.trim() || null;
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password-confirm').value;
+
+            // Validation
+            if (!username) {
+                showError('Username is required');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+                showError('Username can only contain letters, numbers, hyphens, and underscores');
+                return;
+            }
+
+            if (username.length < 3 || username.length > 50) {
+                showError('Username must be between 3 and 50 characters');
+                return;
+            }
+
+            if (!password) {
+                showError('Password is required');
+                return;
+            }
+
+            if (password.length < 8) {
+                showError('Password must be at least 8 characters');
+                return;
+            }
+
+            if (!checkPasswordRequirements(password)) {
+                showError('Password does not meet all requirements');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            if (email && !email.includes('@')) {
+                showError('Please enter a valid email address');
+                return;
+            }
+
+            try {
+                showLoader(true);
+
+                const response = await fetch('/api/instructors/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        display_name: displayName,
+                        password
+                    })
+                });
+
+                if (response.status === 400) {
+                    const error = await response.json();
+                    showError(error.detail || 'Registration failed');
+                    return;
+                }
+
+                if (!response.ok) {
+                    showError('Registration failed. Please try again.');
+                    return;
+                }
+
+                const data = await response.json();
+                
+                // Now login the user
+                const loginResponse = await fetch('/api/instructors/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                });
+
+                if (!loginResponse.ok) {
+                    showSuccess('Account created! Please log in with your credentials.');
+                    setTimeout(() => {
+                        window.location.href = '/instructor-login';
+                    }, 2000);
+                    return;
+                }
+
+                const tokenData = await loginResponse.json();
+                
+                // Store token
+                localStorage.setItem('instructor_token', tokenData.access_token);
+                showSuccess('Account created and logged in! Redirecting...');
+                
+                // Redirect to classes page
+                setTimeout(() => {
+                    window.location.href = '/classes';
+                }, 1500);
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('Registration failed. Please try again.');
+            } finally {
+                showLoader(false);
+            }
+        });
+
+        // Add breadcrumb navigation
+        addBreadcrumbs([
+            { label: 'Home', href: '/' },
+            { label: 'Register', href: '/register' }
+        ]);
+    </script>
+</body>
+</html>

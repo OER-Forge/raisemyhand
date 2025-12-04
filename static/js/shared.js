@@ -4,6 +4,57 @@
  */
 
 // ============================================================================
+// JWT Token Management (for Instructor Web UI)
+// ============================================================================
+
+/**
+ * Get JWT token from localStorage
+ * @returns {string|null} The JWT token or null if not found
+ */
+function getJwtToken() {
+    return localStorage.getItem('instructor_token');
+}
+
+/**
+ * Set JWT token in localStorage
+ * @param {string} token - The JWT token to store
+ */
+function setJwtToken(token) {
+    localStorage.setItem('instructor_token', token);
+}
+
+/**
+ * Clear JWT token from storage
+ */
+function clearJwtToken() {
+    localStorage.removeItem('instructor_token');
+}
+
+/**
+ * Check if user has valid authentication (either JWT token or API key)
+ * @returns {boolean} True if authenticated
+ */
+function isAuthenticated() {
+    return getJwtToken() !== null || getApiKey() !== null;
+}
+
+/**
+ * Get appropriate authorization headers based on available authentication
+ * @returns {Object} Headers object with Authorization bearer token
+ */
+function getAuthHeaders() {
+    const jwtToken = getJwtToken();
+    const apiKey = getApiKey();
+    
+    if (jwtToken) {
+        return { 'Authorization': `Bearer ${jwtToken}` };
+    } else if (apiKey) {
+        return { 'Authorization': `Bearer ${apiKey}` };
+    }
+    return {};
+}
+
+// ============================================================================
 // API Key Management (Secure)
 // ============================================================================
 
@@ -74,20 +125,6 @@ function clearCsrfToken() {
 }
 
 /**
- * Get authorization headers with API key
- * @returns {Object} Headers object with Authorization bearer token
- */
-function getAuthHeaders() {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        return {};
-    }
-    return {
-        'Authorization': `Bearer ${apiKey}`
-    };
-}
-
-/**
  * Make authenticated fetch request with proper headers (including CSRF for POST/PUT/DELETE)
  * @param {string} url - The URL to fetch
  * @param {Object} options - Fetch options
@@ -133,23 +170,45 @@ async function authenticatedFetch(url, options = {}) {
  * Handle authentication errors
  */
 function handleAuthError() {
-    alert('Invalid or expired API key. Please enter a valid API key.');
-    clearApiKey();
-    promptForApiKey();
+    const hasJwtToken = getJwtToken() !== null;
+    const hasApiKey = getApiKey() !== null;
+    
+    if (hasJwtToken) {
+        // JWT token expired or invalid - redirect to login
+        clearJwtToken();
+        alert('Your session has expired. Please log in again.');
+        window.location.href = '/instructor-login';
+    } else if (hasApiKey) {
+        // API key invalid - prompt for new one
+        alert('Invalid or expired API key. Please enter a valid API key.');
+        clearApiKey();
+        promptForApiKey();
+    } else {
+        // No authentication - prompt for API key (fallback)
+        promptForApiKey();
+    }
 }
 
 /**
- * Prompt user for API key
+ * Prompt user for API key (fallback authentication method)
  */
 function promptForApiKey() {
-    const apiKey = prompt('Please enter your instructor API key:');
-    if (apiKey) {
-        setApiKey(apiKey);
-        // Reload the page to retry with new key
-        window.location.reload();
+    const choice = confirm('Would you like to log in with your account (recommended) or use an API key?\n\nClick OK for account login, Cancel for API key.');
+    
+    if (choice) {
+        // Redirect to login page
+        window.location.href = '/instructor-login';
     } else {
-        alert('API key is required to access instructor features.');
-        window.location.href = '/';
+        // Prompt for API key
+        const apiKey = prompt('Please enter your instructor API key:');
+        if (apiKey) {
+            setApiKey(apiKey);
+            // Reload the page to retry with new key
+            window.location.reload();
+        } else {
+            alert('Authentication is required to access instructor features.');
+            window.location.href = '/';
+        }
     }
 }
 

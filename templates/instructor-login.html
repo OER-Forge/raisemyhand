@@ -133,16 +133,16 @@
             <!-- Password Login Tab -->
             <div id="password-tab" class="tab-content active">
                 <div class="help-text">
-                    Login with your username and password to access your profile and manage your account.
+                    Login with your username or email and password to access your profile and manage your account.
                 </div>
 
                 <form id="password-form">
                     <div class="form-group">
-                        <label for="username">Username</label>
+                        <label for="login">Username or Email</label>
                         <input
                             type="text"
-                            id="username"
-                            placeholder="Your username"
+                            id="login"
+                            placeholder="Enter your username or email"
                             required
                             autocomplete="username"
                         >
@@ -161,7 +161,7 @@
                 </form>
 
                 <div class="back-link" style="margin-top: 15px; text-align: center; font-size: 0.9rem;">
-                    <p>Don't have an account? Contact your administrator to create one.</p>
+                    <p>Don't have an account? <a href="/register" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">Register here</a></p>
                 </div>
             </div>
 
@@ -238,6 +238,11 @@
             <div class="back-link">
                 <a href="/">← Back to Home</a>
             </div>
+
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">Don't have an account yet?</p>
+                <a href="/register" class="btn btn-primary" style="text-decoration: none; display: inline-block; padding: 10px 20px;">Create Account</a>
+            </div>
         </div>
     </div>
 
@@ -287,11 +292,11 @@
             e.preventDefault();
             hideMessages();
 
-            const username = document.getElementById('username').value.trim();
+            const username = document.getElementById('login').value.trim();
             const password = document.getElementById('password').value;
 
             if (!username || !password) {
-                showError('Please enter your username and password');
+                showError('Please enter your username/email and password');
                 return;
             }
 
@@ -309,13 +314,16 @@
                 }
 
                 const data = await response.json();
+                console.log('Login successful, token:', data.access_token.substring(0, 20) + '...');
                 
                 // Store the JWT token
                 localStorage.setItem('instructor_token', data.access_token);
+                console.log('Token stored in localStorage');
                 showSuccess('Login successful! Redirecting...');
                 
                 // Redirect to classes page
                 setTimeout(() => {
+                    console.log('Redirecting to /classes');
                     window.location.href = '/classes';
                 }, 1500);
             } catch (error) {

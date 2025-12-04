@@ -715,6 +715,12 @@ async def instructor_login_view(request: Request):
     return templates.TemplateResponse("instructor-login.html", {"request": request})
 
 
+@app.get("/register", response_class=HTMLResponse)
+async def register_view(request: Request):
+    """Instructor registration page."""
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
 @app.get("/instructor", response_class=HTMLResponse)
 async def instructor_view(request: Request):
     """Instructor dashboard (authentication handled by frontend JavaScript)."""
