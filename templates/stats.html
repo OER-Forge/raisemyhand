@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <style>
         .stats-container {
-            max-width: 900px;
+            max-width: 1400px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
@@ -46,11 +46,65 @@
             color: #721c24;
         }
 
+        /* Two-column layout for QR and stats */
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .qr-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .qr-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .qr-section img {
+            width: 100%;
+            max-width: 280px;
+            height: auto;
+            border: 4px solid #3498db;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+            margin-bottom: 1rem;
+        }
+
+        .qr-instruction {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .stats-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
         }
 
         .stat-card {
@@ -80,7 +134,6 @@
             border-radius: 12px;
             padding: 2rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
         }
 
         .chart-title {
@@ -192,37 +245,6 @@
             background: #f8f9fa;
             border-radius: 8px;
         }
-
-        .qr-container {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .qr-container img {
-            max-width: 250px;
-            height: auto;
-            border: 4px solid #3498db;
-            border-radius: 8px;
-            padding: 10px;
-            background: white;
-        }
-
-        .qr-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 1rem;
-        }
-
-        .qr-instruction {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-        }
     </style>
 </head>
 <body>
@@ -240,35 +262,43 @@
         <div id="error" class="error-message" style="display: none;"></div>
 
         <div id="stats-content" style="display: none;">
-            <!-- QR Code Section -->
-            <div class="qr-container">
-                <div class="qr-title">📱 Scan to Join Session</div>
-                <img id="qr-code" alt="Session QR Code" style="display: none;">
-                <div class="qr-instruction">Students can scan this code to join and ask questions</div>
-            </div>
+            <!-- Main two-column layout: QR on left, stats on right -->
+            <div class="main-content">
+                <!-- QR Code Section (Sticky) -->
+                <div class="qr-section">
+                    <div class="qr-title">📱 Scan to Join</div>
+                    <img id="qr-code" alt="Session QR Code" style="display: none;">
+                    <div class="qr-instruction">Students can scan this code to join and ask questions</div>
+                </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="total-questions">0</div>
-                    <div class="stat-label">Total Questions</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="answered-questions" style="color: #27ae60;">0</div>
-                    <div class="stat-label">Answered</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="unanswered-questions" style="color: #f39c12;">0</div>
-                    <div class="stat-label">Pending</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="total-votes" style="color: #e74c3c;">0</div>
-                    <div class="stat-label">Total Votes</div>
-                </div>
-            </div>
+                <!-- Stats Section -->
+                <div class="stats-section">
+                    <!-- Summary Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-questions">0</div>
+                            <div class="stat-label">Total Questions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="answered-questions" style="color: #27ae60;">0</div>
+                            <div class="stat-label">Answered</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="unanswered-questions" style="color: #f39c12;">0</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-votes" style="color: #e74c3c;">0</div>
+                            <div class="stat-label">Total Votes</div>
+                        </div>
+                    </div>
 
-            <div class="chart-container">
-                <div class="chart-title">Questions by Vote Count</div>
-                <div id="questions-chart"></div>
+                    <!-- Questions Chart -->
+                    <div class="chart-container">
+                        <div class="chart-title">Questions by Vote Count</div>
+                        <div id="questions-chart"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="refresh-info">
@@ -325,7 +355,7 @@
             const qrImg = document.getElementById('qr-code');
             if (!qrImg.src) {
                 const baseUrl = '{{ base_url }}';
-                qrImg.src = `/api/sessions/${sessionCode}/qr?url_base=${encodeURIComponent(baseUrl)}`;
+                qrImg.src = `/api/meetings/${sessionCode}/qr?url_base=${encodeURIComponent(baseUrl)}`;
                 qrImg.style.display = 'block';
             }
 

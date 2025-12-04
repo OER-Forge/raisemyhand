@@ -130,6 +130,7 @@ class ClassMeetingResponse(BaseModel):
     question_count: Optional[int] = None  # Computed field
     student_url: Optional[str] = None  # Computed field
     instructor_url: Optional[str] = None  # Computed field
+    class_name: Optional[str] = None  # Computed field
 
     class Config:
         from_attributes = True

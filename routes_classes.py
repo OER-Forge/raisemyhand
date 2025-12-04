@@ -383,16 +383,39 @@ def list_all_meetings(
 
     meetings = query.order_by(ClassMeeting.created_at.desc()).all()
 
-    # Add computed fields
+    # Build response with computed fields using dictionaries for Pydantic
+    responses = []
     for meeting in meetings:
-        meeting.question_count = db.query(func.count(Question.id)).filter(
+        question_count = db.query(func.count(Question.id)).filter(
             Question.meeting_id == meeting.id
         ).scalar()
-        meeting.has_password = bool(meeting.password_hash)
-        meeting.student_url = f"{settings.base_url}/student?code={meeting.meeting_code}"
-        meeting.instructor_url = f"{settings.base_url}/instructor?code={meeting.instructor_code}"
+        
+        # Get class name
+        class_obj = db.query(Class).filter(Class.id == meeting.class_id).first()
+        class_name = class_obj.name if class_obj else f"Class {meeting.class_id}"
+        
+        # Create response dict with all fields explicitly
+        response_dict = {
+            'id': meeting.id,
+            'class_id': meeting.class_id,
+            'api_key_id': meeting.api_key_id,
+            'meeting_code': meeting.meeting_code,
+            'instructor_code': meeting.instructor_code,
+            'title': meeting.title,
+            'has_password': bool(meeting.password_hash),
+            'created_at': meeting.created_at,
+            'started_at': meeting.started_at,
+            'ended_at': meeting.ended_at,
+            'is_active': meeting.is_active,
+            'question_count': question_count,
+            'student_url': f"{settings.base_url}/student?code={meeting.meeting_code}",
+            'instructor_url': f"{settings.base_url}/instructor?code={meeting.instructor_code}",
+            'class_name': class_name
+        }
+        response_data = ClassMeetingResponse(**response_dict)
+        responses.append(response_data)
 
-    return meetings
+    return responses
 
 
 @router.get("/api/meetings/{meeting_code}/qr")

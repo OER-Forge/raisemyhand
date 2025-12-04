@@ -91,7 +91,7 @@
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -101,12 +101,16 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
         }
         
         .stat-label {
             color: #666;
             font-size: 14px;
             margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
         }
         
         .stat-value {
@@ -117,24 +121,274 @@
         
         .filters {
             background: white;
-            padding: 15px;
+            padding: 15px 20px;
             border-radius: 8px;
             margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
-            gap: 15px;
+            gap: 20px;
             align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+
+        .search-group input:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 0;
+            border-color: #1976d2;
+        }
+
+        .search-group label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .sort-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sort-group label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .sort-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .sort-group select:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 0;
+            border-color: #1976d2;
+        }
+
+        .date-filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-filter-group label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .date-filter-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .date-filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 13px;
+            color: #333;
+            transition: all 0.2s;
+        }
+
+        .date-filter-btn:hover {
+            background-color: #f0f0f0;
+            border-color: #1976d2;
+        }
+
+        .date-filter-btn.active {
+            background-color: #1976d2;
+            color: white;
+            border-color: #1976d2;
+        }
+
+        .date-filter-btn:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        .clear-search-btn {
+            padding: 4px 8px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .clear-search-btn:hover {
+            background: #e0e0e0;
         }
         
         .filter-group {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
         }
-        
+
         .filter-group label {
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #333;
         }
-        
+
+        .filter-group input[type="radio"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #1976d2;
+        }
+
+        .filter-group input[type="radio"]:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        /* View toggle styles */
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .view-toggle-btn {
+            padding: 10px 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            transition: all 0.2s;
+        }
+
+        .view-toggle-btn.active {
+            background-color: #1976d2;
+            color: white;
+            border-color: #1976d2;
+        }
+
+        .view-toggle-btn:hover {
+            border-color: #1976d2;
+            background-color: #f5f5f5;
+        }
+
+        .view-toggle-btn.active:hover {
+            background-color: #1565c0;
+        }
+
+        .view-toggle-btn:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        /* Class group styles */
+        .class-group {
+            margin-bottom: 24px;
+        }
+
+        .class-group-header {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-left: 4px solid #1976d2;
+            padding: 16px 20px;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .class-group-header:hover {
+            background: linear-gradient(135deg, #bbdefb 0%, #e1bee7 100%);
+        }
+
+        .class-group-header:focus-within {
+            outline: 2px solid #1976d2;
+            outline-offset: -4px;
+        }
+
+        .class-group-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a237e;
+        }
+
+        .class-group-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            transition: transform 0.2s;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #1976d2;
+        }
+
+        .class-group-toggle[aria-expanded="false"] {
+            transform: rotate(-90deg);
+        }
+
+        .class-group-info {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .class-group-content {
+            background: white;
+            border-left: 4px solid #1976d2;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            border-radius: 0 0 4px 4px;
+            padding: 16px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .class-group-content[hidden] {
+            display: none;
+        }
+
         .sessions-grid {
             display: grid;
             gap: 20px;
@@ -373,23 +627,68 @@
                 <div class="stat-value" id="total-questions">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Unanswered</div>
-                <div class="stat-value" id="unanswered-questions">0</div>
+                <div class="stat-label">Avg Questions</div>
+                <div class="stat-value" id="avg-questions">0</div>
             </div>
         </div>
         
-        <div class="filters">
+        <div class="filters" role="group" aria-labelledby="filter-legend">
+            <div class="search-group">
+                <label for="search-sessions" style="font-weight: 600; color: #333;">Search:</label>
+                <input 
+                    type="text" 
+                    id="search-sessions"
+                    placeholder="Find by name or code..."
+                    aria-label="Search sessions by title or meeting code"
+                    onkeyup="filterSessions()"
+                >
+            </div>
+
+            <span id="filter-legend" style="font-weight: 600; color: #333;">Status:</span>
             <div class="filter-group">
                 <label>
-                    <input type="radio" name="status-filter" value="all" checked onchange="filterSessions()"> All
+                    <input type="radio" name="status-filter" value="all" checked onchange="filterSessions()" aria-label="Show all sessions"> 
+                    All
                 </label>
                 <label>
-                    <input type="radio" name="status-filter" value="active" onchange="filterSessions()"> Active Only
+                    <input type="radio" name="status-filter" value="active" onchange="filterSessions()" aria-label="Show only active sessions"> 
+                    🟢 Active
                 </label>
                 <label>
-                    <input type="radio" name="status-filter" value="ended" onchange="filterSessions()"> Ended Only
+                    <input type="radio" name="status-filter" value="ended" onchange="filterSessions()" aria-label="Show only ended sessions"> 
+                    🔴 Ended
                 </label>
             </div>
+
+            <div class="sort-group">
+                <label for="sort-sessions">Sort by:</label>
+                <select id="sort-sessions" onchange="filterSessions()" aria-label="Sort sessions">
+                    <option value="created-newest">📅 Newest First</option>
+                    <option value="created-oldest">📅 Oldest First</option>
+                    <option value="questions-high">❓ Most Questions</option>
+                    <option value="questions-low">❓ Least Questions</option>
+                    <option value="updated-newest">⏱️ Recently Updated</option>
+                </select>
+            </div>
+
+            <div class="date-filter-group">
+                <label>Date Range:</label>
+                <div class="date-filter-buttons">
+                    <button class="date-filter-btn active" data-date-range="all" onclick="setDateRange('all')" aria-label="Show all sessions">All</button>
+                    <button class="date-filter-btn" data-date-range="7" onclick="setDateRange('7')" aria-label="Show sessions from the last 7 days">7 Days</button>
+                    <button class="date-filter-btn" data-date-range="30" onclick="setDateRange('30')" aria-label="Show sessions from the last 30 days">30 Days</button>
+                    <button class="date-filter-btn" data-date-range="90" onclick="setDateRange('90')" aria-label="Show sessions from the last 90 days">90 Days</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="view-toggle" role="group" aria-label="View layout options">
+            <button class="view-toggle-btn active" data-view="flat" onclick="setViewMode('flat')" aria-pressed="true" aria-label="Show sessions as flat list">
+                📋 Flat List
+            </button>
+            <button class="view-toggle-btn" data-view="class" onclick="setViewMode('class')" aria-pressed="false" aria-label="Show sessions grouped by class">
+                📚 By Class
+            </button>
         </div>
         
         <div id="sessions-list" class="sessions-grid">

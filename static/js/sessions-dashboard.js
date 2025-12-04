@@ -3,6 +3,8 @@
 
 let allMeetings = [];
 let filterClassId = null;
+let currentDateRange = 'all';
+let currentViewMode = 'flat';
 
 // Check authentication on load
 function checkAuth() {
@@ -58,22 +60,52 @@ async function loadMeetings() {
 function updateStats() {
     const activeMeetings = allMeetings.filter(m => m.is_active);
     const totalQuestions = allMeetings.reduce((sum, m) => sum + (m.question_count || 0), 0);
-    const unansweredQuestions = 0; // TODO: Add unanswered count to API response
+    const avgQuestions = allMeetings.length > 0 ? Math.round(totalQuestions / allMeetings.length * 10) / 10 : 0;
 
     document.getElementById('total-sessions').textContent = allMeetings.length;
     document.getElementById('active-sessions').textContent = activeMeetings.length;
     document.getElementById('total-questions').textContent = totalQuestions;
-    document.getElementById('unanswered-questions').textContent = unansweredQuestions;
+    document.getElementById('avg-questions').textContent = avgQuestions;
 }
 
 // Filter meetings
 function filterSessions() {
     const filter = document.querySelector('input[name="status-filter"]:checked').value;
-    renderMeetings(filter);
+    const searchTerm = document.getElementById('search-sessions')?.value.toLowerCase() || '';
+    const sortBy = document.getElementById('sort-sessions')?.value || 'created-newest';
+    renderMeetings(filter, searchTerm, sortBy, currentDateRange);
+}
+
+// Set date range filter
+function setDateRange(days) {
+    currentDateRange = days;
+    
+    // Update button styling
+    document.querySelectorAll('.date-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-date-range="${days}"]`).classList.add('active');
+    
+    filterSessions();
+}
+
+// Set view mode (flat or by class)
+function setViewMode(mode) {
+    currentViewMode = mode;
+    
+    // Update button styling and accessibility
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+        const isActive = btn.dataset.view === mode;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive);
+    });
+    
+    // Re-render with new view mode
+    filterSessions();
 }
 
 // Render meetings (v2 API)
-function renderMeetings(filter = 'all') {
+function renderMeetings(filter = 'all', searchTerm = '', sortBy = 'created-newest', dateRange = 'all') {
     const container = document.getElementById('sessions-list');
     const emptyState = document.getElementById('empty-state');
 
@@ -91,11 +123,44 @@ function renderMeetings(filter = 'all') {
         }
     }
 
+    // Filter by date range
+    if (dateRange !== 'all') {
+        const daysAgo = parseInt(dateRange);
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
+        
+        meetingsToShow = meetingsToShow.filter(m => {
+            const meetingDate = new Date(m.created_at);
+            return meetingDate >= cutoffDate;
+        });
+    }
+
+    // Filter by search term (title or meeting code)
+    if (searchTerm) {
+        meetingsToShow = meetingsToShow.filter(m => 
+            m.title.toLowerCase().includes(searchTerm) || 
+            m.meeting_code.toLowerCase().includes(searchTerm)
+        );
+    }
+
     // Filter by status
     if (filter === 'active') {
         meetingsToShow = meetingsToShow.filter(m => m.is_active);
     } else if (filter === 'ended') {
         meetingsToShow = meetingsToShow.filter(m => !m.is_active);
+    }
+
+    // Sort meetings
+    if (sortBy === 'created-newest') {
+        meetingsToShow.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else if (sortBy === 'created-oldest') {
+        meetingsToShow.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    } else if (sortBy === 'questions-high') {
+        meetingsToShow.sort((a, b) => (b.question_count || 0) - (a.question_count || 0));
+    } else if (sortBy === 'questions-low') {
+        meetingsToShow.sort((a, b) => (a.question_count || 0) - (b.question_count || 0));
+    } else if (sortBy === 'updated-newest') {
+        meetingsToShow.sort((a, b) => new Date(b.ended_at || b.created_at) - new Date(a.ended_at || a.created_at));
     }
 
     if (meetingsToShow.length === 0) {
@@ -112,10 +177,91 @@ function renderMeetings(filter = 'all') {
         return;
     }
 
-    container.style.display = 'grid';
+    container.style.display = currentViewMode === 'flat' ? 'grid' : 'block';
     emptyState.style.display = 'none';
 
-    container.innerHTML = meetingsToShow.map(meeting => `
+    // Render based on view mode
+    if (currentViewMode === 'class') {
+        renderByClass(meetingsToShow, container);
+    } else {
+        renderFlat(meetingsToShow, container);
+    }
+}
+
+// Render meetings as flat list
+function renderFlat(meetingsToShow, container) {
+    container.innerHTML = meetingsToShow.map(meeting => renderMeetingCard(meeting)).join('');
+}
+
+// Render meetings grouped by class
+function renderByClass(meetingsToShow, container) {
+    // Group meetings by class
+    const groupedByClass = {};
+    meetingsToShow.forEach(meeting => {
+        const classId = meeting.class_id;
+        if (!groupedByClass[classId]) {
+            groupedByClass[classId] = {
+                class_id: classId,
+                class_name: meeting.class_name || `Class ${classId}`,
+                meetings: []
+            };
+        }
+        groupedByClass[classId].meetings.push(meeting);
+    });
+
+    // Sort classes by name
+    const sortedClasses = Object.values(groupedByClass).sort((a, b) => 
+        a.class_name.localeCompare(b.class_name)
+    );
+
+    // Render class groups
+    let html = '';
+    sortedClasses.forEach(classGroup => {
+        const classId = `class-group-${classGroup.class_id}`;
+        html += `
+            <div class="class-group">
+                <button 
+                    class="class-group-header" 
+                    aria-expanded="true" 
+                    aria-controls="${classId}-content"
+                    onclick="toggleClassGroup(this)"
+                >
+                    <h2 class="class-group-title">
+                        <span class="class-group-toggle" aria-hidden="true">▼</span>
+                        📚 ${escapeHtml(classGroup.class_name)}
+                    </h2>
+                    <div class="class-group-info">
+                        <span>${classGroup.meetings.length} meeting${classGroup.meetings.length !== 1 ? 's' : ''}</span>
+                    </div>
+                </button>
+                <div id="${classId}-content" class="class-group-content" role="region">
+                    ${classGroup.meetings.map(meeting => renderMeetingCard(meeting)).join('')}
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// Toggle class group expansion
+function toggleClassGroup(button) {
+    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', !isExpanded);
+    
+    const contentId = button.getAttribute('aria-controls');
+    const content = document.getElementById(contentId);
+    
+    if (isExpanded) {
+        content.hidden = true;
+    } else {
+        content.hidden = false;
+    }
+}
+
+// Render single meeting card
+function renderMeetingCard(meeting) {
+    return `
         <div class="session-card">
             <div class="session-header">
                 <div>
@@ -160,7 +306,7 @@ function renderMeetings(filter = 'all') {
                 ` : ''}
             </div>
         </div>
-    `).join('');
+    `;
 }
 
 // End a meeting (v2 API)
