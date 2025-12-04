@@ -110,8 +110,8 @@ function renderMeetings(filter = 'all') {
                     <span class="session-stat-value">${meeting.question_count || 0}</span>
                 </div>
                 <div class="session-stat">
-                    <span class="session-stat-label">Class ID</span>
-                    <span class="session-stat-value">${meeting.class_id}</span>
+                    <span class="session-stat-label">Class</span>
+                    <span class="session-stat-value">${meeting.class_name || `Class ${meeting.class_id}`}</span>
                 </div>
                 <div class="session-stat">
                     <span class="session-stat-label">Code</span>
@@ -169,7 +169,7 @@ function logout() {
 }
 
 // Modal functions
-function openCreateSessionModal() {
+async function openCreateSessionModal() {
     console.log('openCreateSessionModal called');
     const modal = document.getElementById('create-session-modal');
     if (!modal) {
@@ -178,10 +178,58 @@ function openCreateSessionModal() {
         return;
     }
     console.log('Modal found, opening...');
+
+    // Load classes for the dropdown
+    await loadClassesForDropdown();
+
     modal.classList.add('active');
     document.getElementById('session-title').value = '';
     document.getElementById('session-password').value = '';
     document.getElementById('session-title').focus();
+}
+
+// Load classes into the dropdown
+async function loadClassesForDropdown() {
+    try {
+        const apiKey = getApiKey();
+        const response = await fetch(`/api/classes?api_key=${apiKey}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to load classes');
+        }
+
+        const classes = await response.json();
+        const select = document.getElementById('session-class');
+
+        // Clear existing options
+        select.innerHTML = '';
+
+        if (classes.length === 0) {
+            select.innerHTML = '<option value="">No classes found - create one first</option>';
+            return;
+        }
+
+        // Add classes to dropdown
+        classes.forEach(cls => {
+            if (!cls.is_archived) {
+                const option = document.createElement('option');
+                option.value = cls.id;
+                option.textContent = cls.name;
+                select.appendChild(option);
+            }
+        });
+
+        // Add "Create new class" option
+        const newClassOption = document.createElement('option');
+        newClassOption.value = 'new';
+        newClassOption.textContent = '+ Create New Class';
+        select.appendChild(newClassOption);
+
+    } catch (error) {
+        console.error('Error loading classes:', error);
+        const select = document.getElementById('session-class');
+        select.innerHTML = '<option value="">Error loading classes</option>';
+    }
 }
 
 function closeCreateSessionModal() {
@@ -193,63 +241,38 @@ function closeCreateSessionModal() {
 async function createSession(event) {
     event.preventDefault();
 
+    const classSelect = document.getElementById('session-class');
+    const selectedClassId = classSelect.value;
     const title = document.getElementById('session-title').value.trim();
     const password = document.getElementById('session-password').value;
     const apiKey = getApiKey();
+
+    if (!selectedClassId) {
+        showNotification('Please select a class', 'error');
+        return;
+    }
 
     if (!title) {
         showNotification('Please enter a session name', 'error');
         return;
     }
 
+    // If user selected "Create new class", redirect to classes page
+    if (selectedClassId === 'new') {
+        if (confirm('You need to create a class first. Redirect to Classes page?')) {
+            window.location.href = '/classes';
+        }
+        return;
+    }
+
     try {
-        // First, get instructor's classes to find default class
-        const classesResponse = await fetch(`/api/classes?api_key=${encodeURIComponent(apiKey)}`);
-
-        if (classesResponse.status === 401) {
-            showNotification('Invalid API key', 'error');
-            clearApiKey();
-            setTimeout(() => window.location.href = '/instructor-login', 2000);
-            return;
-        }
-
-        if (!classesResponse.ok) {
-            showNotification('Failed to verify API key', 'error');
-            return;
-        }
-
-        const classes = await classesResponse.json();
-
-        // Find or create default class
-        let classId;
-        const defaultClass = classes.find(c => c.name === "Default Class");
-
-        if (defaultClass) {
-            classId = defaultClass.id;
-        } else {
-            // Create a new default class
-            const createClassResponse = await fetch(`/api/classes?api_key=${encodeURIComponent(apiKey)}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: "Default Class", description: "Auto-created default class" })
-            });
-
-            if (!createClassResponse.ok) {
-                showNotification('Failed to create class', 'error');
-                return;
-            }
-
-            const newClass = await createClassResponse.json();
-            classId = newClass.id;
-        }
-
-        // Now create the meeting
+        // Create the meeting in the selected class
         const payload = { title: title };
         if (password) {
             payload.password = password;
         }
 
-        const response = await fetch(`/api/classes/${classId}/meetings?api_key=${encodeURIComponent(apiKey)}`, {
+        const response = await fetch(`/api/classes/${selectedClassId}/meetings?api_key=${encodeURIComponent(apiKey)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -257,6 +280,8 @@ async function createSession(event) {
 
         if (response.status === 401) {
             showNotification('Invalid API key', 'error');
+            clearApiKey();
+            setTimeout(() => window.location.href = '/instructor-login', 2000);
             return;
         }
 

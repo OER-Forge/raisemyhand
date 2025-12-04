@@ -733,6 +733,12 @@ async def sessions_dashboard(request: Request):
     return templates.TemplateResponse("sessions.html", {"request": request})
 
 
+@app.get("/classes", response_class=HTMLResponse)
+async def classes_dashboard(request: Request):
+    """Classes dashboard - manage instructor classes."""
+    return templates.TemplateResponse("classes.html", {"request": request})
+
+
 # API Key Management endpoints (admin only)
 @app.post("/api/admin/api-keys", response_model=APIKeyResponse)
 @limiter.limit("10/minute")

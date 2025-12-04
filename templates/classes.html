@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Sessions - RaiseMyHand</title>
+    <title>My Classes - RaiseMyHand</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <style>
         header {
@@ -55,210 +55,138 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
-        .sessions-container {
+        .classes-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background-color: #1976d2;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #1565c0;
-        }
-        
-        .btn-secondary {
-            background-color: #757575;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #616161;
-        }
-        
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-        
+
         .stat-card {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         .stat-label {
             color: #666;
             font-size: 14px;
             margin-bottom: 5px;
         }
-        
+
         .stat-value {
             font-size: 32px;
             font-weight: bold;
             color: #1a237e;
         }
-        
-        .filters {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .filter-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .filter-group label {
-            font-weight: 500;
-        }
-        
-        .sessions-grid {
+
+        .classes-grid {
             display: grid;
             gap: 20px;
         }
-        
-        .session-card {
+
+        .class-card {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 20px;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        
-        .session-card:hover {
+
+        .class-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        
-        .session-header {
+
+        .class-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
             margin-bottom: 15px;
         }
-        
-        .session-title {
+
+        .class-title {
             font-size: 20px;
             font-weight: bold;
             color: #1a237e;
             margin: 0 0 5px 0;
         }
-        
-        .session-meta {
+
+        .class-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .class-meta {
             display: flex;
             gap: 15px;
             color: #666;
             font-size: 14px;
             margin-bottom: 15px;
         }
-        
-        .session-stats {
+
+        .class-stats {
             display: flex;
             gap: 20px;
             margin-bottom: 15px;
         }
-        
-        .session-stat {
+
+        .class-stat {
             display: flex;
             flex-direction: column;
         }
-        
-        .session-stat-label {
+
+        .class-stat-label {
             font-size: 12px;
             color: #666;
         }
-        
-        .session-stat-value {
+
+        .class-stat-value {
             font-size: 18px;
             font-weight: bold;
             color: #1976d2;
         }
-        
-        .session-actions {
+
+        .class-actions {
             display: flex;
             gap: 10px;
             margin-top: 15px;
         }
-        
+
         .badge {
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 500;
         }
-        
+
         .badge-active {
             background-color: #4caf50;
             color: white;
         }
-        
-        .badge-ended {
+
+        .badge-archived {
             background-color: #9e9e9e;
             color: white;
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: #666;
         }
-        
+
         .empty-state-icon {
             font-size: 64px;
             margin-bottom: 20px;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 4px;
-            color: white;
-            z-index: 1000;
-            animation: slideIn 0.3s ease;
-        }
-        
-        .notification.success {
-            background-color: #4caf50;
-        }
-        
-        .notification.error {
-            background-color: #f44336;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
         }
 
         /* Modal styles */
@@ -315,11 +243,9 @@
             box-sizing: border-box;
         }
 
-        .form-group small {
-            display: block;
-            margin-top: 5px;
-            color: #666;
-            font-size: 12px;
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
         }
 
         .modal-actions {
@@ -339,117 +265,88 @@
             <div class="header-content">
                 <div>
                     <h1>✋ RaiseMyHand</h1>
-                    <p class="subtitle">📊 My Sessions</p>
+                    <p class="subtitle">📚 My Classes</p>
                 </div>
                 <div class="header-actions">
-                    <a href="/classes" class="header-btn">My Classes</a>
-                    <button onclick="openCreateSessionModal()" class="header-btn">+ New Session</button>
+                    <a href="/sessions" class="header-btn">My Sessions</a>
+                    <button onclick="openCreateClassModal()" class="header-btn">+ New Class</button>
                     <button onclick="logout()" class="header-btn logout-btn">Logout</button>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="sessions-container">
-        
+    <div class="classes-container">
+
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total Sessions</div>
-                <div class="stat-value" id="total-sessions">0</div>
+                <div class="stat-label">Total Classes</div>
+                <div class="stat-value" id="total-classes">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Active Sessions</div>
-                <div class="stat-value" id="active-sessions">0</div>
+                <div class="stat-label">Active Classes</div>
+                <div class="stat-value" id="active-classes">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total Questions</div>
-                <div class="stat-value" id="total-questions">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Unanswered</div>
-                <div class="stat-value" id="unanswered-questions">0</div>
+                <div class="stat-label">Total Meetings</div>
+                <div class="stat-value" id="total-meetings">0</div>
             </div>
         </div>
-        
-        <div class="filters">
-            <div class="filter-group">
-                <label>
-                    <input type="radio" name="status-filter" value="all" checked onchange="filterSessions()"> All
-                </label>
-                <label>
-                    <input type="radio" name="status-filter" value="active" onchange="filterSessions()"> Active Only
-                </label>
-                <label>
-                    <input type="radio" name="status-filter" value="ended" onchange="filterSessions()"> Ended Only
-                </label>
-            </div>
+
+        <div id="classes-list" class="classes-grid">
+            <!-- Classes will be loaded here -->
         </div>
-        
-        <div id="sessions-list" class="sessions-grid">
-            <!-- Sessions will be loaded here -->
-        </div>
-        
+
         <div id="empty-state" class="empty-state" style="display: none;">
-            <div class="empty-state-icon">📝</div>
-            <h2>No sessions yet</h2>
-            <p>Create your first session to start collecting questions!</p>
-            <button onclick="openCreateSessionModal()" class="btn btn-primary">Create Session</button>
+            <div class="empty-state-icon">📚</div>
+            <h2>No classes yet</h2>
+            <p>Create your first class to organize your meetings!</p>
+            <button onclick="openCreateClassModal()" class="btn btn-primary">Create Class</button>
         </div>
     </div>
 
-    <!-- Create Session Modal -->
-    <div class="modal" id="create-session-modal">
+    <!-- Create/Edit Class Modal -->
+    <div class="modal" id="class-modal">
         <div class="modal-content">
-            <h2>Create New Session</h2>
-            <form id="create-session-form" onsubmit="createSession(event)">
-                <div class="form-group">
-                    <label for="session-class">Class</label>
-                    <select id="session-class" required>
-                        <option value="">Loading classes...</option>
-                    </select>
-                </div>
+            <h2 id="class-modal-title">Create New Class</h2>
+            <form id="class-form" onsubmit="saveClass(event)">
+                <input type="hidden" id="class-id" value="">
 
                 <div class="form-group">
-                    <label for="session-title">Session Name</label>
+                    <label for="class-name">Class Name *</label>
                     <input
                         type="text"
-                        id="session-title"
-                        name="title"
-                        placeholder="e.g., Lecture 5 - Cell Division"
+                        id="class-name"
+                        placeholder="e.g., Biology 101"
                         required
                         maxlength="200"
                     >
                 </div>
 
                 <div class="form-group">
-                    <label for="session-password">
-                        Session Password (optional)
-                    </label>
-                    <input
-                        type="password"
-                        id="session-password"
-                        name="password"
-                        placeholder="Leave blank for no password"
-                        autocomplete="new-password"
-                    >
-                    <small>Students will need this password to join the session</small>
+                    <label for="class-description">Description</label>
+                    <textarea
+                        id="class-description"
+                        placeholder="Optional class description"
+                        maxlength="500"
+                    ></textarea>
                 </div>
 
                 <div class="modal-actions">
-                    <button type="submit" class="btn btn-primary">Create Session</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateSessionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Class</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeClassModal()">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
-    
-    <script src="/static/js/shared.js?v=3"></script>
-    <script src="/static/js/sessions-dashboard.js?v=3"></script>
+
+    <script src="/static/js/shared.js"></script>
+    <script src="/static/js/classes-dashboard.js"></script>
     <script>
         // Add breadcrumb navigation
         addBreadcrumbs([
             { label: 'Home', href: '/' },
-            { label: 'My Sessions', href: '/sessions' }
+            { label: 'My Classes', href: '/classes' }
         ]);
     </script>
 </body>
