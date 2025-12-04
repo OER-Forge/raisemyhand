@@ -739,6 +739,12 @@ async def classes_dashboard(request: Request):
     return templates.TemplateResponse("classes.html", {"request": request})
 
 
+@app.get("/profile", response_class=HTMLResponse)
+async def profile_view(request: Request):
+    """Instructor profile page - edit personal information (authentication handled by frontend)."""
+    return templates.TemplateResponse("profile.html", {"request": request})
+
+
 # API Key Management endpoints (admin only)
 @app.post("/api/admin/api-keys", response_model=APIKeyResponse)
 @limiter.limit("10/minute")

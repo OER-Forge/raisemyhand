@@ -122,15 +122,51 @@
             </div>
 
             <div class="tab-container">
-                <button class="tab active" onclick="switchTab('view')">View Sessions</button>
+                <button class="tab active" onclick="switchTab('password')">Login with Password</button>
+                <button class="tab" onclick="switchTab('view')">View Sessions (API Key)</button>
                 <button class="tab" onclick="switchTab('create')">Create New Session</button>
             </div>
 
             <div class="error-message" id="error-message"></div>
             <div class="success-message" id="success-message"></div>
 
+            <!-- Password Login Tab -->
+            <div id="password-tab" class="tab-content active">
+                <div class="help-text">
+                    Login with your username and password to access your profile and manage your account.
+                </div>
+
+                <form id="password-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            placeholder="Your username"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Your password"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                </form>
+
+                <div class="back-link" style="margin-top: 15px; text-align: center; font-size: 0.9rem;">
+                    <p>Don't have an account? Contact your administrator to create one.</p>
+                </div>
+            </div>
+
             <!-- View Sessions Tab -->
-            <div id="view-tab" class="tab-content active">
+            <div id="view-tab" class="tab-content">
                 <div class="help-text">
                     Enter your API key to view all your sessions. Don't have an API key? Contact your administrator.
                 </div>
@@ -234,14 +270,59 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
-            if (tab === 'view') {
+            if (tab === 'password') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('password-tab').classList.add('active');
+            } else if (tab === 'view') {
+                document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('view-tab').classList.add('active');
             } else {
-                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.querySelectorAll('.tab')[2].classList.add('active');
                 document.getElementById('create-tab').classList.add('active');
             }
         }
+
+        // Password Login Form
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('Please enter your username and password');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/instructors/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showError(error.detail || 'Login failed');
+                    return;
+                }
+
+                const data = await response.json();
+                
+                // Store the JWT token
+                localStorage.setItem('instructor_token', data.access_token);
+                showSuccess('Login successful! Redirecting...');
+                
+                // Redirect to classes page
+                setTimeout(() => {
+                    window.location.href = '/classes';
+                }, 1500);
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Login failed. Please try again.');
+            }
+        });
 
         // View Sessions Form
         document.getElementById('view-form').addEventListener('submit', async (e) => {
