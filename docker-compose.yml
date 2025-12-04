@@ -2,14 +2,14 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
+      - "8004:8004"
     volumes:
       - ./data:/app/data  # Persist database data
       - .:/app  # Mount entire directory for hot reload
     env_file: .env
     secrets:
       - admin_password
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8004 --reload
     restart: unless-stopped
 
 volumes:
