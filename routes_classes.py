@@ -1,17 +1,22 @@
 """
 Class and ClassMeeting management routes for v2 API
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import func
 from datetime import datetime
 from typing import List
+from io import BytesIO, StringIO
+import csv
+import qrcode
 
 from database import get_db
 from models_v2 import Class, ClassMeeting, APIKey as APIKeyV2, Instructor, Question
 from schemas_v2 import (
     ClassCreate, ClassUpdate, ClassResponse, ClassWithMeetings,
-    ClassMeetingCreate, ClassMeetingResponse, ClassMeetingWithQuestions
+    ClassMeetingCreate, ClassMeetingResponse, ClassMeetingWithQuestions,
+    SessionPasswordVerify
 )
 from config import settings
 from logging_config import get_logger, log_database_operation
@@ -355,3 +360,111 @@ def list_all_meetings(
         meeting.instructor_url = f"{settings.base_url}/instructor?code={meeting.instructor_code}"
 
     return meetings
+
+
+@router.get("/api/meetings/{meeting_code}/qr")
+def get_meeting_qr_code(meeting_code: str, url_base: str):
+    """Generate QR code for meeting URL (v2 API)."""
+    url = f"{url_base}/student?code={meeting_code}"
+
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(url)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+
+    return StreamingResponse(buf, media_type="image/png")
+
+
+@router.post("/api/meetings/{meeting_code}/verify-password")
+def verify_meeting_password(
+    meeting_code: str,
+    password_data: SessionPasswordVerify,
+    db: DBSession = Depends(get_db)
+):
+    """Verify meeting password (v2 API)."""
+    meeting = db.query(ClassMeeting).filter(
+        ClassMeeting.meeting_code == meeting_code
+    ).first()
+
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    if not meeting.password_hash:
+        return {"verified": True}
+
+    if pwd_context.verify(password_data.password, meeting.password_hash):
+        return {"verified": True}
+    else:
+        raise HTTPException(status_code=401, detail="Incorrect password")
+
+
+@router.get("/api/meetings/{instructor_code}/report")
+def get_meeting_report(
+    instructor_code: str,
+    format: str = "json",
+    api_key: str = None,
+    db: DBSession = Depends(get_db)
+):
+    """Generate a report for a meeting (v2 API)."""
+    # Verify API key if provided
+    if api_key:
+        verify_api_key_v2(api_key, db)
+
+    meeting = db.query(ClassMeeting).filter(
+        ClassMeeting.instructor_code == instructor_code
+    ).first()
+
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    questions = db.query(Question).filter(
+        Question.meeting_id == meeting.id
+    ).order_by(Question.upvotes.desc()).all()
+
+    if format == "csv":
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Question", "Upvotes", "Answered in Class", "Created At"])
+        for q in questions:
+            writer.writerow([
+                q.text,
+                q.upvotes,
+                "Yes" if q.is_answered_in_class else "No",
+                q.created_at.isoformat()
+            ])
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=meeting_{meeting.meeting_code}_report.csv"}
+        )
+
+    # JSON format (default)
+    return {
+        "meeting": {
+            "title": meeting.title,
+            "meeting_code": meeting.meeting_code,
+            "created_at": meeting.created_at.isoformat(),
+            "ended_at": meeting.ended_at.isoformat() if meeting.ended_at else None,
+            "is_active": meeting.is_active
+        },
+        "questions": [
+            {
+                "text": q.text,
+                "upvotes": q.upvotes,
+                "is_answered_in_class": q.is_answered_in_class,
+                "created_at": q.created_at.isoformat()
+            }
+            for q in questions
+        ],
+        "stats": {
+            "total_questions": len(questions),
+            "answered_questions": sum(1 for q in questions if q.is_answered_in_class),
+            "total_upvotes": sum(q.upvotes for q in questions)
+        }
+    }
