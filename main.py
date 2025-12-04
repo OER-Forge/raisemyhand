@@ -553,7 +553,7 @@ def get_session(session_code: str, db: DBSession = Depends(get_db)):
     """Get a session with all its questions."""
     session = db.query(Session)\
         .options(selectinload(Session.questions))\
-        .filter(Session.session_code == session_code)\
+        .filter(Session.meeting_code == session_code)\
         .first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -563,7 +563,7 @@ def get_session(session_code: str, db: DBSession = Depends(get_db)):
 @app.post("/api/sessions/{session_code}/verify-password")
 def verify_session_password(session_code: str, password_data: SessionPasswordVerify, db: DBSession = Depends(get_db)):
     """Verify session password for protected sessions."""
-    session = db.query(Session).filter(Session.session_code == session_code).first()
+    session = db.query(Session).filter(Session.meeting_code == session_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
@@ -719,7 +719,7 @@ async def get_session_report(
 @app.post("/api/sessions/{session_code}/questions", response_model=QuestionResponse)
 async def create_question(session_code: str, question: QuestionCreate, db: DBSession = Depends(get_db)):
     """Submit a new question to a session."""
-    session = db.query(Session).filter(Session.session_code == session_code, Session.is_active == True).first()
+    session = db.query(Session).filter(Session.meeting_code == session_code, Session.is_active == True).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found or inactive")
 
@@ -880,7 +880,7 @@ def get_qr_code(session_code: str, url_base: str):
 @limiter.limit("30/minute")
 async def get_session_stats(request: Request, session_code: str, db: DBSession = Depends(get_db)):
     """Get public stats for a session - question count, answered count, votes per question (no text)."""
-    session = db.query(Session).filter(Session.session_code == session_code).first()
+    session = db.query(Session).filter(Session.meeting_code == session_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
@@ -928,7 +928,7 @@ async def websocket_endpoint(websocket: WebSocket, session_code: str, db: DBSess
     try:
         # Validate that the session exists and is active BEFORE accepting connection
         logger.info(f"WebSocket validation: checking session code {session_code}")
-        session = db.query(Session).filter(Session.session_code == session_code).first()
+        session = db.query(Session).filter(Session.meeting_code == session_code).first()
         logger.info(f"WebSocket validation: query returned session={session}")
     except Exception as e:
         logger.error(f"WebSocket validation error: {e}", exc_info=True)
