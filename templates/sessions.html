@@ -260,6 +260,77 @@
                 opacity: 1;
             }
         }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -271,7 +342,7 @@
                     <p class="subtitle">📊 My Sessions</p>
                 </div>
                 <div class="header-actions">
-                    <a href="/instructor-login" class="header-btn">+ New Session</a>
+                    <button onclick="openCreateSessionModal()" class="header-btn">+ New Session</button>
                     <button onclick="logout()" class="header-btn logout-btn">Logout</button>
                 </div>
             </div>
@@ -321,12 +392,51 @@
             <div class="empty-state-icon">📝</div>
             <h2>No sessions yet</h2>
             <p>Create your first session to start collecting questions!</p>
-            <a href="/instructor-login" class="btn btn-primary">Create Session</a>
+            <button onclick="openCreateSessionModal()" class="btn btn-primary">Create Session</button>
+        </div>
+    </div>
+
+    <!-- Create Session Modal -->
+    <div class="modal" id="create-session-modal">
+        <div class="modal-content">
+            <h2>Create New Session</h2>
+            <form id="create-session-form" onsubmit="createSession(event)">
+                <div class="form-group">
+                    <label for="session-title">Session Name</label>
+                    <input
+                        type="text"
+                        id="session-title"
+                        name="title"
+                        placeholder="e.g., Biology 101 - Lecture 5"
+                        required
+                        maxlength="200"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="session-password">
+                        Session Password (optional)
+                    </label>
+                    <input
+                        type="password"
+                        id="session-password"
+                        name="password"
+                        placeholder="Leave blank for no password"
+                        autocomplete="new-password"
+                    >
+                    <small>Students will need this password to join the session</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Create Session</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateSessionModal()">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
     
-    <script src="/static/js/shared.js"></script>
-    <script src="/static/js/sessions-dashboard.js"></script>
+    <script src="/static/js/shared.js?v=2"></script>
+    <script src="/static/js/sessions-dashboard.js?v=2"></script>
     <script>
         // Add breadcrumb navigation
         addBreadcrumbs([

@@ -142,6 +142,40 @@
         </div>
     </div>
 
+    <div class="modal" id="answer-modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2 id="answer-modal-title">Write Answer</h2>
+            <p id="answer-modal-question" style="background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-style: italic;"></p>
+            <form id="answer-form" onsubmit="submitAnswer(event)">
+                <input type="hidden" id="answer-question-id">
+                <div class="form-group">
+                    <label for="answer-text">Your Answer</label>
+                    <textarea
+                        id="answer-text"
+                        name="answer_text"
+                        rows="10"
+                        placeholder="Write your answer here. You can use plain text."
+                        required
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; resize: vertical;"
+                    ></textarea>
+                    <small style="color: #7f8c8d; display: block; margin-top: 8px;">
+                        Students will see this answer once you publish it.
+                    </small>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Answer</button>
+                    <button type="button" class="btn btn-success" id="publish-answer-btn" onclick="publishAnswer()" style="flex: 1; display: none;">
+                        ✓ Publish to Students
+                    </button>
+                    <button type="button" class="btn btn-danger" id="delete-answer-btn" onclick="deleteAnswer()" style="display: none;">
+                        Delete
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeAnswerDialog()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="/static/js/shared.js"></script>
     <script src="/static/js/instructor.js"></script>
 </body>

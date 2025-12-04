@@ -58,6 +58,7 @@ from schemas_v2 import (
 from routes_instructor import router as instructor_router
 from routes_classes import router as classes_router
 from routes_questions import router as questions_router
+from routes_answers import router as answers_router
 from logging_config import setup_logging, get_logger, log_request, log_database_operation, log_websocket_event, log_security_event
 
 # Configure centralized logging
@@ -74,6 +75,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(instructor_router)
 app.include_router(classes_router)
 app.include_router(questions_router)
+app.include_router(answers_router)
 
 # Security Configuration
 security = HTTPBearer(auto_error=False)
@@ -737,7 +739,36 @@ async def sessions_dashboard(request: Request):
 def create_api_key(request: Request, key_data: APIKeyCreate, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
     """Create a new API key for instructor authentication (admin only, rate limited: 10/min)."""
     try:
+        # In v2, API keys require an instructor_id
+        # Create a placeholder instructor account for admin-created keys
+        # The instructor can later register and claim this API key
+        instructor_username = f"instructor_{secrets.token_urlsafe(8)}"
+        instructor = Instructor(
+            username=instructor_username,
+            email=None,
+            display_name=key_data.name,  # Use API key name as display name
+            password_hash=pwd_context.hash(secrets.token_urlsafe(32)),  # Random password
+            created_at=datetime.utcnow(),
+            is_active=True
+        )
+        db.add(instructor)
+        db.flush()  # Get instructor.id without committing
+
+        # Create a default class for this instructor
+        # This is required because meetings need a class_id in v2
+        default_class = Class(
+            instructor_id=instructor.id,
+            name="Default Class",
+            description="Auto-created default class for meetings",
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            is_archived=False
+        )
+        db.add(default_class)
+        db.flush()  # Get class.id without committing
+
         api_key = APIKey(
+            instructor_id=instructor.id,
             key=APIKey.generate_key(),
             name=key_data.name
         )

@@ -168,6 +168,133 @@ function logout() {
     }
 }
 
+// Modal functions
+function openCreateSessionModal() {
+    console.log('openCreateSessionModal called');
+    const modal = document.getElementById('create-session-modal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        alert('Error: Modal element not found. Please refresh the page.');
+        return;
+    }
+    console.log('Modal found, opening...');
+    modal.classList.add('active');
+    document.getElementById('session-title').value = '';
+    document.getElementById('session-password').value = '';
+    document.getElementById('session-title').focus();
+}
+
+function closeCreateSessionModal() {
+    const modal = document.getElementById('create-session-modal');
+    modal.classList.remove('active');
+}
+
+// Create a new session (v2 API)
+async function createSession(event) {
+    event.preventDefault();
+
+    const title = document.getElementById('session-title').value.trim();
+    const password = document.getElementById('session-password').value;
+    const apiKey = getApiKey();
+
+    if (!title) {
+        showNotification('Please enter a session name', 'error');
+        return;
+    }
+
+    try {
+        // First, get instructor's classes to find default class
+        const classesResponse = await fetch(`/api/classes?api_key=${encodeURIComponent(apiKey)}`);
+
+        if (classesResponse.status === 401) {
+            showNotification('Invalid API key', 'error');
+            clearApiKey();
+            setTimeout(() => window.location.href = '/instructor-login', 2000);
+            return;
+        }
+
+        if (!classesResponse.ok) {
+            showNotification('Failed to verify API key', 'error');
+            return;
+        }
+
+        const classes = await classesResponse.json();
+
+        // Find or create default class
+        let classId;
+        const defaultClass = classes.find(c => c.name === "Default Class");
+
+        if (defaultClass) {
+            classId = defaultClass.id;
+        } else {
+            // Create a new default class
+            const createClassResponse = await fetch(`/api/classes?api_key=${encodeURIComponent(apiKey)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: "Default Class", description: "Auto-created default class" })
+            });
+
+            if (!createClassResponse.ok) {
+                showNotification('Failed to create class', 'error');
+                return;
+            }
+
+            const newClass = await createClassResponse.json();
+            classId = newClass.id;
+        }
+
+        // Now create the meeting
+        const payload = { title: title };
+        if (password) {
+            payload.password = password;
+        }
+
+        const response = await fetch(`/api/classes/${classId}/meetings?api_key=${encodeURIComponent(apiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.status === 401) {
+            showNotification('Invalid API key', 'error');
+            return;
+        }
+
+        if (!response.ok) {
+            const error = await response.json();
+            showNotification(error.detail || 'Failed to create meeting', 'error');
+            return;
+        }
+
+        const meeting = await response.json();
+
+        // Close modal
+        closeCreateSessionModal();
+
+        // Show success and redirect to instructor view
+        showNotification('Meeting created successfully!', 'success');
+        setTimeout(() => {
+            window.location.href = `/instructor?code=${meeting.instructor_code}`;
+        }, 1000);
+
+    } catch (error) {
+        console.error('Error creating meeting:', error);
+        showNotification('Failed to create meeting. Please try again.', 'error');
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('create-session-modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeCreateSessionModal();
+            }
+        });
+    }
+});
+
 // Helper functions
 function formatDate(dateString) {
     const date = new Date(dateString);

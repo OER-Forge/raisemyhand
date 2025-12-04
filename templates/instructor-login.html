@@ -255,15 +255,15 @@
                 return;
             }
 
-            // Verify API key before redirecting
+            // Verify API key before redirecting (v2 API)
             try {
-                const response = await fetch(`/api/sessions/my-sessions?api_key=${encodeURIComponent(apiKey)}`);
-                
+                const response = await fetch(`/api/meetings?api_key=${encodeURIComponent(apiKey)}&include_ended=false`);
+
                 if (response.status === 401) {
                     showError('Invalid API key. Please check your key and try again.');
                     return;
                 }
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to verify API key');
                 }
@@ -298,20 +298,56 @@
             }
 
             try {
-                const payload = { title };
+                // First, get instructor's classes to find default class
+                const classesResponse = await fetch(`/api/classes?api_key=${encodeURIComponent(apiKey)}`);
+
+                if (classesResponse.status === 401) {
+                    showError('Invalid API key');
+                    return;
+                }
+
+                if (!classesResponse.ok) {
+                    showError('Failed to verify API key');
+                    return;
+                }
+
+                const classes = await classesResponse.json();
+
+                // Find or create default class
+                let classId;
+                const defaultClass = classes.find(c => c.name === "Default Class");
+
+                if (defaultClass) {
+                    classId = defaultClass.id;
+                } else {
+                    // Create a new default class
+                    const createClassResponse = await fetch(`/api/classes?api_key=${encodeURIComponent(apiKey)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: "Default Class", description: "Auto-created default class" })
+                    });
+
+                    if (!createClassResponse.ok) {
+                        showError('Failed to create class');
+                        return;
+                    }
+
+                    const newClass = await createClassResponse.json();
+                    classId = newClass.id;
+                }
+
+                // Now create the meeting
+                const payload = {
+                    title: title
+                };
+
                 if (password) {
                     payload.password = password;
                 }
 
-                // Get CSRF token
-                const csrfToken = await getCsrfToken();
-
-                const response = await fetch(`/api/sessions?api_key=${encodeURIComponent(apiKey)}`, {
+                const response = await fetch(`/api/classes/${classId}/meetings?api_key=${encodeURIComponent(apiKey)}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
@@ -320,27 +356,23 @@
                     return;
                 }
 
-                if (response.status === 403) {
-                    showError('Invalid or expired CSRF token. Please try again.');
-                    return;
-                }
-
                 if (!response.ok) {
                     const error = await response.json();
-                    showError(error.detail || 'Failed to create session');
+                    showError(error.detail || 'Failed to create meeting');
                     return;
                 }
 
-                const session = await response.json();
+                const meeting = await response.json();
 
                 // Store API key
                 sessionStorage.setItem('instructor_api_key', apiKey);
                 document.cookie = `instructor_api_key=${apiKey}; path=/; max-age=2592000`;
 
                 // Redirect to instructor dashboard
-                window.location.href = `/instructor?code=${session.instructor_code}`;
+                window.location.href = `/instructor?code=${meeting.instructor_code}`;
             } catch (error) {
-                showError('Failed to create session. Please try again.');
+                console.error('Error creating meeting:', error);
+                showError('Failed to create meeting. Please try again.');
             }
         });
 

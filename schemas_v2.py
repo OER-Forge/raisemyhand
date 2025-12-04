@@ -110,7 +110,6 @@ class ClassResponse(BaseModel):
 
 class ClassMeetingCreate(BaseModel):
     """Create a new class meeting."""
-    class_id: int
     title: str = Field(..., min_length=1, max_length=200)
     password: Optional[str] = Field(None, min_length=4, max_length=50)
 

@@ -191,7 +191,12 @@ function renderQuestions() {
                                 onclick="toggleAnswered(${q.id})"
                                 aria-label="${answerLabel}"
                                 aria-pressed="${isAnswered}">
-                            ${isAnswered ? 'Mark Unanswered' : 'Mark Answered'}
+                            ${isAnswered ? '✓ Answered in Class' : 'Mark Answered in Class'}
+                        </button>
+                        <button class="btn btn-primary"
+                                onclick="openAnswerDialog(${q.id}, '${escapeHtml(q.text).replace(/'/g, "\\'")}', ${q.has_written_answer})"
+                                aria-label="Write answer for this question">
+                            ${q.has_written_answer ? '✏️ Edit Answer' : '📝 Write Answer'}
                         </button>
                     </div>
                 </div>
@@ -419,6 +424,202 @@ function logout() {
     if (confirm('Are you sure you want to logout?')) {
         clearApiKey();
         window.location.href = '/';
+    }
+}
+
+// Answer Dialog Functions
+let currentAnswerQuestionId = null;
+let currentAnswerData = null;
+
+async function openAnswerDialog(questionId, questionText, hasAnswer) {
+    currentAnswerQuestionId = questionId;
+
+    // Set modal title and question text
+    document.getElementById('answer-modal-title').textContent = hasAnswer ? 'Edit Answer' : 'Write Answer';
+    document.getElementById('answer-modal-question').textContent = `Question: ${questionText}`;
+    document.getElementById('answer-question-id').value = questionId;
+
+    // Clear form
+    document.getElementById('answer-text').value = '';
+
+    // Hide publish/delete buttons initially
+    document.getElementById('publish-answer-btn').style.display = 'none';
+    document.getElementById('delete-answer-btn').style.display = 'none';
+
+    // If answer exists, load it
+    if (hasAnswer) {
+        try {
+            const apiKey = getApiKey();
+            const response = await fetch(`/api/questions/${questionId}/answer?api_key=${apiKey}`);
+
+            if (response.ok) {
+                currentAnswerData = await response.json();
+                document.getElementById('answer-text').value = currentAnswerData.answer_text;
+
+                // Show publish button if not already published
+                if (!currentAnswerData.is_approved) {
+                    document.getElementById('publish-answer-btn').style.display = 'inline-block';
+                }
+
+                // Show delete button
+                document.getElementById('delete-answer-btn').style.display = 'inline-block';
+            }
+        } catch (error) {
+            console.error('Error loading answer:', error);
+            showNotification('Failed to load existing answer', 'error');
+        }
+    }
+
+    // Show modal
+    const modal = document.getElementById('answer-modal');
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+
+    // Focus textarea
+    setTimeout(() => {
+        document.getElementById('answer-text').focus();
+    }, 100);
+}
+
+function closeAnswerDialog() {
+    const modal = document.getElementById('answer-modal');
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    currentAnswerQuestionId = null;
+    currentAnswerData = null;
+}
+
+async function submitAnswer(event) {
+    event.preventDefault();
+
+    const questionId = document.getElementById('answer-question-id').value;
+    const answerText = document.getElementById('answer-text').value;
+
+    if (!answerText.trim()) {
+        showNotification('Please enter an answer', 'error');
+        return;
+    }
+
+    try {
+        const apiKey = getApiKey();
+        const response = await fetch(`/api/questions/${questionId}/answer?api_key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                answer_text: answerText,
+                is_approved: false
+            })
+        });
+
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to save answer');
+        }
+
+        const data = await response.json();
+        currentAnswerData = data;
+
+        showNotification('Answer saved successfully', 'success');
+
+        // Show publish button
+        document.getElementById('publish-answer-btn').style.display = 'inline-block';
+        document.getElementById('delete-answer-btn').style.display = 'inline-block';
+
+        // Update question in local data
+        const question = meetingData.questions.find(q => q.id == questionId);
+        if (question) {
+            question.has_written_answer = true;
+        }
+
+        // Don't close modal - allow user to publish or continue editing
+    } catch (error) {
+        console.error('Error saving answer:', error);
+        showNotification('Failed to save answer', 'error');
+    }
+}
+
+async function publishAnswer() {
+    if (!currentAnswerQuestionId) return;
+
+    if (!confirm('Publish this answer to students? Once published, students will be able to see it.')) {
+        return;
+    }
+
+    try {
+        const apiKey = getApiKey();
+        const response = await fetch(`/api/questions/${currentAnswerQuestionId}/answer/publish?api_key=${apiKey}`, {
+            method: 'POST'
+        });
+
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to publish answer');
+        }
+
+        showNotification('Answer published to students!', 'success');
+
+        // Hide publish button
+        document.getElementById('publish-answer-btn').style.display = 'none';
+
+        // Close modal
+        closeAnswerDialog();
+
+        // Refresh questions to update UI
+        renderQuestions();
+    } catch (error) {
+        console.error('Error publishing answer:', error);
+        showNotification('Failed to publish answer', 'error');
+    }
+}
+
+async function deleteAnswer() {
+    if (!currentAnswerQuestionId) return;
+
+    if (!confirm('Delete this answer? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const apiKey = getApiKey();
+        const response = await fetch(`/api/questions/${currentAnswerQuestionId}/answer?api_key=${apiKey}`, {
+            method: 'DELETE'
+        });
+
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to delete answer');
+        }
+
+        showNotification('Answer deleted successfully', 'success');
+
+        // Update question in local data
+        const question = meetingData.questions.find(q => q.id == currentAnswerQuestionId);
+        if (question) {
+            question.has_written_answer = false;
+        }
+
+        // Close modal
+        closeAnswerDialog();
+
+        // Refresh questions to update UI
+        renderQuestions();
+    } catch (error) {
+        console.error('Error deleting answer:', error);
+        showNotification('Failed to delete answer', 'error');
     }
 }
 
