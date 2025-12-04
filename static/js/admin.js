@@ -79,7 +79,7 @@ async function loadSessions() {
                 : '<span class="badge badge-ended">Ended</span>';
 
             const instructorUrl = `${window.location.origin}/instructor?code=${session.instructor_code}`;
-            const studentUrl = `${window.location.origin}/student?code=${session.session_code}`;
+            const studentUrl = `${window.location.origin}/student?code=${session.meeting_code}`;
 
             return `
                 <tr>
@@ -90,7 +90,7 @@ async function loadSessions() {
                     <td>${session.question_count}</td>
                     <td>
                         <div style="font-size: 0.85rem;">
-                            <div>Student: <span class="code-snippet">${session.session_code}</span></div>
+                            <div>Student: <span class="code-snippet">${session.meeting_code}</span></div>
                             <div>Instructor: <span class="code-snippet">${session.instructor_code}</span></div>
                         </div>
                     </td>
@@ -166,10 +166,10 @@ async function endSessionAdmin(sessionId, instructorCode, sessionTitle) {
         // Get CSRF token
         const csrfToken = await getCsrfToken();
 
-        // FIXME: This endpoint requires API key, but admins use JWT tokens
-        // For now, we try without auth - the instructor_code serves as verification
-        // TODO: Create admin-specific endpoints that accept JWT tokens
-        const response = await fetch(`/api/sessions/${instructorCode}/end`, {
+        // Use v2 endpoint - requires API key, but we can't use admin JWT
+        // This won't work without proper admin API endpoints
+        // For now, rely on bulk operations which use admin JWT
+        const response = await fetch(`/api/meetings/${instructorCode}/end`, {
             method: 'POST',
             headers: {
                 'X-CSRF-Token': csrfToken
@@ -201,10 +201,10 @@ async function restartSessionAdmin(sessionId, instructorCode, sessionTitle) {
         // Get CSRF token
         const csrfToken = await getCsrfToken();
 
-        // FIXME: This endpoint requires API key, but admins use JWT tokens
-        // For now, we try without auth - the instructor_code serves as verification
-        // TODO: Create admin-specific endpoints that accept JWT tokens
-        const response = await fetch(`/api/sessions/${instructorCode}/restart`, {
+        // Use v2 endpoint - requires API key, but we can't use admin JWT
+        // This won't work without proper admin API endpoints
+        // For now, rely on bulk operations which use admin JWT
+        const response = await fetch(`/api/meetings/${instructorCode}/restart`, {
             method: 'POST',
             headers: {
                 'X-CSRF-Token': csrfToken

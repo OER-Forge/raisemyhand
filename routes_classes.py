@@ -320,3 +320,38 @@ def restart_meeting(
         db.rollback()
         logger.error(f"Failed to restart meeting: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to restart meeting")
+
+
+@router.get("/api/meetings", response_model=List[ClassMeetingResponse])
+def list_all_meetings(
+    api_key: str,
+    include_ended: bool = True,
+    db: DBSession = Depends(get_db)
+):
+    """List all meetings for the authenticated instructor."""
+    key_record = verify_api_key_v2(api_key, db)
+
+    # Get all classes for this instructor
+    class_ids = db.query(Class.id).filter(
+        Class.instructor_id == key_record.instructor_id
+    ).all()
+    class_ids = [c[0] for c in class_ids]
+
+    # Get all meetings for these classes
+    query = db.query(ClassMeeting).filter(ClassMeeting.class_id.in_(class_ids))
+
+    if not include_ended:
+        query = query.filter(ClassMeeting.is_active == True)
+
+    meetings = query.order_by(ClassMeeting.created_at.desc()).all()
+
+    # Add computed fields
+    for meeting in meetings:
+        meeting.question_count = db.query(func.count(Question.id)).filter(
+            Question.meeting_id == meeting.id
+        ).scalar()
+        meeting.has_password = bool(meeting.password_hash)
+        meeting.student_url = f"{settings.base_url}/student?code={meeting.meeting_code}"
+        meeting.instructor_url = f"{settings.base_url}/instructor?code={meeting.instructor_code}"
+
+    return meetings
