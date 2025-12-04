@@ -124,7 +124,6 @@
             <div class="tab-container">
                 <button class="tab active" onclick="switchTab('password')">Login with Password</button>
                 <button class="tab" onclick="switchTab('view')">View Sessions (API Key)</button>
-                <button class="tab" onclick="switchTab('create')">Create New Session</button>
             </div>
 
             <div class="error-message" id="error-message"></div>
@@ -186,55 +185,6 @@
                 </form>
             </div>
 
-            <!-- Create Session Tab -->
-            <div id="create-tab" class="tab-content">
-                <div class="help-text">
-                    Create a new session to start collecting student questions. Password protection is optional.
-                </div>
-
-                <form id="create-form">
-                    <div class="form-group">
-                        <label for="create-api-key">API Key</label>
-                        <input
-                            type="text"
-                            id="create-api-key"
-                            placeholder="rmh_..."
-                            required
-                            autocomplete="off"
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="session-title">Session Name</label>
-                        <input
-                            type="text"
-                            id="session-title"
-                            placeholder="e.g., Biology 101 - Lecture 5"
-                            required
-                            maxlength="200"
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="session-password">
-                            Session Password 
-                            <span class="optional-badge">(optional)</span>
-                        </label>
-                        <input
-                            type="password"
-                            id="session-password"
-                            placeholder="Leave blank for no password"
-                            autocomplete="new-password"
-                        >
-                        <small style="color: var(--text-secondary); font-size: 0.85rem;">
-                            Students will need this password to join the session
-                        </small>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Create Session</button>
-                </form>
-            </div>
-
             <div class="back-link">
                 <a href="/">← Back to Home</a>
             </div>
@@ -281,9 +231,6 @@
             } else if (tab === 'view') {
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('view-tab').classList.add('active');
-            } else {
-                document.querySelectorAll('.tab')[2].classList.add('active');
-                document.getElementById('create-tab').classList.add('active');
             }
         }
 
@@ -367,116 +314,6 @@
             }
         });
 
-        // Create Session Form
-        document.getElementById('create-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideMessages();
-
-            const apiKey = document.getElementById('create-api-key').value.trim();
-            const title = document.getElementById('session-title').value.trim();
-            const password = document.getElementById('session-password').value;
-
-            if (!apiKey) {
-                showError('Please enter your API key');
-                return;
-            }
-
-            if (!title) {
-                showError('Please enter a session name');
-                return;
-            }
-
-            try {
-                // First, get instructor's classes to find default class
-                const classesResponse = await fetch(`/api/classes?api_key=${encodeURIComponent(apiKey)}`);
-
-                if (classesResponse.status === 401) {
-                    showError('Invalid API key');
-                    return;
-                }
-
-                if (!classesResponse.ok) {
-                    showError('Failed to verify API key');
-                    return;
-                }
-
-                const classes = await classesResponse.json();
-
-                // Find or create default class
-                let classId;
-                const defaultClass = classes.find(c => c.name === "Default Class");
-
-                if (defaultClass) {
-                    classId = defaultClass.id;
-                } else {
-                    // Create a new default class
-                    const createClassResponse = await fetch(`/api/classes?api_key=${encodeURIComponent(apiKey)}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: "Default Class", description: "Auto-created default class" })
-                    });
-
-                    if (!createClassResponse.ok) {
-                        showError('Failed to create class');
-                        return;
-                    }
-
-                    const newClass = await createClassResponse.json();
-                    classId = newClass.id;
-                }
-
-                // Now create the meeting
-                const payload = {
-                    title: title
-                };
-
-                if (password) {
-                    payload.password = password;
-                }
-
-                const response = await fetch(`/api/classes/${classId}/meetings?api_key=${encodeURIComponent(apiKey)}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.status === 401) {
-                    showError('Invalid API key');
-                    return;
-                }
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    showError(error.detail || 'Failed to create meeting');
-                    return;
-                }
-
-                const meeting = await response.json();
-
-                // Store API key
-                sessionStorage.setItem('instructor_api_key', apiKey);
-                document.cookie = `instructor_api_key=${apiKey}; path=/; max-age=2592000`;
-
-                // Redirect to instructor dashboard
-                window.location.href = `/instructor?code=${meeting.instructor_code}`;
-            } catch (error) {
-                console.error('Error creating meeting:', error);
-                showError('Failed to create meeting. Please try again.');
-            }
-        });
-
-        // Pre-fill API key if stored
-        const storedKey = sessionStorage.getItem('instructor_api_key');
-        if (storedKey) {
-            document.getElementById('view-api-key').value = storedKey;
-            document.getElementById('create-api-key').value = storedKey;
-        }
-
-        // Add breadcrumb navigation
-        addBreadcrumbs([
-            { label: 'Home', href: '/' },
-            { label: 'Instructor Login', href: '/instructor-login' }
-        ]);
     </script>
 </body>
 </html>

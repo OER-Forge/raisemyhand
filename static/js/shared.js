@@ -3,6 +3,10 @@
  * Common helpers used across student, instructor, and admin interfaces
  */
 
+// IMMEDIATE DEBUG - This should appear in console immediately
+console.log('[SHARED.JS LOADED] Script file is executing');
+window.sharedJsLoaded = true;
+
 // ============================================================================
 // JWT Token Management (for Instructor Web UI)
 // ============================================================================
@@ -12,7 +16,10 @@
  * @returns {string|null} The JWT token or null if not found
  */
 function getJwtToken() {
-    return localStorage.getItem('instructor_token');
+    const token = localStorage.getItem('instructor_token');
+    console.log('[SHARED] getJwtToken() called, result:', token ? 'TOKEN_FOUND' : 'TOKEN_NULL');
+    console.log('[SHARED] localStorage keys:', Object.keys(localStorage));
+    return token;
 }
 
 /**

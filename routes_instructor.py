@@ -3,7 +3,6 @@ Instructor management routes for v2 API
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session as DBSession
-from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
 from typing import Optional
@@ -15,11 +14,11 @@ from schemas_v2 import (
     InstructorUpdate, Token, APIKeyCreate, APIKeyResponse
 )
 from config import settings
+from security import verify_password, get_password_hash
 from logging_config import get_logger, log_security_event, log_database_operation
 
 router = APIRouter(prefix="/api/instructors", tags=["instructors"])
 logger = get_logger(__name__)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def create_instructor_token(instructor_id: int, username: str) -> str:
@@ -87,7 +86,7 @@ def register_instructor(data: InstructorRegister, db: DBSession = Depends(get_db
         username=data.username,
         email=data.email,
         display_name=data.display_name,
-        password_hash=pwd_context.hash(data.password),
+        password_hash=get_password_hash(data.password),
         created_at=datetime.utcnow()
     )
 
@@ -118,8 +117,8 @@ def login_instructor(data: InstructorLogin, db: DBSession = Depends(get_db)):
     if not instructor:
         log_security_event(logger, "LOGIN_FAILED", f"No instructor found for: {data.username}", severity="warning")
         raise HTTPException(status_code=401, detail="Incorrect username/email or password")
-    
-    if not pwd_context.verify(data.password, instructor.password_hash):
+
+    if not verify_password(data.password, instructor.password_hash):
         log_security_event(logger, "LOGIN_FAILED", f"Failed login attempt for: {data.username}", severity="warning")
         raise HTTPException(status_code=401, detail="Incorrect username/email or password")
 
@@ -172,17 +171,17 @@ def update_profile(
             # Verify current password
             if not data.current_password:
                 raise HTTPException(status_code=400, detail="Current password required to change password")
-            
-            if not pwd_context.verify(data.current_password, instructor.password_hash):
+
+            if not verify_password(data.current_password, instructor.password_hash):
                 log_security_event(logger, "PASSWORD_CHANGE_FAILED", f"Invalid current password for: {instructor.username}", severity="warning")
                 raise HTTPException(status_code=401, detail="Current password is incorrect")
-            
+
             # Verify new password is different
-            if pwd_context.verify(data.new_password, instructor.password_hash):
+            if verify_password(data.new_password, instructor.password_hash):
                 raise HTTPException(status_code=400, detail="New password must be different from current password")
-            
+
             # Update password
-            instructor.password_hash = pwd_context.hash(data.new_password)
+            instructor.password_hash = get_password_hash(data.new_password)
             log_security_event(logger, "PASSWORD_CHANGED", f"Password changed for: {instructor.username}", severity="info")
 
         db.commit()

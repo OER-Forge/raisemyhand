@@ -8,38 +8,68 @@ let currentViewMode = 'flat';
 
 // Check authentication on load
 function checkAuth() {
-    const apiKey = getApiKey();
-
     // Check for class_id filter in URL
     const urlParams = new URLSearchParams(window.location.search);
     filterClassId = urlParams.get('class_id');
 
+    // Check for instructor JWT token first (preferred method)
+    const instructorToken = localStorage.getItem('instructor_token');
+    if (instructorToken) {
+        loadMeetings();
+        return;
+    }
+
+    // Fall back to API key for backward compatibility
+    const apiKey = getApiKey();
     if (!apiKey) {
-        const key = prompt('Please enter your API key to view your meetings:');
-        if (key) {
-            setApiKey(key);
-            loadMeetings();
-        } else {
-            alert('API key is required to view meetings.');
-            window.location.href = '/';
-        }
+        // No authentication found - redirect to login
+        showNotification('Please log in to view your meetings.', 'error');
+        setTimeout(() => {
+            window.location.href = '/instructor-login';
+        }, 1500);
     } else {
         loadMeetings();
     }
 }
 
-// Load all meetings for this API key (v2 API)
+// Load all meetings (supports both JWT and API key auth)
 async function loadMeetings() {
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/meetings?api_key=${apiKey}&include_ended=true`);
-        
+        // Try instructor JWT authentication first
+        const instructorToken = localStorage.getItem('instructor_token');
+        let url = '/api/meetings?include_ended=true';
+        let headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (instructorToken) {
+            // Use JWT authentication
+            headers['Authorization'] = `Bearer ${instructorToken}`;
+        } else {
+            // Fall back to API key
+            const apiKey = getApiKey();
+            if (apiKey) {
+                url += `&api_key=${apiKey}`;
+            }
+        }
+
+        const response = await fetch(url, { headers });
+
         if (response.status === 401) {
-            clearApiKey();
-            showNotification('Invalid API key. Please log in again.', 'error');
-            setTimeout(() => {
-                checkAuth();
-            }, 2000);
+            // Authentication failed
+            if (instructorToken) {
+                localStorage.removeItem('instructor_token');
+                showNotification('Session expired. Please log in again.', 'error');
+                setTimeout(() => {
+                    window.location.href = '/instructor-login';
+                }, 1500);
+            } else {
+                clearApiKey();
+                showNotification('Invalid API key. Please log in again.', 'error');
+                setTimeout(() => {
+                    checkAuth();
+                }, 2000);
+            }
             return;
         }
 

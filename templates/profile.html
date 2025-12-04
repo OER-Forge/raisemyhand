@@ -3,6 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - RaiseMyHand</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .classes-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .profile-card h2 {
+            color: #1a237e;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group span {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1a237e;
+            box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            color: #666;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .form-display {
+            display: block;
+            padding: 12px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-primary {
+            background: #1a237e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c62828;
+        }
+
+        #success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2e7d32;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header class="nav-header">
+        <nav class="nav-container" role="navigation" aria-label="Main navigation">
+            <div class="nav-brand">
+                <a href="/" aria-label="RaiseMyHand Home" style="text-decoration: none; color: white;">
+                    <h1>✋ RaiseMyHand</h1>
+                </a>
+                <p class="subtitle" aria-label="Current page">⚙️ Profile Settings</p>
+            </div>
+
+            <button id="hamburger-btn" class="hamburger-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+                ☰
+            </button>
+
+            <ul id="nav-menu" class="nav-menu" role="menu" aria-hidden="false">
+                <li role="none"><a href="/classes" class="nav-link" role="menuitem" aria-label="My Classes">📚 My Classes</a></li>
+                <li role="none"><a href="/sessions" class="nav-link" role="menuitem" aria-label="All Meetings">📊 All Meetings</a></li>
+                <li role="none"><a href="/profile" class="nav-link" role="menuitem" aria-label="Profile Settings (current page)" aria-current="page">⚙️ Profile</a></li>
+                <li role="none"><button onclick="logout()" class="nav-link logout-btn" role="menuitem" aria-label="Logout">Logout</button></li>
+            </ul>
+        </nav>
+        <div id="nav-overlay" class="nav-overlay"></div>
+    </header>
+
+    <div class="classes-container">
+        <h1>Instructor Profile</h1>
+        
+        <div id="loading">Loading profile...</div>
+        <div id="error" style="display:none;"></div>
+        <div id="success" style="display:none;"></div>
+        
+        <div id="profileContainer" style="display:none;">
+            <!-- Basic Information -->
+            <div class="profile-card">
+                <h2>Basic Information</h2>
+                
+                <div class="form-group">
+                    <label>Username</label>
+                    <span id="username" class="form-display"></span>
+                    <small>Username cannot be changed</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email">
+                    <small>Used for notifications and password recovery</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="displayName">Display Name</label>
+                    <input type="text" id="displayName" maxlength="100">
+                    <small>How your name appears to students (optional)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Member Since</label>
+                    <span id="memberSince" class="form-display"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label>Last Login</label>
+                    <span id="lastLogin" class="form-display"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label>Account Status</label>
+                    <span id="accountStatus" class="form-display"></span>
+                </div>
+            </div>
+            
+            <!-- Change Password -->
+            <div class="profile-card">
+                <h2>Change Password</h2>
+                <p style="color: #666; margin-bottom: 15px;">Leave password fields blank to keep your current password</p>
+                
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword">
+                    <small>Required to change password</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword">
+                    <small>Must be at least 8 characters long</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword">
+                    <small>Must match new password</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                    <button type="button" class="btn btn-primary" id="saveBtn" onclick="saveProfile()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/shared.js"></script>
+    <script src="/static/js/profile_enhanced.js"></script>
+</body>
+</html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instructor Profile - RaiseMyHand</title>
     <style>
         * {

@@ -21,6 +21,7 @@ from schemas_v2 import (
 from config import settings
 from logging_config import get_logger, log_database_operation
 from passlib.context import CryptContext
+from routes_instructor import get_current_instructor
 
 router = APIRouter(tags=["classes"])
 logger = get_logger(__name__)
@@ -430,16 +431,43 @@ def restart_meeting(
 
 @router.get("/api/meetings", response_model=List[ClassMeetingResponse])
 def list_all_meetings(
-    api_key: str,
+    api_key: Optional[str] = None,
     include_ended: bool = True,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """List all meetings for the authenticated instructor."""
-    key_record = verify_api_key_v2(api_key, db)
+    """List all meetings for the authenticated instructor (supports both JWT and API key auth)."""
+    instructor_id = None
+
+    # Try JWT authentication first (from Authorization header)
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            # Use instructor JWT authentication
+            from routes_instructor import verify_instructor_token
+            token = authorization.split(" ")[1]
+            payload = verify_instructor_token(token)
+            instructor_id = int(payload.get("sub"))
+            logger.info(f"Authenticated via JWT, instructor_id: {instructor_id}")
+        except Exception as e:
+            logger.warning(f"JWT auth failed: {e}")
+            # Fall through to API key auth
+
+    # Fall back to API key authentication
+    if instructor_id is None and api_key:
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+        logger.info(f"Authenticated via API key, instructor_id: {instructor_id}")
+
+    # If neither auth method succeeded
+    if instructor_id is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required: provide either Authorization header (JWT) or api_key parameter"
+        )
 
     # Get all classes for this instructor
     class_ids = db.query(Class.id).filter(
-        Class.instructor_id == key_record.instructor_id
+        Class.instructor_id == instructor_id
     ).all()
     class_ids = [c[0] for c in class_ids]
 

@@ -74,9 +74,9 @@ Open **http://localhost:8000** and start your session!
 3. Create an API key in the dashboard
 4. Use the key to create instructor sessions
 
-📖 **New to RaiseMyHand?** See [GETTING_STARTED.md](GETTING_STARTED.md) for a complete step-by-step guide.
+📖 **New to RaiseMyHand?** See [docs/setup/GETTING_STARTED.md](docs/setup/GETTING_STARTED.md) for a complete step-by-step guide.
 
-📖 See [DATABASE_SETUP.md](DATABASE_SETUP.md) for detailed configuration.
+📖 See [docs/setup/DATABASE_SETUP.md](docs/setup/DATABASE_SETUP.md) for detailed configuration.
 
 ---
 
@@ -94,12 +94,12 @@ docker compose up -d
 
 Server available at `http://your-server:8000`
 
-🐳 **See [DOCKER.md](DOCKER.md) for:**
+🐳 **See [docs/deployment/DOCKER.md](docs/deployment/DOCKER.md) for:**
 - Complete Docker setup guide
 - Production deployment with nginx/SSL
 - Backup and monitoring strategies
 
-📦 **See [DEPLOYMENT.md](DEPLOYMENT.md) for:**
+📦 **See [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md) for:**
 - Cloud hosting options (AWS, Heroku, DigitalOcean)
 - nginx configuration
 - Scaling strategies
@@ -108,7 +108,7 @@ Server available at `http://your-server:8000`
 
 ## 📖 Usage Guide
 
-📘 **First time using RaiseMyHand?** Check out [GETTING_STARTED.md](GETTING_STARTED.md) for a comprehensive step-by-step walkthrough.
+📘 **First time using RaiseMyHand?** Check out [docs/setup/GETTING_STARTED.md](docs/setup/GETTING_STARTED.md) for a comprehensive step-by-step walkthrough.
 
 ### 👨‍🏫 For Instructors
 
@@ -224,10 +224,10 @@ CREATE_DEFAULT_API_KEY=false  # Set true for first run
 ```
 
 📖 **Detailed guides:**
-- [URL_CONFIGURATION.md](URL_CONFIGURATION.md) - URL and timezone setup
-- [DATABASE_SETUP.md](DATABASE_SETUP.md) - Database configuration
-- [SECURITY.md](SECURITY.md) - Security best practices
-- [LOGGING.md](LOGGING.md) - Logging system and monitoring
+- [docs/setup/URL_CONFIGURATION.md](docs/setup/URL_CONFIGURATION.md) - URL and timezone setup
+- [docs/setup/DATABASE_SETUP.md](docs/setup/DATABASE_SETUP.md) - Database configuration
+- [docs/deployment/SECURITY.md](docs/deployment/SECURITY.md) - Security best practices
+- [docs/deployment/LOGGING.md](docs/deployment/LOGGING.md) - Logging system and monitoring
 
 ---
 
@@ -242,7 +242,7 @@ CREATE_DEFAULT_API_KEY=false  # Set true for first run
 ✅ **Secrets Management** - Docker secrets support for production
 ✅ **No Hardcoded Credentials** - All sensitive data in environment/secrets
 
-🔒 See [SECURITY.md](SECURITY.md) for security best practices.
+🔒 See [docs/deployment/SECURITY.md](docs/deployment/SECURITY.md) for security best practices.
 
 ---
 
@@ -302,7 +302,7 @@ pip install -r requirements.txt
 # Follow setup guide
 ```
 
-📖 See [ALEMBIC_SETUP.md](ALEMBIC_SETUP.md) for complete Alembic configuration.
+📖 See [docs/setup/ALEMBIC_SETUP.md](docs/setup/ALEMBIC_SETUP.md) for complete Alembic configuration.
 
 ---
 

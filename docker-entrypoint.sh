@@ -12,17 +12,14 @@ if [ -f "/run/secrets/admin_password" ]; then
     echo "Loaded admin password from Docker secret"
 fi
 
-# Always run migrations first (safe - they check if needed)
-echo "Running database migrations..."
-python migrate_db.py 2>/dev/null || true
-python migrate_api_keys.py 2>/dev/null || true
-python migrate_questions.py 2>/dev/null || true
-python migrate_question_numbers.py 2>/dev/null || true
+# Always run database initialization (safe - checks if tables exist)
+echo "Initializing database..."
+python init_db_v2.py 2>/dev/null || true
 
-# Check if we should create a default API key
-if [ "$CREATE_DEFAULT_API_KEY" = "true" ] || [ "$CREATE_DEFAULT_API_KEY" = "1" ]; then
-    echo "Checking for API keys..."
-    python init_database.py --create-key
+# Initialize demo data if requested
+if [ "$CREATE_DEMO_DATA" = "true" ] || [ "$CREATE_DEMO_DATA" = "1" ]; then
+    echo "Creating demo data..."
+    python init_demo_data.py 2>/dev/null || true
 fi
 
 # Start the application

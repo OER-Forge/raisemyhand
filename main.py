@@ -29,6 +29,16 @@ from passlib.context import CryptContext
 load_dotenv()
 
 from database import get_db, init_db
+from config import settings
+from security import (
+    pwd_context,
+    verify_password,
+    get_password_hash,
+    create_access_token,
+    verify_jwt_token,
+    generate_csrf_token,
+    verify_csrf_token
+)
 # V2 Models
 from models_v2 import (
     ClassMeeting as Session,  # Alias for backward compat with old endpoints
@@ -79,72 +89,27 @@ app.include_router(answers_router)
 
 # Security Configuration
 security = HTTPBearer(auto_error=False)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# JWT Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))  # 8 hours default
-
-# App Configuration
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
-TIMEZONE = os.getenv("TIMEZONE", "UTC")
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-
-# SECURITY: Admin password MUST be set via environment variable or Docker secret
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
-if not ADMIN_PASSWORD:
-    # Try to read from Docker secret file
-    secret_file = "/run/secrets/admin_password"
-    if os.path.exists(secret_file):
-        with open(secret_file, 'r') as f:
-            ADMIN_PASSWORD = f.read().strip()
-
-    # If still not set, raise an error
-    if not ADMIN_PASSWORD:
-        raise ValueError(
-            "ADMIN_PASSWORD environment variable must be set! "
-            "For Docker: create secrets/admin_password.txt or use Docker secrets. "
-            "For local: set ADMIN_PASSWORD in .env file."
-        )
-
-ENABLE_AUTH = os.getenv("ENABLE_AUTH", "true").lower() == "true"
-
-# CSRF Protection Configuration
-CSRF_SECRET = os.getenv("CSRF_SECRET", secrets.token_urlsafe(32))
-CSRF_TOKEN_EXPIRY = 3600  # 1 hour
+# Validate production configuration
+if settings.is_production:
+    errors, warnings = settings.validate_production_config()
+    if errors:
+        for error in errors:
+            logger.error(f"Production config error: {error}")
+        raise ValueError(f"Production configuration errors: {'; '.join(errors)}")
+    if warnings:
+        for warning in warnings:
+            logger.warning(f"Production config warning: {warning}")
 
 # Initialize timezone
 try:
-    LOCAL_TZ = pytz.timezone(TIMEZONE)
+    LOCAL_TZ = pytz.timezone(settings.timezone)
 except pytz.exceptions.UnknownTimeZoneError:
-    print(f"Warning: Unknown timezone '{TIMEZONE}', falling back to UTC")
+    logger.warning(f"Unknown timezone '{settings.timezone}', falling back to UTC")
     LOCAL_TZ = pytz.UTC
 
 
-# Security helper functions
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    """Hash a password."""
-    return pwd_context.hash(password)
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """Create a JWT access token."""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
+# API Key verification (specific to this app, not in security.py)
 def verify_api_key(api_key: Optional[str], db) -> bool:
     """Verify API key and update last_used timestamp."""
     if not api_key:
@@ -200,53 +165,7 @@ def get_api_key(
     return api_key
 
 
-def generate_csrf_token(session_identifier: str = "") -> str:
-    """
-    Generate a CSRF token.
-    Token format: timestamp:signature
-    """
-    timestamp = str(int(datetime.utcnow().timestamp()))
-    message = f"{timestamp}:{session_identifier}"
-    signature = hmac.new(
-        CSRF_SECRET.encode(),
-        message.encode(),
-        hashlib.sha256
-    ).hexdigest()
-    return f"{timestamp}:{signature}"
-
-
-def verify_csrf_token(token: str, session_identifier: str = "") -> bool:
-    """Verify a CSRF token."""
-    try:
-        if not token:
-            return False
-
-        parts = token.split(":")
-        if len(parts) != 2:
-            return False
-
-        timestamp_str, provided_signature = parts
-        timestamp = int(timestamp_str)
-
-        # Check if token has expired
-        current_time = int(datetime.utcnow().timestamp())
-        if current_time - timestamp > CSRF_TOKEN_EXPIRY:
-            return False
-
-        # Verify signature
-        message = f"{timestamp_str}:{session_identifier}"
-        expected_signature = hmac.new(
-            CSRF_SECRET.encode(),
-            message.encode(),
-            hashlib.sha256
-        ).hexdigest()
-
-        # Use constant-time comparison to prevent timing attacks
-        return hmac.compare_digest(provided_signature, expected_signature)
-    except (ValueError, AttributeError):
-        return False
-
-
+# CSRF token dependency helper
 def get_csrf_token(x_csrf_token: Optional[str] = Header(None)) -> str:
     """
     Dependency to extract and verify CSRF token from X-CSRF-Token header.
@@ -261,18 +180,18 @@ def get_csrf_token(x_csrf_token: Optional[str] = Header(None)) -> str:
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[str]:
     """Verify JWT token and return username if valid."""
-    if not ENABLE_AUTH:
+    if not settings.enable_auth:
         return "admin"  # Skip auth if disabled
-    
+
     if not credentials:
         raise HTTPException(
             status_code=401,
             detail="Missing authorization token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     try:
-        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(credentials.credentials, settings.secret_key, algorithms=[settings.algorithm])
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -621,7 +540,7 @@ async def get_session_stats(request: Request, session_code: str, db: DBSession =
 @app.get("/stats", response_class=HTMLResponse)
 async def stats_page(request: Request):
     """Public stats page."""
-    return templates.TemplateResponse("stats.html", {"request": request, "base_url": BASE_URL})
+    return templates.TemplateResponse("stats.html", {"request": request, "base_url": settings.base_url})
 
 
 # WebSocket endpoint
@@ -838,15 +757,15 @@ def instructor_auth(auth_data: InstructorAuth, db: DBSession = Depends(get_db)):
 @limiter.limit("5/minute")
 def admin_login(request: Request, login_data: AdminLogin):
     """Admin login endpoint."""
-    if not ENABLE_AUTH:
+    if not settings.enable_auth:
         # If auth is disabled, always return a valid token
         access_token = create_access_token(data={"sub": "admin"})
         log_security_event(logger, "AUTH_DISABLED_LOGIN", "Admin login with auth disabled", severity="warning")
         return {"access_token": access_token, "token_type": "bearer"}
 
     # Verify admin credentials
-    correct_username = secrets.compare_digest(login_data.username, ADMIN_USERNAME)
-    correct_password = secrets.compare_digest(login_data.password, ADMIN_PASSWORD or "")
+    correct_username = secrets.compare_digest(login_data.username, settings.admin_username)
+    correct_password = secrets.compare_digest(login_data.password, settings.admin_password or "")
 
     if not (correct_username and correct_password):
         log_security_event(
@@ -899,11 +818,10 @@ def health_check():
 @app.get("/api/config")
 def get_config():
     """Get client configuration including base URL, timezone, auth status, and environment."""
-    from config import settings
     return {
-        "base_url": BASE_URL,
-        "timezone": TIMEZONE,
-        "auth_enabled": ENABLE_AUTH,
+        "base_url": settings.base_url,
+        "timezone": settings.timezone,
+        "auth_enabled": settings.enable_auth,
         "environment": settings.env,
         "debug": settings.debug
     }
