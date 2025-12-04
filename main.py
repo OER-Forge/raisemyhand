@@ -293,7 +293,7 @@ def format_session_response(session: Session) -> dict:
     """Format a session object for API response."""
     return {
         "id": session.id,
-        "session_code": session.session_code,
+        "session_code": session.meeting_code,
         "instructor_code": session.instructor_code,
         "title": session.title,
         "has_password": session.password_hash is not None,
@@ -303,7 +303,7 @@ def format_session_response(session: Session) -> dict:
         "questions": [
             {
                 "id": q.id,
-                "session_id": q.session_id,
+                "meeting_id": q.meeting_id,
                 "text": q.text,
                 "upvotes": q.upvotes,
                 "is_answered": q.is_answered,
@@ -484,7 +484,7 @@ def create_session(
             password_hash = get_password_hash(session.password)
 
         db_session = Session(
-            session_code=Session.generate_code(),
+            meeting_code=Session.generate_code(),
             instructor_code=Session.generate_code(),
             title=session.title,
             password_hash=password_hash
@@ -496,7 +496,7 @@ def create_session(
         # Create response with has_password field
         response_data = {
             "id": db_session.id,
-            "session_code": db_session.session_code,
+            "session_code": db_session.meeting_code,
             "instructor_code": db_session.instructor_code,
             "title": db_session.title,
             "has_password": password_hash is not None,
@@ -535,7 +535,7 @@ def get_my_sessions(
         result.append({
             "id": session.id,
             "title": session.title,
-            "session_code": session.session_code,
+            "session_code": session.meeting_code,
             "instructor_code": session.instructor_code,
             "created_at": session.created_at,
             "ended_at": session.ended_at,
@@ -667,7 +667,7 @@ async def get_session_report(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    questions = db.query(Question).filter(Question.session_id == session.id).order_by(Question.upvotes.desc()).all()
+    questions = db.query(Question).filter(Question.meeting_id == session.id).order_by(Question.upvotes.desc()).all()
 
     if format == "csv":
         output = StringIO()
@@ -685,14 +685,14 @@ async def get_session_report(
         return StreamingResponse(
             iter([output.getvalue()]),
             media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename=session_{session.session_code}_report.csv"}
+            headers={"Content-Disposition": f"attachment; filename=session_{session.meeting_code}_report.csv"}
         )
 
     # JSON format (default)
     return {
         "session": {
             "title": session.title,
-            "session_code": session.session_code,
+            "session_code": session.meeting_code,
             "created_at": session.created_at.isoformat(),
             "ended_at": session.ended_at.isoformat() if session.ended_at else None,
             "is_active": session.is_active
@@ -730,13 +730,13 @@ async def create_question(session_code: str, question: QuestionCreate, db: DBSes
             # Get the next question number for this session with a lock
             # Use SELECT FOR UPDATE to prevent concurrent reads
             max_number = db.query(func.max(Question.question_number))\
-                .filter(Question.session_id == session.id)\
+                .filter(Question.meeting_id == session.id)\
                 .with_for_update()\
                 .scalar()
             next_number = (max_number or 0) + 1
 
             db_question = Question(
-                session_id=session.id,
+                meeting_id=session.id,
                 question_number=next_number,
                 text=question.text
             )
@@ -784,7 +784,9 @@ async def toggle_vote(question_id: int, action: str, db: DBSession = Depends(get
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
 
-    session = db.query(Session).filter(Session.id == question.session_id).first()
+    session = db.query(Session).filter(Session.id == question.meeting_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
     if not session.is_active:
         raise HTTPException(status_code=400, detail="Session is inactive")
 
@@ -811,7 +813,7 @@ async def toggle_vote(question_id: int, action: str, db: DBSession = Depends(get
         "type": "vote_update",
         "question_id": question.id,
         "upvotes": question.upvotes
-    }, session.session_code)
+    }, session.meeting_code)
 
     return {"upvotes": question.upvotes}
 
@@ -831,7 +833,9 @@ async def mark_answered(question_id: int, instructor_code: str, db: DBSession = 
         if not question:
             raise HTTPException(status_code=404, detail="Question not found")
 
-        session = db.query(Session).filter(Session.id == question.session_id).first()
+        session = db.query(Session).filter(Session.id == question.meeting_id).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
         if session.instructor_code != instructor_code:
             raise HTTPException(status_code=403, detail="Unauthorized")
 
@@ -844,7 +848,7 @@ async def mark_answered(question_id: int, instructor_code: str, db: DBSession = 
             "type": "answer_status",
             "question_id": question.id,
             "is_answered": question.is_answered
-        }, session.session_code)
+        }, session.meeting_code)
 
         return {"is_answered": question.is_answered}
     except HTTPException:
@@ -883,12 +887,12 @@ async def get_session_stats(request: Request, session_code: str, db: DBSession =
     session = db.query(Session).filter(Session.meeting_code == session_code).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    
-    questions = db.query(Question).filter(Question.session_id == session.id).all()
-    
+
+    questions = db.query(Question).filter(Question.meeting_id == session.id).all()
+
     stats = {
         "session_title": session.title,
-        "session_code": session.session_code,
+        "session_code": session.meeting_code,
         "is_active": session.is_active,
         "created_at": session.created_at.isoformat(),
         "ended_at": session.ended_at.isoformat() if session.ended_at else None,
@@ -1223,7 +1227,7 @@ def get_all_sessions(
         result.append({
             "id": session.id,
             "title": session.title,
-            "session_code": session.session_code,
+            "session_code": session.meeting_code,
             "instructor_code": session.instructor_code,
             "created_at": session.created_at.isoformat(),
             "ended_at": session.ended_at.isoformat() if session.ended_at else None,
@@ -1243,7 +1247,7 @@ def delete_session_admin(request: Request, session_id: int, db: DBSession = Depe
         raise HTTPException(status_code=404, detail="Session not found")
 
     # Delete associated questions first
-    db.query(Question).filter(Question.session_id == session_id).delete()
+    db.query(Question).filter(Question.meeting_id == session_id).delete()
     db.delete(session)
     db.commit()
 
@@ -1298,7 +1302,7 @@ def bulk_delete_sessions(
 ):
     """Delete multiple sessions at once (admin only)."""
     # Delete associated questions first
-    db.query(Question).filter(Question.session_id.in_(session_ids)).delete(synchronize_session=False)
+    db.query(Question).filter(Question.meeting_id.in_(session_ids)).delete(synchronize_session=False)
 
     # Delete sessions
     deleted_count = db.query(Session).filter(Session.id.in_(session_ids)).delete(synchronize_session=False)

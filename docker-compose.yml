@@ -1,29 +1,20 @@
+version: '3.8'
+
 services:
-  app:
+  web:
     build: .
     ports:
-      - "${PORT:-8000}:${PORT:-8000}"
+      - "8000:8000"
     volumes:
-      - app-data:/app/data
-    env_file:
-      - .env
-    secrets:
-      - admin_password
+      - ./data:/app/data
+      - ./static:/app/static
+      - ./templates:/app/templates
     environment:
-      # Override password with Docker secret
-      - ADMIN_PASSWORD_FILE=/run/secrets/admin_password
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - DATABASE_URL=sqlite:///./data/raisemyhand.db
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8000}').read()"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
 volumes:
-  app-data:
-    driver: local
-
-secrets:
-  admin_password:
-    file: ./secrets/admin_password.txt
+  data:

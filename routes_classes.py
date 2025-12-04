@@ -232,9 +232,11 @@ def get_meeting_by_code(
     meeting_code: str,
     db: DBSession = Depends(get_db)
 ):
-    """Get meeting details by code (for students)."""
+    """Get meeting details by code (for students or instructors)."""
+    # Check both meeting_code and instructor_code
     meeting = db.query(ClassMeeting).filter(
-        ClassMeeting.meeting_code == meeting_code
+        (ClassMeeting.meeting_code == meeting_code) |
+        (ClassMeeting.instructor_code == meeting_code)
     ).first()
 
     if not meeting:

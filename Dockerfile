@@ -1,13 +1,13 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    gcc \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy requirements file
 COPY requirements.txt .
 
 # Install Python dependencies
@@ -16,14 +16,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create directory for database
-RUN mkdir -p /app/data
+# Create data directory
+RUN mkdir -p data
 
-# Make entrypoint script executable
-RUN chmod +x docker-entrypoint.sh
+# Expose port
+EXPOSE 8000
 
-# Note: Port is configured via docker-compose.yml and .env
-# No EXPOSE needed as port mapping is explicit in compose file
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
 
-# Use entrypoint script
-ENTRYPOINT ["./docker-entrypoint.sh"]
+# Run the application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
