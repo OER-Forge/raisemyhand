@@ -1,3 +1,155 @@
+// Tab Switching with Persistence
+function switchTab(tabName) {
+    // Close any open modals
+    const createUserModal = document.getElementById('create-user-modal');
+    if (createUserModal) {
+        closeCreateUserModal();
+    }
+    
+    // Save active tab to localStorage
+    localStorage.setItem('adminActiveTab', tabName);
+
+    // Update URL without page reload using history.replaceState
+    window.history.replaceState({ tab: tabName }, '', window.location.pathname);
+
+    // Hide all panels
+    document.querySelectorAll('[role="tabpanel"]').forEach(panel => {
+        panel.setAttribute('aria-hidden', 'true');
+    });
+
+    // Deselect all buttons
+    document.querySelectorAll('[role="tab"]').forEach(button => {
+        button.setAttribute('aria-selected', 'false');
+        button.setAttribute('tabindex', '-1');
+    });
+
+    // Show selected panel
+    const selectedPanel = document.getElementById(`panel-${tabName}`);
+    if (selectedPanel) {
+        selectedPanel.setAttribute('aria-hidden', 'false');
+    }
+
+    // Select active button
+    const selectedButton = document.getElementById(`tab-${tabName}`);
+    if (selectedButton) {
+        selectedButton.setAttribute('aria-selected', 'true');
+        selectedButton.setAttribute('tabindex', '0');
+        selectedButton.focus();
+    }
+
+    // Load data for the selected tab
+    switch(tabName) {
+        case 'overview':
+            loadStats();
+            break;
+        case 'api-keys':
+            loadApiKeys();
+            break;
+        case 'sessions':
+            loadSessions();
+            break;
+        case 'users':
+            loadInstructorList();
+            break;
+    }
+}
+
+// Tab Hamburger Menu (Mobile)
+function initTabHamburgerMenu() {
+    const hamburgerBtn = document.getElementById('tab-hamburger-btn');
+    const tabList = document.getElementById('tab-menu-list');
+    const overlay = document.getElementById('tab-menu-overlay');
+    
+    if (!hamburgerBtn || !tabList || !overlay) return;
+    
+    // Toggle menu on hamburger click
+    hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = tabList.classList.contains('open');
+        if (isOpen) {
+            closeTabMenu();
+        } else {
+            openTabMenu();
+        }
+    });
+    
+    // Close menu on overlay click
+    overlay.addEventListener('click', closeTabMenu);
+    
+    // Close menu on tab button click
+    tabList.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', closeTabMenu);
+    });
+    
+    // Close menu on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && tabList.classList.contains('open')) {
+            closeTabMenu();
+            hamburgerBtn.focus();
+        }
+    });
+    
+    // Close menu on window resize (when switching to desktop)
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (window.innerWidth > 768 && tabList.classList.contains('open')) {
+                closeTabMenu();
+            }
+        }, 250);
+    });
+}
+
+function openTabMenu() {
+    const hamburgerBtn = document.getElementById('tab-hamburger-btn');
+    const tabList = document.getElementById('tab-menu-list');
+    const overlay = document.getElementById('tab-menu-overlay');
+    
+    if (tabList) {
+        tabList.classList.add('open');
+        hamburgerBtn.setAttribute('aria-expanded', 'true');
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeTabMenu() {
+    const hamburgerBtn = document.getElementById('tab-hamburger-btn');
+    const tabList = document.getElementById('tab-menu-list');
+    const overlay = document.getElementById('tab-menu-overlay');
+    
+    if (tabList) {
+        tabList.classList.remove('open');
+        hamburgerBtn.setAttribute('aria-expanded', 'false');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
+// Initialize tab on page load - restore from localStorage or use default
+window.addEventListener('load', function() {
+    // First, check if URL has a hash (anchor) - ignore it
+    // Instead, use localStorage to remember the last tab
+    const savedTab = localStorage.getItem('adminActiveTab') || 'overview';
+    
+    // Remove any hash from URL to prevent browser jumping
+    if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname);
+    }
+    
+    // Initialize hamburger menu for mobile
+    initTabHamburgerMenu();
+    
+    switchTab(savedTab);
+});
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', function(event) {
+    const tabName = event.state?.tab || localStorage.getItem('adminActiveTab') || 'overview';
+    switchTab(tabName);
+});
+
 // Admin-specific authentication helper functions
 // Note: Admin uses admin_token (JWT), different from instructor API keys
 function getAuthHeaders() {
@@ -46,85 +198,180 @@ async function loadStats() {
     }
 }
 
+// Global sessions data for filtering
+let allSessions = [];
+let currentDateRange = 'all';
+
 async function loadSessions() {
-    const activeOnly = document.getElementById('active-only').checked;
-    const tbody = document.getElementById('sessions-tbody');
+    const grid = document.getElementById('sessions-grid');
 
     try {
-        const response = await fetch(`/api/admin/sessions?active_only=${activeOnly}&limit=100`, {
+        const response = await fetch(`/api/admin/sessions?limit=500`, {
             headers: getAuthHeaders()
         });
         
         if (handleAuthError(response)) return;
         if (!response.ok) throw new Error('Failed to load sessions');
 
-        const sessions = await response.json();
-
-        if (sessions.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
-                        No sessions found
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = sessions.map(session => {
-            const createdDate = new Date(session.created_at);
-            const formattedDate = createdDate.toLocaleString();
-            const statusBadge = session.is_active
-                ? '<span class="badge badge-active">Active</span>'
-                : '<span class="badge badge-ended">Ended</span>';
-
-            const instructorUrl = `${window.location.origin}/instructor?code=${session.instructor_code}`;
-            const studentUrl = `${window.location.origin}/student?code=${session.meeting_code}`;
-
-            return `
-                <tr>
-                    <td><input type="checkbox" class="session-checkbox" value="${session.id}"></td>
-                    <td><strong>${escapeHtml(session.title)}</strong></td>
-                    <td>${formattedDate}</td>
-                    <td>${statusBadge}</td>
-                    <td>${session.question_count}</td>
-                    <td>
-                        <div style="font-size: 0.85rem;">
-                            <div>Student: <span class="code-snippet">${session.meeting_code}</span></div>
-                            <div>Instructor: <span class="code-snippet">${session.instructor_code}</span></div>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn-view" onclick="window.open('${instructorUrl}', '_blank')">
-                            👁️ View
-                        </button>
-                        ${session.is_active ? `
-                        <button class="btn-view" onclick="endSessionAdmin(${session.id}, '${session.instructor_code}', '${escapeHtml(session.title)}')">
-                            🛑 End
-                        </button>
-                        ` : `
-                        <button class="btn-success" onclick="restartSessionAdmin(${session.id}, '${session.instructor_code}', '${escapeHtml(session.title)}')">
-                            🔄 Restart
-                        </button>
-                        `}
-                        <button class="btn-delete" onclick="deleteSession(${session.id}, '${escapeHtml(session.title)}')">
-                            🗑️ Delete
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        allSessions = await response.json();
+        filterSessions();
     } catch (error) {
         console.error('Error loading sessions:', error);
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 40px; color: #dc3545;">
-                    Error loading sessions. Please try again.
-                </td>
-            </tr>
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #dc3545; grid-column: 1 / -1;">
+                Error loading sessions. Please try again.
+            </div>
         `;
         showNotification('Failed to load sessions', 'error');
     }
+}
+
+function filterSessions() {
+    const searchTerm = document.getElementById('sessions-search')?.value.toLowerCase() || '';
+    const status = document.querySelector('input[name="sessions-status"]:checked')?.value || 'all';
+    const sortBy = document.getElementById('sessions-sort')?.value || 'created-newest';
+    const grid = document.getElementById('sessions-grid');
+
+    // Filter sessions
+    let filtered = allSessions.filter(session => {
+        // Search filter
+        if (searchTerm && !session.title.toLowerCase().includes(searchTerm)) {
+            return false;
+        }
+
+        // Status filter
+        if (status === 'active' && !session.is_active) return false;
+        if (status === 'ended' && session.is_active) return false;
+
+        // Date range filter
+        if (currentDateRange !== 'all') {
+            const sessionDate = new Date(session.created_at);
+            const now = new Date();
+            const diffDays = Math.floor((now - sessionDate) / (1000 * 60 * 60 * 24));
+
+            if (currentDateRange === 'today' && diffDays > 0) return false;
+            if (currentDateRange === 'week' && diffDays > 7) return false;
+            if (currentDateRange === 'month' && diffDays > 30) return false;
+        }
+
+        return true;
+    });
+
+    // Sort sessions
+    switch(sortBy) {
+        case 'created-oldest':
+            filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            break;
+        case 'questions-most':
+            filtered.sort((a, b) => (b.question_count || 0) - (a.question_count || 0));
+            break;
+        case 'title-az':
+            filtered.sort((a, b) => a.title.localeCompare(b.title));
+            break;
+        case 'created-newest':
+        default:
+            filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
+    // Render cards
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666; grid-column: 1 / -1;">
+                <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
+                <p>No sessions found matching your filters</p>
+            </div>
+        `;
+        document.getElementById('sessions-count').textContent = '0 sessions';
+        return;
+    }
+
+    grid.innerHTML = filtered.map(session => {
+        const createdDate = new Date(session.created_at);
+        const formattedDate = createdDate.toLocaleDateString();
+        const formattedTime = createdDate.toLocaleTimeString();
+        const statusBadge = session.is_active
+            ? '<span class="badge badge-active">Active</span>'
+            : '<span class="badge badge-ended">Ended</span>';
+
+        const instructorUrl = `${window.location.origin}/instructor?code=${session.instructor_code}`;
+
+        return `
+            <div class="session-card">
+                <div class="session-card-header">
+                    <div style="flex: 1;">
+                        <h3 class="session-card-title">${escapeHtml(session.title)}</h3>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="checkbox" class="session-checkbox" value="${session.id}" style="width: 20px; height: 20px; cursor: pointer;">
+                        ${statusBadge}
+                    </div>
+                </div>
+
+                <div class="session-card-meta">
+                    <span>📅 ${formattedDate}</span>
+                    <span>🕐 ${formattedTime}</span>
+                </div>
+
+                <div class="session-card-stats">
+                    <div class="session-card-stat">
+                        <div class="session-card-stat-label">Questions</div>
+                        <div class="session-card-stat-value">${session.question_count || 0}</div>
+                    </div>
+                    <div class="session-card-stat">
+                        <div class="session-card-stat-label">Students</div>
+                        <div class="session-card-stat-value">${session.students_count || 0}</div>
+                    </div>
+                </div>
+
+                <div class="session-card-codes">
+                    <div>📱 Student: <strong>${session.meeting_code}</strong></div>
+                    <div>👨‍🏫 Instructor: <strong>${session.instructor_code}</strong></div>
+                </div>
+
+                <div class="session-card-actions">
+                    <button class="btn btn-secondary" onclick="window.open('${instructorUrl}', '_blank')" style="flex: 1; min-height: 40px;">👁️ View</button>
+                    ${session.is_active ? `
+                    <button class="btn btn-secondary" onclick="endSessionAdmin(${session.id}, '${session.instructor_code}', '${escapeHtml(session.title)}')" style="flex: 1; min-height: 40px;">🛑 End</button>
+                    ` : `
+                    <button class="btn btn-success" onclick="restartSessionAdmin(${session.id}, '${session.instructor_code}', '${escapeHtml(session.title)}')" style="flex: 1; min-height: 40px;">🔄 Restart</button>
+                    `}
+                    <button class="btn btn-danger" onclick="deleteSession(${session.id}, '${escapeHtml(session.title)}')" style="flex: 1; min-height: 40px;">🗑️ Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('sessions-count').textContent = `${filtered.length} session${filtered.length !== 1 ? 's' : ''}`;
+}
+
+function setSessionDateRange(range) {
+    currentDateRange = range;
+    
+    // Update active button
+    document.querySelectorAll('.date-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.range === range) {
+            btn.classList.add('active');
+        }
+    });
+
+    filterSessions();
+}
+
+function clearSessionFilters() {
+    document.getElementById('sessions-search').value = '';
+    document.querySelector('input[name="sessions-status"][value="all"]').checked = true;
+    document.getElementById('sessions-sort').value = 'created-newest';
+    currentDateRange = 'all';
+    
+    document.querySelectorAll('.date-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.range === 'all') {
+            btn.classList.add('active');
+        }
+    });
+
+    filterSessions();
 }
 
 async function deleteSession(sessionId, sessionTitle) {
@@ -582,9 +829,9 @@ async function loadInstructors() {
     const searchTerm = document.getElementById('instructor-search')?.value || '';
     const statusFilter = document.getElementById('instructor-status-filter')?.value || '';
     const loginFilter = document.getElementById('instructor-login-filter')?.value || '';
+    const grid = document.getElementById('instructors-grid');
 
-    const tbody = document.getElementById('instructors-tbody');
-    if (!tbody) return; // Tab might not be loaded yet
+    if (!grid) return; // Tab might not be loaded yet
 
     try {
         // Build query parameters
@@ -607,37 +854,36 @@ async function loadInstructors() {
         if (!response.ok) throw new Error('Failed to load instructors');
 
         const instructors = await response.json();
-        renderInstructorsTable(instructors);
+        renderInstructorsCards(instructors);
     } catch (error) {
         console.error('Error loading instructors:', error);
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align: center; padding: 40px; color: #dc3545;">
-                    Error loading instructors. Please try again.
-                </td>
-            </tr>
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #dc3545; grid-column: 1 / -1;">
+                Error loading instructors. Please try again.
+            </div>
         `;
         showNotification('Failed to load instructors', 'error');
     }
 }
 
-function renderInstructorsTable(instructors) {
-    const tbody = document.getElementById('instructors-tbody');
+function renderInstructorsCards(instructors) {
+    const grid = document.getElementById('instructors-grid');
+    const countEl = document.getElementById('instructor-count');
 
     if (instructors.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
-                    No instructors found
-                </td>
-            </tr>
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666; grid-column: 1 / -1;">
+                <div style="font-size: 48px; margin-bottom: 10px;">👥</div>
+                <p>No instructors found</p>
+            </div>
         `;
+        countEl.textContent = '0 instructors';
         return;
     }
 
-    tbody.innerHTML = instructors.map(instructor => {
-        const createdDate = new Date(instructor.created_at);
+    grid.innerHTML = instructors.map(instructor => {
         const lastLogin = instructor.last_login ? new Date(instructor.last_login) : null;
+        const displayName = instructor.display_name || instructor.username;
 
         // Badge styling
         let badgeClass = '';
@@ -653,62 +899,81 @@ function renderInstructorsTable(instructors) {
             badgeText = 'Placeholder';
         }
 
-        // Display name
-        const displayName = instructor.display_name || instructor.username;
-        const subtitle = instructor.email ? `<div style="font-size: 0.85rem; color: #666;">${escapeHtml(instructor.email)}</div>` : '';
+        // Role styling
+        let roleColor = '#4a90e2';
+        if (instructor.role === 'ADMIN') roleColor = '#f39c12';
+        else if (instructor.role === 'SUPER_ADMIN') roleColor = '#e74c3c';
+        else if (instructor.role === 'INACTIVE') roleColor = '#95a5a6';
 
         return `
-            <tr data-instructor-id="${instructor.id}">
-                <td><input type="checkbox" class="instructor-checkbox" value="${instructor.id}"></td>
-                <td>
-                    <div><strong>${escapeHtml(displayName)}</strong></div>
-                    <div style="font-size: 0.85rem; color: #666;">@${escapeHtml(instructor.username)}</div>
-                    ${subtitle}
-                </td>
-                <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-                <td>${instructor.classes_count}</td>
-                <td>
-                    ${instructor.sessions_count}
-                    ${instructor.active_sessions_count > 0 ? `<span class="badge badge-active" style="font-size: 0.75rem; margin-left: 4px;">${instructor.active_sessions_count} active</span>` : ''}
-                </td>
-                <td>${lastLogin ? lastLogin.toLocaleString() : 'Never'}</td>
-                <td>
-                    <button class="btn-view instructor-view-btn">
-                        👁️ View
-                    </button>
+            <div class="instructor-card" data-instructor-id="${instructor.id}">
+                <div class="instructor-card-header">
+                    <div style="flex: 1;">
+                        <h3 class="instructor-card-name">${escapeHtml(displayName)}</h3>
+                        <div style="font-size: 13px; color: var(--text-secondary);">@${escapeHtml(instructor.username)}</div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background-color: ${roleColor}20; color: ${roleColor}; font-weight: 600;">${instructor.role}</span>
+                        <input type="checkbox" class="instructor-checkbox" value="${instructor.id}" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                </div>
+
+                ${instructor.email ? `<div class="instructor-card-email">${escapeHtml(instructor.email)}</div>` : ''}
+
+                <div class="instructor-card-stats">
+                    <div class="instructor-card-stat">
+                        <div class="instructor-card-stat-label">Classes</div>
+                        <div class="instructor-card-stat-value">${instructor.classes_count}</div>
+                    </div>
+                    <div class="instructor-card-stat">
+                        <div class="instructor-card-stat-label">Sessions</div>
+                        <div class="instructor-card-stat-value">${instructor.sessions_count}</div>
+                    </div>
+                    ${instructor.active_sessions_count > 0 ? `
+                    <div class="instructor-card-stat">
+                        <div class="instructor-card-stat-label">Active</div>
+                        <div class="instructor-card-stat-value" style="color: #28a745;">${instructor.active_sessions_count}</div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="instructor-card-meta">
+                    ${lastLogin ? `Last login: ${lastLogin.toLocaleDateString()}` : 'Last login: Never'}
+                </div>
+
+                <div class="instructor-card-actions">
+                    <button class="btn btn-secondary instructor-view-btn" style="flex: 1; min-height: 40px;">👁️ View</button>
                     ${instructor.is_active ? `
-                    <button class="btn-delete instructor-deactivate-btn" style="background: #ffc107; color: #000;">
-                        🚫 Deactivate
-                    </button>
+                    <button class="btn btn-secondary instructor-deactivate-btn" style="flex: 1; min-height: 40px;">🚫 Deactivate</button>
                     ` : `
-                    <button class="btn-success instructor-activate-btn">
-                        ✅ Activate
-                    </button>
+                    <button class="btn btn-success instructor-activate-btn" style="flex: 1; min-height: 40px;">✅ Activate</button>
                     `}
-                </td>
-            </tr>
+                </div>
+            </div>
         `;
     }).join('');
-    
+
     // Add event listeners using event delegation
-    tbody.addEventListener('click', function(e) {
+    grid.addEventListener('click', function(e) {
         const viewBtn = e.target.closest('.instructor-view-btn');
         const deactivateBtn = e.target.closest('.instructor-deactivate-btn');
         const activateBtn = e.target.closest('.instructor-activate-btn');
         
-        const row = e.target.closest('tr');
-        const instructorId = parseInt(row.getAttribute('data-instructor-id'));
+        const card = e.target.closest('.instructor-card');
+        const instructorId = parseInt(card.getAttribute('data-instructor-id'));
+        const instructor = instructors.find(i => i.id === instructorId);
         
         if (viewBtn) {
             viewInstructorDetail(instructorId);
         } else if (deactivateBtn) {
-            const username = row.querySelector('strong').textContent;
-            deactivateInstructor(instructorId, username);
+            deactivateInstructor(instructorId, instructor.display_name || instructor.username);
         } else if (activateBtn) {
-            const username = row.querySelector('strong').textContent;
-            activateInstructor(instructorId, username);
+            activateInstructor(instructorId, instructor.display_name || instructor.username);
         }
     });
+
+    countEl.textContent = `${instructors.length} instructor${instructors.length !== 1 ? 's' : ''}`;
 }
 
 function debouncedSearchInstructors() {
@@ -897,8 +1162,6 @@ async function bulkDeleteInstructors() {
 let currentInstructorId = null;
 
 async function viewInstructorDetail(instructorId) {
-    console.log('viewInstructorDetail called with ID:', instructorId, 'Type:', typeof instructorId);
-    
     if (!instructorId || instructorId === 'null' || isNaN(instructorId)) {
         console.error('Invalid instructor ID:', instructorId);
         showNotification('Error: Invalid instructor ID', 'error');
@@ -908,7 +1171,13 @@ async function viewInstructorDetail(instructorId) {
     currentInstructorId = instructorId;
 
     // Show modal
-    document.getElementById('instructor-detail-modal').classList.add('active');
+    const modal = document.getElementById('instructor-detail-modal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        return;
+    }
+    
+    modal.setAttribute('aria-modal', 'true');
 
     try {
         const response = await fetch(`/api/admin/instructors/${instructorId}`, {
@@ -1011,7 +1280,7 @@ function populateInstructorModal(instructor) {
 function hideInstructorDetailModal() {
     const modal = document.getElementById('instructor-detail-modal');
     if (modal) {
-        modal.classList.remove('active');
+        modal.setAttribute('aria-modal', 'false');
     }
     // Don't reset currentInstructorId here - we might need it for viewFullDetails()
     // It will be reset when opening a new instructor or explicitly
@@ -1102,7 +1371,7 @@ async function resetPasswordFromModal() {
         // Show password reset modal
         document.getElementById('reset-instructor-username').textContent = username;
         document.getElementById('temp-password-display').value = result.temporary_password;
-        document.getElementById('password-reset-modal').classList.add('active');
+        document.getElementById('password-reset-modal').setAttribute('aria-modal', 'true');
 
         // Auto-copy to clipboard
         await copyToClipboard(result.temporary_password);
@@ -1114,7 +1383,7 @@ async function resetPasswordFromModal() {
 }
 
 function hidePasswordResetModal() {
-    document.getElementById('password-reset-modal').classList.remove('active');
+    document.getElementById('password-reset-modal').setAttribute('aria-modal', 'false');
     document.getElementById('temp-password-display').value = '';
 }
 

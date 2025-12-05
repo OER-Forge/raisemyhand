@@ -15,6 +15,10 @@
             top: 0;
             z-index: 100;
             box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
         }
 
         .tab-list {
@@ -24,6 +28,7 @@
             padding: 0;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            flex: 1;
         }
 
         .tab-list li {
@@ -32,11 +37,11 @@
 
         .tab-button {
             display: block;
-            padding: 15px 25px;
+            padding: 15px 20px;
             border: none;
             background: none;
             color: var(--text-secondary);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -76,11 +81,105 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Mobile: Stack tabs */
+        /* Prevent scroll-to-anchor behavior */
+        html {
+            scroll-behavior: auto;
+        }
+
+        /* Tab Hamburger Menu for Mobile */
+        .tab-hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            min-width: 44px;
+            min-height: 44px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .tab-hamburger-btn:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        /* Tab Menu Overlay */
+        .tab-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 199;
+        }
+
+        .tab-menu-overlay.open {
+            display: block;
+        }
+
+        /* Mobile: Convert tabs to hamburger menu */
         @media (max-width: 768px) {
+            .tab-navigation {
+                padding: 0;
+                flex-wrap: wrap;
+            }
+
+            .tab-hamburger-btn {
+                display: block;
+                margin: 0;
+            }
+
+            .tab-list {
+                display: none;
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
+                background: var(--card-bg);
+                flex-direction: column;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                transition: right 0.3s ease;
+                padding-top: 60px;
+                border-left: 1px solid var(--border-color);
+                z-index: 200;
+                margin: 0;
+            }
+
+            .tab-list.open {
+                display: flex;
+                right: 0;
+            }
+
+            .tab-list li {
+                width: 100%;
+                flex-shrink: 1;
+            }
+
             .tab-button {
-                padding: 12px 20px;
-                font-size: 0.9rem;
+                padding: 15px 20px;
+                border-bottom: 1px solid var(--border-color);
+                border-right: 4px solid transparent;
+                width: 100%;
+                text-align: left;
+                font-size: 1rem;
+            }
+
+            .tab-button[aria-selected="true"] {
+                border-bottom: 1px solid var(--border-color);
+                border-right: 4px solid var(--primary-color);
+                background: rgba(74, 144, 226, 0.05);
+            }
+
+            .tab-button:hover {
+                background: rgba(74, 144, 226, 0.05);
             }
         }
 
@@ -189,6 +288,280 @@
             background: #0056b3;
         }
 
+        /* Session Card Styles */
+        .session-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .session-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .session-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .session-card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin: 0;
+            flex: 1;
+            min-width: 150px;
+            line-height: 1.3;
+        }
+
+        .session-card-meta {
+            display: flex;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .session-card-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            padding: 12px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .session-card-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .session-card-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        .session-card-stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .session-card-codes {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .session-card-codes div {
+            margin-bottom: 4px;
+        }
+
+        .session-card-codes div:last-child {
+            margin-bottom: 0;
+        }
+
+        .session-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .session-card-actions button {
+            flex: 1;
+            min-width: 80px;
+            min-height: 40px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        /* Instructor Card Styles */
+        .instructor-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .instructor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .instructor-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .instructor-card-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin: 0;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .instructor-card-email {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .instructor-card-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            padding: 12px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .instructor-card-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .instructor-card-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        .instructor-card-stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .instructor-card-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .instructor-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .instructor-card-actions button {
+            flex: 1;
+            min-width: 70px;
+            min-height: 40px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .date-filter-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            color: var(--text-primary);
+        }
+
+        .date-filter-btn:hover {
+            background-color: #f0f0f0;
+            border-color: var(--primary-color);
+        }
+
+        .date-filter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .date-filter-btn:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .session-card {
+                padding: 16px;
+            }
+
+            .session-card-title {
+                font-size: 16px;
+            }
+
+            .session-card-stat-value {
+                font-size: 16px;
+            }
+
+            #sessions-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-group {
+                min-width: unset;
+            }
+
+            .search-group input {
+                width: 100%;
+            }
+        }
+
         .filters {
             margin-bottom: 20px;
             display: flex;
@@ -232,6 +605,186 @@
         .logout-btn:hover {
             background: #c82333;
         }
+
+        /* User Management - Card Layout */
+        .instructor-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .instructor-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-color);
+        }
+
+        .instructor-card:focus-within {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Button Variations */
+        .btn-sm {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            min-height: 40px;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+
+        .btn-warning:focus {
+            outline: 2px solid #f39c12;
+            outline-offset: 2px;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-success:focus {
+            outline: 2px solid #27ae60;
+            outline-offset: 2px;
+        }
+
+        /* Modal Dialog - improved accessibility */
+        .modal {
+            display: none !important;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal[aria-modal="true"] {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        /* Form Accessibility */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            min-height: 44px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 0;
+            border-color: var(--primary-color);
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin: 0.5rem 0 0 0;
+            display: block;
+        }
+
+        /* Mobile Responsive - Card Grid */
+        @media (max-width: 768px) {
+            .tab-button {
+                padding: 12px 16px;
+                font-size: 0.85rem;
+            }
+
+            .modal-content {
+                padding: 20px;
+                margin: 0 10px;
+            }
+
+            .form-group input,
+            .form-group select {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .btn-sm {
+                min-width: 100%;
+                margin-top: 8px;
+            }
+        }
+
+        /* Prefers Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Status Badge Colors - Color + Icon for accessibility */
+        .status-active {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .status-inactive {
+            color: #dc3545;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -250,7 +803,16 @@
     <div class="container">
         <!-- Tab Navigation -->
         <nav class="tab-navigation" role="tablist" aria-label="Admin dashboard sections">
-            <ul class="tab-list">
+            <button
+                class="tab-hamburger-btn"
+                id="tab-hamburger-btn"
+                aria-label="Toggle tab menu"
+                aria-expanded="false"
+                aria-controls="tab-menu-list">
+                ☰
+            </button>
+            <div class="tab-menu-overlay" id="tab-menu-overlay"></div>
+            <ul class="tab-list" id="tab-menu-list">
                 <li role="presentation">
                     <button
                         role="tab"
@@ -261,18 +823,6 @@
                         tabindex="0"
                         onclick="switchTab('overview')">
                         📊 Overview
-                    </button>
-                </li>
-                <li role="presentation">
-                    <button
-                        role="tab"
-                        id="tab-instructors"
-                        class="tab-button"
-                        aria-selected="false"
-                        aria-controls="panel-instructors"
-                        tabindex="-1"
-                        onclick="switchTab('instructors')">
-                        👥 Instructors
                     </button>
                 </li>
                 <li role="presentation">
@@ -297,6 +847,18 @@
                         tabindex="-1"
                         onclick="switchTab('sessions')">
                         📝 Sessions
+                    </button>
+                </li>
+                <li role="presentation">
+                    <button
+                        role="tab"
+                        id="tab-users"
+                        class="tab-button"
+                        aria-selected="false"
+                        aria-controls="panel-users"
+                        tabindex="-1"
+                        onclick="switchTab('users')">
+                        👥 Users
                     </button>
                 </li>
                 <li role="presentation">
@@ -355,143 +917,6 @@
         <div
             role="tabpanel"
             id="panel-instructors"
-            class="tab-panel"
-            aria-labelledby="tab-instructors"
-            aria-hidden="true">
-
-            <!-- Header -->
-            <div class="section-header">
-                <h2>Instructor Management</h2>
-                <div class="button-group">
-                    <button
-                        class="btn btn-secondary"
-                        onclick="refreshInstructors()"
-                        aria-label="Refresh instructor list">
-                        🔄 Refresh
-                    </button>
-                </div>
-            </div>
-
-            <!-- Search and Filters -->
-            <div class="filters-container" style="background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow);">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                    <!-- Search -->
-                    <div class="form-group" style="margin: 0;">
-                        <label for="instructor-search">Search</label>
-                        <input
-                            type="text"
-                            id="instructor-search"
-                            placeholder="Username, email, or name..."
-                            aria-label="Search instructors by username, email, or name"
-                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
-                            onkeyup="debouncedSearchInstructors()">
-                    </div>
-
-                    <!-- Status Filter -->
-                    <div class="form-group" style="margin: 0;">
-                        <label for="instructor-status-filter">Status</label>
-                        <select
-                            id="instructor-status-filter"
-                            aria-label="Filter by instructor status"
-                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
-                            onchange="filterInstructors()">
-                            <option value="">All Statuses</option>
-                            <option value="active">Active (Registered)</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="placeholder">Placeholder (No Login)</option>
-                        </select>
-                    </div>
-
-                    <!-- Login Filter -->
-                    <div class="form-group" style="margin: 0;">
-                        <label for="instructor-login-filter">Login Activity</label>
-                        <select
-                            id="instructor-login-filter"
-                            aria-label="Filter by login activity"
-                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
-                            onchange="filterInstructors()">
-                            <option value="">All</option>
-                            <option value="7">Last 7 days</option>
-                            <option value="30">Last 30 days</option>
-                            <option value="90">Last 90 days</option>
-                            <option value="never">Never logged in</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Clear Filters -->
-                <div style="margin-top: 15px;">
-                    <button
-                        class="btn btn-secondary"
-                        onclick="clearInstructorFilters()"
-                        style="padding: 8px 16px; font-size: 0.9rem;">
-                        Clear Filters
-                    </button>
-                    <span id="instructor-count" style="margin-left: 15px; color: var(--text-secondary);">
-                        Loading...
-                    </span>
-                </div>
-            </div>
-
-            <!-- Bulk Actions -->
-            <div
-                class="bulk-actions"
-                style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <strong>Bulk Actions:</strong>
-                <button
-                    class="btn btn-success"
-                    onclick="bulkActivateInstructors()"
-                    aria-label="Activate selected instructors"
-                    style="min-width: 44px; min-height: 44px;">
-                    ✅ Activate Selected
-                </button>
-                <button
-                    class="btn btn-secondary"
-                    onclick="bulkDeactivateInstructors()"
-                    aria-label="Deactivate selected instructors"
-                    style="min-width: 44px; min-height: 44px;">
-                    🚫 Deactivate Selected
-                </button>
-                <button
-                    class="btn btn-danger"
-                    onclick="bulkDeleteInstructors()"
-                    aria-label="Delete selected instructors"
-                    style="min-width: 44px; min-height: 44px;">
-                    🗑️ Delete Selected
-                </button>
-            </div>
-
-            <!-- Instructors Table -->
-            <div class="sessions-table">
-                <table role="table" aria-label="Instructors list">
-                    <thead>
-                        <tr>
-                            <th scope="col">
-                                <input
-                                    type="checkbox"
-                                    id="select-all-instructors"
-                                    onchange="toggleSelectAllInstructors()"
-                                    aria-label="Select all instructors"
-                                    style="width: 20px; height: 20px; cursor: pointer;">
-                            </th>
-                            <th scope="col">Name</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Classes</th>
-                            <th scope="col">Sessions</th>
-                            <th scope="col">Last Login</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="instructors-tbody">
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px;">
-                                <div class="spinner" style="margin: 0 auto 10px;"></div>
-                                Loading instructors...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
 
         <!-- Tab Panel: API Keys -->
@@ -540,43 +965,93 @@
 
             <div class="section-header">
                 <h2>All Sessions</h2>
-                <div class="filters">
-                    <label>
-                        <input type="checkbox" id="active-only"> Active only
-                    </label>
-                    <button class="btn btn-secondary" onclick="refreshSessions()">
-                        🔄 Refresh
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filters" style="background: var(--card-bg); padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: var(--shadow); display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                
+                <!-- Search Group -->
+                <div class="search-group" style="flex: 1; min-width: 200px;">
+                    <label for="sessions-search" style="font-weight: 500; color: var(--text-primary); margin-bottom: 5px; display: block;">Search</label>
+                    <input
+                        type="text"
+                        id="sessions-search"
+                        placeholder="Search sessions by title..."
+                        onkeyup="filterSessions()"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                </div>
+
+                <!-- Status Filter -->
+                <div class="filter-group" style="display: flex; flex-direction: column;">
+                    <label style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">Status</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="sessions-status" value="all" checked onchange="filterSessions()" style="cursor: pointer;">
+                            All
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="sessions-status" value="active" onchange="filterSessions()" style="cursor: pointer;">
+                            Active
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="sessions-status" value="ended" onchange="filterSessions()" style="cursor: pointer;">
+                            Ended
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div style="display: flex; flex-direction: column;">
+                    <label for="sessions-sort" style="font-weight: 500; color: var(--text-primary); margin-bottom: 5px; display: block;">Sort By</label>
+                    <select
+                        id="sessions-sort"
+                        onchange="filterSessions()"
+                        style="padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; background-color: white; cursor: pointer; min-width: 150px;">
+                        <option value="created-newest">Newest First</option>
+                        <option value="created-oldest">Oldest First</option>
+                        <option value="questions-most">Most Questions</option>
+                        <option value="title-az">Title (A-Z)</option>
+                    </select>
+                </div>
+
+                <!-- Date Range Buttons -->
+                <div style="display: flex; flex-direction: column;">
+                    <label style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">Date Range</label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button class="date-filter-btn active" data-range="all" onclick="setSessionDateRange('all')" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background-color: white; cursor: pointer; font-size: 13px; transition: all 0.2s;">All Time</button>
+                        <button class="date-filter-btn" data-range="today" onclick="setSessionDateRange('today')" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background-color: white; cursor: pointer; font-size: 13px; transition: all 0.2s;">Today</button>
+                        <button class="date-filter-btn" data-range="week" onclick="setSessionDateRange('week')" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background-color: white; cursor: pointer; font-size: 13px; transition: all 0.2s;">This Week</button>
+                        <button class="date-filter-btn" data-range="month" onclick="setSessionDateRange('month')" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background-color: white; cursor: pointer; font-size: 13px; transition: all 0.2s;">This Month</button>
+                    </div>
+                </div>
+
+                <!-- Clear Button -->
+                <div style="display: flex; align-items: flex-end;">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="clearSessionFilters()"
+                        style="padding: 10px 16px; font-size: 14px; height: 44px;">
+                        ✕ Clear Filters
                     </button>
                 </div>
+
             </div>
 
             <!-- Bulk Actions -->
-            <div class="bulk-actions" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center;">
+            <div class="bulk-actions" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <strong>Bulk Actions:</strong>
-                <button class="btn btn-secondary" onclick="bulkEndSessions()">🛑 End Selected</button>
-                <button class="btn btn-secondary" onclick="bulkRestartSessions()">🔄 Restart Selected</button>
-                <button class="btn btn-danger" onclick="bulkDeleteSessions()">🗑️ Delete Selected</button>
+                <button class="btn btn-secondary" onclick="bulkEndSessions()" style="min-width: 44px; min-height: 44px;">🛑 End Selected</button>
+                <button class="btn btn-secondary" onclick="bulkRestartSessions()" style="min-width: 44px; min-height: 44px;">🔄 Restart Selected</button>
+                <button class="btn btn-danger" onclick="bulkDeleteSessions()" style="min-width: 44px; min-height: 44px;">🗑️ Delete Selected</button>
+                <span id="sessions-count" style="margin-left: auto; color: var(--text-secondary); font-size: 14px;">Loading...</span>
             </div>
 
-            <div class="sessions-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" id="select-all" onchange="toggleSelectAll()"></th>
-                            <th>Title</th>
-                            <th>Created</th>
-                            <th>Status</th>
-                            <th>Questions</th>
-                            <th>Codes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sessions-tbody">
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px;">Loading...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Sessions Grid -->
+            <div id="sessions-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                <div style="text-align: center; padding: 40px; color: #666; grid-column: 1 / -1;">
+                    <div class="spinner" style="margin: 0 auto 10px;"></div>
+                    Loading sessions...
+                </div>
             </div>
         </div>
 
@@ -704,6 +1179,184 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tab Panel: Users -->
+        <div
+            role="tabpanel"
+            id="panel-users"
+            class="tab-panel"
+            aria-labelledby="tab-users"
+            aria-hidden="true">
+            <h2>User Management</h2>
+            <p style="color: #7f8c8d; margin-bottom: 2rem;">Create and manage all user accounts (instructors, admins, etc).</p>
+            
+            <!-- Stats Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 2rem;">
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: var(--shadow); text-align: center;">
+                    <div style="font-size: 14px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; margin-bottom: 8px;">Total</div>
+                    <div style="font-size: 28px; font-weight: bold; color: var(--primary-color);" id="stat-total-instructors">-</div>
+                </div>
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: var(--shadow); text-align: center;">
+                    <div style="font-size: 14px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; margin-bottom: 8px;">Active</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #27ae60;" id="stat-active-instructors">-</div>
+                </div>
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: var(--shadow); text-align: center;">
+                    <div style="font-size: 14px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; margin-bottom: 8px;">Inactive</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #dc3545;" id="stat-inactive-instructors">-</div>
+                </div>
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: var(--shadow); text-align: center;">
+                    <div style="font-size: 14px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; margin-bottom: 8px;">Admins</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #f39c12;" id="stat-admin-count">-</div>
+                </div>
+            </div>
+            
+            <!-- Create User Button -->
+            <div style="margin-bottom: 2rem;">
+                <button 
+                    class="btn btn-primary"
+                    onclick="openCreateUserModal()"
+                    aria-label="Open create new user dialog"
+                    style="min-height: 44px; padding: 10px 20px; font-weight: 600;">
+                    ➕ Create New User
+                </button>
+            </div>
+            
+            <!-- Filters Section -->
+            <div style="background: var(--card-bg); padding: 15px 16px; border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 8px; align-items: center; flex: 1; min-width: 200px;">
+                    <label for="instructor-search" style="font-weight: 600; color: #333; font-size: 14px; white-space: nowrap;">Search:</label>
+                    <input 
+                        type="text" 
+                        id="instructor-search" 
+                        placeholder="Username or email..." 
+                        onkeyup="loadInstructorList()"
+                        style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; min-width: 150px;">
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label for="instructor-role-filter" style="font-weight: 600; color: #333; font-size: 14px;">Role:</label>
+                    <select 
+                        id="instructor-role-filter"
+                        onchange="loadInstructorList()"
+                        style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; background-color: white; cursor: pointer; min-height: 36px;">
+                        <option value="">All Roles</option>
+                        <option value="INSTRUCTOR">Instructor</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label for="instructor-status-filter" style="font-weight: 600; color: #333; font-size: 14px;">Status:</label>
+                    <select 
+                        id="instructor-status-filter"
+                        onchange="loadInstructorList()"
+                        style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; background-color: white; cursor: pointer; min-height: 36px;">
+                        <option value="">All</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Instructor Cards List -->
+            <div id="instructor-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+                <p style="text-align: center; color: #7f8c8d; grid-column: 1 / -1;">Loading instructors...</p>
+            </div>
+            
+            <!-- Live region for screen readers -->
+            <div id="instructor-updates-live" aria-live="polite" aria-atomic="true" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
+            
+            <!-- Create User Modal (inside Users tab) -->
+            <div class="modal" id="create-user-modal" role="dialog" aria-labelledby="create-user-modal-title" aria-modal="false">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 id="create-user-modal-title" style="margin: 0;">Create New Instructor</h2>
+                        <button 
+                            type="button"
+                            class="modal-close-btn"
+                            onclick="closeCreateUserModal()"
+                            aria-label="Close dialog"
+                            style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <form id="create-user-form" onsubmit="handleCreateUser(event)">
+                        <div class="form-group">
+                            <label for="new-username">Username <span style="color: #dc3545;" aria-label="required">*</span></label>
+                            <input
+                                type="text"
+                                id="new-username"
+                                placeholder="e.g., john_doe"
+                                required
+                                minlength="3"
+                                maxlength="50"
+                                pattern="[a-zA-Z0-9_\-]+"
+                                aria-describedby="username-hint">
+                            <p class="form-hint" id="username-hint">3-50 characters, letters/numbers/dash/underscore only</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-password">Password <span style="color: #dc3545;" aria-label="required">*</span></label>
+                            <input
+                                type="password"
+                                id="new-password"
+                                placeholder="Minimum 8 characters"
+                                required
+                                minlength="8"
+                                aria-describedby="password-hint">
+                            <p class="form-hint" id="password-hint">Minimum 8 characters. User can change after first login.</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-email">Email <span style="color: #999; font-size: 12px;">(optional)</span></label>
+                            <input
+                                type="email"
+                                id="new-email"
+                                placeholder="instructor@institution.edu">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-display-name">Display Name <span style="color: #999; font-size: 12px;">(optional)</span></label>
+                            <input
+                                type="text"
+                                id="new-display-name"
+                                placeholder="Name shown to students">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-role">Initial Role</label>
+                            <select 
+                                id="new-role"
+                                aria-describedby="role-hint"
+                                style="padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; width: 100%; min-height: 44px;">
+                                <option value="INSTRUCTOR">Instructor (Standard)</option>
+                                <option value="ADMIN">Admin (System Manager)</option>
+                            </select>
+                            <p class="form-hint" id="role-hint">ADMIN role: can manage other users. (Only SUPER_ADMIN can create ADMIN accounts)</p>
+                        </div>
+                        
+                        <div id="create-user-message" style="margin: 1rem 0; padding: 12px; border-radius: 4px; display: none;"></div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button 
+                                type="submit" 
+                                class="btn btn-primary" 
+                                style="flex: 1; min-height: 44px;">
+                                ✅ Create Instructor
+                            </button>
+                            <button 
+                                type="button" 
+                                class="btn btn-secondary" 
+                                onclick="closeCreateUserModal()"
+                                style="flex: 1; min-height: 44px;">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Create API Key Modal -->
@@ -774,7 +1427,7 @@
     </div>
 
     <!-- Quick View Instructor Modal -->
-    <div id="instructor-detail-modal" class="modal" role="dialog" aria-labelledby="instructor-detail-title" aria-modal="true">
+    <div id="instructor-detail-modal" class="modal" role="dialog" aria-labelledby="instructor-detail-title" aria-modal="false">
         <div class="modal-content" style="max-width: 800px; text-align: left;">
             <!-- Header -->
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
@@ -890,7 +1543,7 @@
     </div>
 
     <!-- Password Reset Success Modal -->
-    <div id="password-reset-modal" class="modal" role="dialog" aria-labelledby="password-reset-title" aria-modal="true">
+    <div id="password-reset-modal" class="modal" role="dialog" aria-labelledby="password-reset-title" aria-modal="false">
         <div class="modal-content" style="max-width: 600px;">
             <h2 id="password-reset-title" style="margin-bottom: 20px;">🔑 Password Reset Successful</h2>
 
@@ -933,7 +1586,7 @@
     </div>
 
     <script src="/static/js/shared.js?v=3"></script>
-    <script src="/static/js/admin.js?v=3"></script>
+    <script src="/static/js/admin.js?v=6"></script>
     <script>
         // Tab navigation logic
         function switchTab(tabName) {
@@ -962,6 +1615,8 @@
                 loadStats();
             } else if (tabName === 'instructors') {
                 loadInstructors();
+            } else if (tabName === 'users') {
+                loadInstructorList();
             } else if (tabName === 'api-keys') {
                 loadApiKeys();
             } else if (tabName === 'sessions') {
@@ -1204,10 +1859,276 @@
             showNotification('Settings refreshed', 'success');
         }
 
-        // Initialize: Load overview on page load
-        window.addEventListener('load', function() {
-            switchTab('overview');
-        });
+        // ===== User Management Functions =====
+        
+        function openCreateUserModal() {
+            const modal = document.getElementById('create-user-modal');
+            modal.setAttribute('aria-modal', 'true');
+            // Focus on first input
+            setTimeout(() => document.getElementById('new-username').focus(), 100);
+            // Announce to screen readers
+            document.getElementById('instructor-updates-live').textContent = 'Create new instructor dialog opened';
+        }
+        
+        function closeCreateUserModal() {
+            const modal = document.getElementById('create-user-modal');
+            modal.removeAttribute('aria-modal');
+            document.getElementById('create-user-form').reset();
+            document.getElementById('create-user-message').style.display = 'none';
+        }
+        
+        async function handleCreateUser(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('new-username').value;
+            const password = document.getElementById('new-password').value;
+            const email = document.getElementById('new-email').value || null;
+            const display_name = document.getElementById('new-display-name').value || null;
+            const role = document.getElementById('new-role').value;
+            const messageDiv = document.getElementById('create-user-message');
+            
+            try {
+                const response = await fetch('/api/admin/users/instructors', {
+                    method: 'POST',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        email: email,
+                        display_name: display_name,
+                        role: role
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to create user');
+                }
+                
+                const result = await response.json();
+                
+                // Show success message
+                messageDiv.style.display = 'block';
+                messageDiv.innerHTML = `✅ <strong>${username}</strong> created successfully`;
+                messageDiv.style.color = '#155724';
+                messageDiv.style.background = '#d4edda';
+                messageDiv.style.borderLeft = '4px solid #28a745';
+                
+                // Announce to screen readers
+                document.getElementById('instructor-updates-live').textContent = `${username} created with ${role} role`;
+                
+                // Clear form
+                document.getElementById('create-user-form').reset();
+                
+                // Reload instructor list
+                setTimeout(() => {
+                    closeCreateUserModal();
+                    loadInstructorList();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error creating user:', error);
+                messageDiv.style.display = 'block';
+                messageDiv.innerHTML = `❌ <strong>Error:</strong> ${error.message}`;
+                messageDiv.style.color = '#721c24';
+                messageDiv.style.background = '#f8d7da';
+                messageDiv.style.borderLeft = '4px solid #dc3545';
+                
+                // Announce to screen readers
+                document.getElementById('instructor-updates-live').textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        async function loadInstructorList() {
+            const container = document.getElementById('instructor-list-container');
+            const searchTerm = document.getElementById('instructor-search').value.toLowerCase();
+            const roleFilter = document.getElementById('instructor-role-filter').value;
+            const statusFilter = document.getElementById('instructor-status-filter').value;
+            
+            try {
+                const response = await fetch(`/api/admin/instructors?active_only=false`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load instructors');
+                
+                let instructors = await response.json();
+                
+                // Apply filters
+                instructors = instructors.filter(instructor => {
+                    // Search filter
+                    const matchesSearch = !searchTerm || 
+                        instructor.username.toLowerCase().includes(searchTerm) ||
+                        (instructor.email && instructor.email.toLowerCase().includes(searchTerm));
+                    
+                    // Role filter
+                    const matchesRole = !roleFilter || instructor.role === roleFilter;
+                    
+                    // Status filter
+                    const matchesStatus = !statusFilter || 
+                        (statusFilter === 'active' && instructor.is_active) ||
+                        (statusFilter === 'inactive' && !instructor.is_active);
+                    
+                    return matchesSearch && matchesRole && matchesStatus;
+                });
+                
+                // Update stats
+                updateInstructorStats(instructors);
+                
+                if (instructors.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #7f8c8d; grid-column: 1 / -1; padding: 40px 20px;">No instructors found</p>';
+                    return;
+                }
+                
+                let html = '';
+                instructors.forEach(instructor => {
+                    const statusClass = instructor.is_active ? 'status-active' : 'status-inactive';
+                    const statusText = instructor.is_active ? '✅ Active' : '🔴 Inactive';
+                    const statusColor = instructor.is_active ? '#27ae60' : '#dc3545';
+                    const createdDate = new Date(instructor.created_at).toLocaleDateString();
+                    const lastLoginText = instructor.last_login 
+                        ? new Date(instructor.last_login).toLocaleDateString()
+                        : 'Never';
+                    
+                    html += `
+                    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: var(--shadow); transition: box-shadow 0.2s;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                <h3 style="margin: 0 0 4px 0; font-size: 16px;">${instructor.username}</h3>
+                                <p style="margin: 0; color: #7f8c8d; font-size: 13px;">${instructor.email || 'No email'}</p>
+                            </div>
+                            <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 600; white-space: nowrap;">
+                                ${statusText}
+                            </span>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 13px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div>
+                                    <span style="color: #7f8c8d; font-weight: 600;">Role:</span>
+                                    <span style="color: ${instructor.role === 'ADMIN' ? '#f39c12' : '#2c3e50'}; font-weight: 600;">${instructor.role}</span>
+                                </div>
+                                <div>
+                                    <span style="color: #7f8c8d; font-weight: 600;">Created:</span>
+                                    <span style="color: #2c3e50;">${createdDate}</span>
+                                </div>
+                                <div>
+                                    <span style="color: #7f8c8d; font-weight: 600;">Last Login:</span>
+                                    <span style="color: #2c3e50;">${lastLoginText}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button 
+                                class="btn btn-sm btn-primary"
+                                onclick="viewInstructorDetail(${instructor.id})"
+                                aria-label="View details for instructor ${instructor.username}"
+                                style="flex: 1; min-height: 40px; min-width: 100px; padding: 8px 12px; font-size: 0.9rem;">
+                                👁️ View
+                            </button>`;
+                    
+                    if (instructor.is_active) {
+                        html += `
+                            <button 
+                                class="btn btn-sm btn-warning"
+                                onclick="deactivateUser(${instructor.id}, '${instructor.username}')"
+                                aria-label="Deactivate instructor ${instructor.username}"
+                                style="flex: 1; min-height: 40px; min-width: 120px; padding: 8px 12px; font-size: 0.9rem;">
+                                🔴 Deactivate
+                            </button>`;
+                    } else {
+                        html += `
+                            <button 
+                                class="btn btn-sm btn-success"
+                                onclick="activateUser(${instructor.id}, '${instructor.username}')"
+                                aria-label="Activate instructor ${instructor.username}"
+                                style="flex: 1; min-height: 40px; min-width: 120px; padding: 8px 12px; font-size: 0.9rem;">
+                                ✅ Activate
+                            </button>`;
+                    }
+                    
+                    html += `</div>
+                    </div>`;
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading instructors:', error);
+                container.innerHTML = `<p style="color: #dc3545; grid-column: 1 / -1; padding: 40px 20px;">Failed to load instructors: ${error.message}</p>`;
+                document.getElementById('instructor-updates-live').textContent = `Error loading instructors: ${error.message}`;
+            }
+        }
+        
+        function updateInstructorStats(instructors) {
+            const total = instructors.length;
+            const active = instructors.filter(i => i.is_active).length;
+            const inactive = total - active;
+            const admins = instructors.filter(i => i.role === 'ADMIN').length;
+            
+            document.getElementById('stat-total-instructors').textContent = total;
+            document.getElementById('stat-active-instructors').textContent = active;
+            document.getElementById('stat-inactive-instructors').textContent = inactive;
+            document.getElementById('stat-admin-count').textContent = admins;
+        }
+        
+        async function deactivateUser(instructorId, username) {
+            const reason = prompt(`Deactivate ${username}?\n\nEnter reason (optional):`, 'Administrative decision');
+            
+            if (reason === null) return; // User cancelled
+            
+            try {
+                const response = await fetch(`/api/admin/instructors/${instructorId}/deactivate`, {
+                    method: 'PUT',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reason: reason || 'No reason provided'
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to deactivate user');
+                
+                showNotification(`${username} deactivated. All sessions ended, API keys revoked.`, 'success');
+                document.getElementById('instructor-updates-live').textContent = `${username} has been deactivated`;
+                loadInstructorList();
+                
+            } catch (error) {
+                console.error('Error deactivating user:', error);
+                showNotification(`Failed to deactivate ${username}`, 'error');
+                document.getElementById('instructor-updates-live').textContent = `Error deactivating ${username}`;
+            }
+        }
+        
+        async function activateUser(instructorId, username) {
+            if (!confirm(`Activate ${username}?`)) return;
+            
+            try {
+                const response = await fetch(`/api/admin/instructors/${instructorId}/activate`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to activate user');
+                
+                showNotification(`${username} reactivated`, 'success');
+                document.getElementById('instructor-updates-live').textContent = `${username} has been reactivated`;
+                loadInstructorList();
+                
+            } catch (error) {
+                console.error('Error activating user:', error);
+                showNotification(`Failed to activate ${username}`, 'error');
+                document.getElementById('instructor-updates-live').textContent = `Error activating ${username}`;
+            }
+        }
+
+        // Initialize: Load overview on page load (moved to admin.js)
     </script>
 </body>
 </html>

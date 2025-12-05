@@ -2,11 +2,12 @@
 Admin-specific routes for instructor and system management
 Requires admin JWT authentication
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status, Header, Body
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime, timedelta
+from pydantic import BaseModel
 import secrets
 import string
 
@@ -21,11 +22,21 @@ from schemas_v2 import (
     BulkPasswordResetResponse,
     InstructorExportData
 )
-from security import get_password_hash, verify_jwt_token
+from security import get_password_hash, verify_jwt_token, verify_role
+from services.user_management_service import UserManagementService
 from logging_config import get_logger, log_security_event, log_database_operation
 
 router = APIRouter(prefix="/api/admin/instructors", tags=["admin-instructors"])
 logger = get_logger(__name__)
+
+
+class InstructorCreateRequest(BaseModel):
+    """Request schema for creating instructor"""
+    username: str
+    email: Optional[str] = None
+    display_name: Optional[str] = None
+    password: str
+    role: str = "INSTRUCTOR"
 
 
 def verify_admin(authorization: str = Header(...)) -> str:
@@ -138,6 +149,7 @@ async def list_instructors(
             username=instructor.username,
             email=instructor.email,
             display_name=instructor.display_name,
+            role=instructor.role,
             created_at=instructor.created_at,
             last_login=instructor.last_login,
             is_active=instructor.is_active,
@@ -263,6 +275,7 @@ async def get_instructor_detail(
         username=instructor.username,
         email=instructor.email,
         display_name=instructor.display_name,
+        role=instructor.role,
         created_at=instructor.created_at,
         last_login=instructor.last_login,
         is_active=instructor.is_active,

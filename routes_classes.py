@@ -390,25 +390,12 @@ def get_meeting_by_code(
     
     questions = query.order_by(Question.created_at.desc()).all()
     
-    # SECURITY: For students, use sanitized text for approved questions with profanity
-    if not is_instructor_view:
-        for q in questions:
-            # If profanity was flagged and sanitized version exists, use it for approved questions
-            if q.flagged_reason == 'profanity' and q.sanitized_text:
-                q.text = q.sanitized_text
-    
-    # For instructors, mark approved profane questions as "flagged" and use sanitized text for display
-    # Keep rejected ones as "rejected"
-    if is_instructor_view:
-        for q in questions:
-            if q.flagged_reason == 'profanity':
-                if q.status == 'approved':
-                    # Mark approved-but-profane questions as flagged for visual distinction
-                    q.status = 'flagged'
-                    # Show sanitized text for approved profane questions
-                    if q.sanitized_text:
-                        q.text = q.sanitized_text
-            # Rejected questions stay as "rejected"
+    # SECURITY: Use sanitized text for display when profanity was detected
+    # This applies to both students and instructors
+    for q in questions:
+        # If profanity was flagged and sanitized version exists, use it for display
+        if q.flagged_reason == 'profanity' and q.sanitized_text:
+            q.text = q.sanitized_text
     
     meeting.questions = questions
     
