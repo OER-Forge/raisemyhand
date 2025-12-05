@@ -828,18 +828,6 @@
                 <li role="presentation">
                     <button
                         role="tab"
-                        id="tab-instructors"
-                        class="tab-button"
-                        aria-selected="false"
-                        aria-controls="panel-instructors"
-                        tabindex="-1"
-                        onclick="switchTab('instructors')">
-                        👥 Instructors
-                    </button>
-                </li>
-                <li role="presentation">
-                    <button
-                        role="tab"
                         id="tab-api-keys"
                         class="tab-button"
                         aria-selected="false"
@@ -870,7 +858,7 @@
                         aria-controls="panel-users"
                         tabindex="-1"
                         onclick="switchTab('users')">
-                        👤 Users
+                        👥 Users
                     </button>
                 </li>
                 <li role="presentation">
@@ -929,143 +917,6 @@
         <div
             role="tabpanel"
             id="panel-instructors"
-            class="tab-panel"
-            aria-labelledby="tab-instructors"
-            aria-hidden="true">
-
-            <!-- Header -->
-            <div class="section-header">
-                <h2>Instructor Management</h2>
-            </div>
-
-            <!-- Search and Filters -->
-            <div class="filters-container" style="background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow);">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                    <!-- Search -->
-                    <div class="form-group" style="margin: 0;">
-                        <label for="instructor-search">Search</label>
-                        <input
-                            type="text"
-                            id="instructor-search"
-                            placeholder="Username, email, or name..."
-                            aria-label="Search instructors by username, email, or name"
-                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
-                            onkeyup="debouncedSearchInstructors()">
-                    </div>
-
-                    <!-- Status Filter -->
-                    <div class="form-group" style="margin: 0;">
-                        <label for="instructor-status-filter">Status</label>
-                        <select
-                            id="instructor-status-filter"
-                            aria-label="Filter by instructor status"
-                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
-                            onchange="filterInstructors()">
-                            <option value="">All Statuses</option>
-                            <option value="active">Active (Registered)</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="placeholder">Placeholder (No Login)</option>
-                        </select>
-                    </div>
-
-                    <!-- Login Filter -->
-                    <div class="form-group" style="margin: 0;">
-                        <label for="instructor-login-filter">Login Activity</label>
-                        <select
-                            id="instructor-login-filter"
-                            aria-label="Filter by login activity"
-                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
-                            onchange="filterInstructors()">
-                            <option value="">All</option>
-                            <option value="7">Last 7 days</option>
-                            <option value="30">Last 30 days</option>
-                            <option value="90">Last 90 days</option>
-                            <option value="never">Never logged in</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Clear Filters -->
-                <div style="margin-top: 15px;">
-                    <button
-                        class="btn btn-secondary"
-                        onclick="clearInstructorFilters()"
-                        style="padding: 8px 16px; font-size: 0.9rem;">
-                        Clear Filters
-                    </button>
-                    <span id="instructor-count" style="margin-left: 15px; color: var(--text-secondary);">
-                        Loading...
-                    </span>
-                </div>
-            </div>
-
-            <!-- Bulk Actions -->
-            <div
-                class="bulk-actions"
-                style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <strong>Bulk Actions:</strong>
-                <button
-                    class="btn btn-success"
-                    onclick="bulkActivateInstructors()"
-                    aria-label="Activate selected instructors"
-                    style="min-width: 44px; min-height: 44px;">
-                    ✅ Activate Selected
-                </button>
-                <button
-                    class="btn btn-secondary"
-                    onclick="bulkDeactivateInstructors()"
-                    aria-label="Deactivate selected instructors"
-                    style="min-width: 44px; min-height: 44px;">
-                    🚫 Deactivate Selected
-                </button>
-                <button
-                    class="btn btn-danger"
-                    onclick="bulkDeleteInstructors()"
-                    aria-label="Delete selected instructors"
-                    style="min-width: 44px; min-height: 44px;">
-                    🗑️ Delete Selected
-                </button>
-            </div>
-
-            <!-- Instructors Table (Hidden - using cards instead) -->
-            <div class="sessions-table" style="display: none;">
-                <table role="table" aria-label="Instructors list">
-                    <thead>
-                        <tr>
-                            <th scope="col">
-                                <input
-                                    type="checkbox"
-                                    id="select-all-instructors"
-                                    onchange="toggleSelectAllInstructors()"
-                                    aria-label="Select all instructors"
-                                    style="width: 20px; height: 20px; cursor: pointer;">
-                            </th>
-                            <th scope="col">Name</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Classes</th>
-                            <th scope="col">Sessions</th>
-                            <th scope="col">Last Login</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="instructors-tbody">
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px;">
-                                <div class="spinner" style="margin: 0 auto 10px;"></div>
-                                Loading instructors...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Instructors Grid (Card View) -->
-            <div id="instructors-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
-                <div style="text-align: center; padding: 40px; color: #666; grid-column: 1 / -1;">
-                    <div class="spinner" style="margin: 0 auto 10px;"></div>
-                    Loading instructors...
-                </div>
-            </div>
         </div>
 
         <!-- Tab Panel: API Keys -->
@@ -1337,7 +1188,7 @@
             aria-labelledby="tab-users"
             aria-hidden="true">
             <h2>User Management</h2>
-            <p style="color: #7f8c8d; margin-bottom: 2rem;">Create and manage instructor accounts.</p>
+            <p style="color: #7f8c8d; margin-bottom: 2rem;">Create and manage all user accounts (instructors, admins, etc).</p>
             
             <!-- Stats Grid -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 2rem;">
@@ -1364,9 +1215,9 @@
                 <button 
                     class="btn btn-primary"
                     onclick="openCreateUserModal()"
-                    aria-label="Open create new instructor dialog"
+                    aria-label="Open create new user dialog"
                     style="min-height: 44px; padding: 10px 20px; font-weight: 600;">
-                    ➕ Create New Instructor
+                    ➕ Create New User
                 </button>
             </div>
             
@@ -2037,7 +1888,7 @@
             const messageDiv = document.getElementById('create-user-message');
             
             try {
-                const response = await fetch('/api/admin/instructors', {
+                const response = await fetch('/api/admin/users/instructors', {
                     method: 'POST',
                     headers: {
                         ...getAuthHeaders(),

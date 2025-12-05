@@ -5,7 +5,11 @@ let ws = null;
 let upvotedQuestions = new Set();
 let studentId = null; // Track student ID for vote tracking
 
+console.log('[STUDENT] Meeting code from URL:', meetingCode);
+console.log('[STUDENT] Full URL:', window.location.href);
+
 if (!meetingCode) {
+    console.error('[STUDENT] No meeting code found in URL');
     alert('Invalid meeting code');
     window.location.href = '/';
 }
@@ -21,6 +25,12 @@ function getStudentId() {
 }
 
 studentId = getStudentId();
+
+// Initialize profanity filter if available
+let profanityFilter = null;
+if (typeof Filter !== 'undefined') {
+    profanityFilter = new Filter();
+}
 
 // Markdown rendering helpers
 function renderMarkdownNoImages(text) {

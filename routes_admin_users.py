@@ -17,7 +17,7 @@ from security import verify_role, get_password_hash
 from services.user_management_service import UserManagementService
 from logging_config import log_security_event, get_logger
 
-router = APIRouter(prefix="/api/admin/instructors", tags=["admin-users"])
+router = APIRouter(prefix="/api/admin/users/instructors", tags=["admin-users"])
 logger = get_logger(__name__)
 
 

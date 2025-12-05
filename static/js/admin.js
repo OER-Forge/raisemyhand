@@ -42,9 +42,6 @@ function switchTab(tabName) {
         case 'overview':
             loadStats();
             break;
-        case 'instructors':
-            loadInstructors();
-            break;
         case 'api-keys':
             loadApiKeys();
             break;
@@ -902,6 +899,12 @@ function renderInstructorsCards(instructors) {
             badgeText = 'Placeholder';
         }
 
+        // Role styling
+        let roleColor = '#4a90e2';
+        if (instructor.role === 'ADMIN') roleColor = '#f39c12';
+        else if (instructor.role === 'SUPER_ADMIN') roleColor = '#e74c3c';
+        else if (instructor.role === 'INACTIVE') roleColor = '#95a5a6';
+
         return `
             <div class="instructor-card" data-instructor-id="${instructor.id}">
                 <div class="instructor-card-header">
@@ -909,7 +912,8 @@ function renderInstructorsCards(instructors) {
                         <h3 class="instructor-card-name">${escapeHtml(displayName)}</h3>
                         <div style="font-size: 13px; color: var(--text-secondary);">@${escapeHtml(instructor.username)}</div>
                     </div>
-                    <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background-color: ${roleColor}20; color: ${roleColor}; font-weight: 600;">${instructor.role}</span>
                         <input type="checkbox" class="instructor-checkbox" value="${instructor.id}" style="width: 20px; height: 20px; cursor: pointer;">
                         <span class="badge ${badgeClass}">${badgeText}</span>
                     </div>

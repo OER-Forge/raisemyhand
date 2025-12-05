@@ -307,6 +307,7 @@ class AdminInstructorListResponse(BaseModel):
     username: str
     email: Optional[str]
     display_name: Optional[str]
+    role: str  # INSTRUCTOR, ADMIN, SUPER_ADMIN, INACTIVE
     created_at: datetime
     last_login: Optional[datetime]
     is_active: bool
@@ -357,6 +358,7 @@ class AdminInstructorDetailResponse(BaseModel):
     username: str
     email: Optional[str]
     display_name: Optional[str]
+    role: str  # INSTRUCTOR, ADMIN, SUPER_ADMIN, INACTIVE
     created_at: datetime
     last_login: Optional[datetime]
     is_active: bool

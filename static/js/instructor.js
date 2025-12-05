@@ -178,14 +178,12 @@ function renderQuestions() {
     const questionsList = document.getElementById('questions-list');
     const questions = meetingData.questions || [];
 
-    // Include approved questions AND approved flagged questions (flagged status but has flagged_reason showing it was reviewed)
-    // Only exclude rejected questions and questions still pending review (flagged without approval)
-    const approvedQuestions = questions.filter(q => {
-        if (q.status === 'rejected') return false; // Exclude rejected
-        if (q.status === 'flagged' && !q.flagged_reason) return false; // Exclude unapproved flagged
-        return true; // Include approved and approved-flagged
-    });
-    const flaggedQuestions = questions.filter(q => q.status === 'rejected' || (q.status === 'flagged' && !q.flagged_reason));
+    // Filter questions by status:
+    // - Approved: show in "All Questions" tab
+    // - Flagged: show in "Flagged for Review" tab (needs instructor action)
+    // - Rejected: show in "Flagged for Review" tab (already moderated)
+    const approvedQuestions = questions.filter(q => q.status === 'approved');
+    const flaggedQuestions = questions.filter(q => q.status === 'flagged' || q.status === 'rejected');
 
     // Update counts
     document.getElementById('question-count').textContent =
