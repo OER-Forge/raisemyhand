@@ -26,10 +26,10 @@ function getStudentId() {
 
 studentId = getStudentId();
 
-// Initialize profanity filter if available
+// Initialize profanity filter if available (leo-profanity library)
 let profanityFilter = null;
-if (typeof Filter !== 'undefined') {
-    profanityFilter = new Filter();
+if (typeof LeoProfanity !== 'undefined') {
+    profanityFilter = LeoProfanity;
 }
 
 // Markdown rendering helpers
@@ -309,7 +309,7 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
     }
 
     // Client-side profanity check (warning only, not blocking)
-    if (profanityFilter && profanityFilter.isProfane(text)) {
+    if (profanityFilter && profanityFilter.check(text)) {
         const proceed = confirm(
             '⚠️ Your question may contain inappropriate language.\n\n' +
             'It will be flagged for instructor review before being visible to others.\n\n' +
