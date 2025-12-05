@@ -163,11 +163,15 @@ function renderQuestions() {
     const questionsList = document.getElementById('questions-list');
     const questions = meetingData.questions || [];
 
+    // NOTE: Server-side filtering now handles removing flagged/rejected questions for students
+    // All questions in this array are already approved for student viewing
+    const visibleQuestions = questions;
+
     // Update count
     document.getElementById('question-count').textContent =
-        `${questions.length} question${questions.length !== 1 ? 's' : ''}`;
+        `${visibleQuestions.length} question${visibleQuestions.length !== 1 ? 's' : ''}`;
 
-    if (questions.length === 0) {
+    if (visibleQuestions.length === 0) {
         questionsList.innerHTML = `
             <div class="empty-state" role="status">
                 <div class="empty-state-icon" aria-hidden="true">💭</div>
@@ -178,7 +182,7 @@ function renderQuestions() {
     }
 
     // Sort by upvotes (descending), then by creation time
-    const sortedQuestions = [...questions].sort((a, b) => {
+    const sortedQuestions = [...visibleQuestions].sort((a, b) => {
         if (b.upvotes !== a.upvotes) {
             return b.upvotes - a.upvotes;
         }
@@ -275,6 +279,9 @@ async function toggleVote(questionId) {
     }
 }
 
+// NOTE: Profanity filtering is now handled server-side
+// Questions are checked and censored before being sent to students
+
 document.getElementById('question-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -289,6 +296,18 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
     if (!text) {
         showNotification('Please enter a question', 'error');
         return;
+    }
+
+    // Client-side profanity check (warning only, not blocking)
+    if (profanityFilter && profanityFilter.isProfane(text)) {
+        const proceed = confirm(
+            '⚠️ Your question may contain inappropriate language.\n\n' +
+            'It will be flagged for instructor review before being visible to others.\n\n' +
+            'Do you want to submit it anyway?'
+        );
+        if (!proceed) {
+            return;
+        }
     }
 
     const submitBtn = e.target.querySelector('button[type="submit"]');

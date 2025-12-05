@@ -158,10 +158,34 @@
                 <h3>Questions</h3>
                 <span class="question-count" id="question-count">0 questions</span>
             </div>
-            <div id="questions-list">
-                <div class="empty-state">
-                    <div class="empty-state-icon">💭</div>
-                    <div class="empty-state-text">No questions yet. Share the session URL with your students!</div>
+
+            <!-- Tabs for All Questions vs Flagged Questions -->
+            <div class="question-tabs">
+                <button class="tab-btn active" data-tab="all" onclick="switchQuestionTab('all')">
+                    All Questions <span id="all-count" class="tab-badge">0</span>
+                </button>
+                <button class="tab-btn" data-tab="flagged" onclick="switchQuestionTab('flagged')">
+                    🚩 Flagged for Review <span id="flagged-count" class="tab-badge warning">0</span>
+                </button>
+            </div>
+
+            <!-- All Questions Tab -->
+            <div id="all-questions-tab" class="tab-content active">
+                <div id="questions-list">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💭</div>
+                        <div class="empty-state-text">No questions yet. Share the session URL with your students!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flagged Questions Tab -->
+            <div id="flagged-questions-tab" class="tab-content">
+                <div id="flagged-questions-list">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <div class="empty-state-text">No flagged questions. All questions are approved!</div>
+                    </div>
                 </div>
             </div>
         </div>

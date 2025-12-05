@@ -135,7 +135,13 @@ function handleWebSocketMessage(message) {
         // Add new question to meeting data
         meetingData.questions.push(message.question);
         renderQuestions();
-        showNotification('New question received!', 'success');
+
+        // Show different notification for flagged vs normal questions
+        if (message.question.status === 'flagged') {
+            showNotification('⚠️ Question flagged for review!', 'warning');
+        } else {
+            showNotification('New question received!', 'success');
+        }
     } else if (message.type === 'upvote' || message.type === 'vote_update') {
         // Update vote count
         const question = meetingData.questions.find(q => q.id === message.question_id);
@@ -150,6 +156,19 @@ function handleWebSocketMessage(message) {
             question.is_answered_in_class = message.is_answered_in_class || message.is_answered;
             renderQuestions();
         }
+    } else if (message.type === 'question_moderated') {
+        // Question was approved or rejected
+        const question = meetingData.questions.find(q => q.id === message.question_id);
+        if (question) {
+            question.status = message.status;
+            renderQuestions();
+
+            // Reload flagged questions if we're viewing that tab
+            const flaggedTab = document.getElementById('flagged-questions-tab');
+            if (flaggedTab && flaggedTab.classList.contains('active')) {
+                loadFlaggedQuestions();
+            }
+        }
     }
 }
 
@@ -157,11 +176,17 @@ function renderQuestions() {
     const questionsList = document.getElementById('questions-list');
     const questions = meetingData.questions || [];
 
-    // Update count
-    document.getElementById('question-count').textContent =
-        `${questions.length} question${questions.length !== 1 ? 's' : ''}`;
+    // Filter out flagged questions from the main list (they appear in the flagged tab)
+    const approvedQuestions = questions.filter(q => q.status !== 'flagged' && q.status !== 'rejected');
+    const flaggedQuestions = questions.filter(q => q.status === 'flagged' || q.status === 'rejected');
 
-    if (questions.length === 0) {
+    // Update counts
+    document.getElementById('question-count').textContent =
+        `${approvedQuestions.length} question${approvedQuestions.length !== 1 ? 's' : ''}`;
+    document.getElementById('all-count').textContent = approvedQuestions.length;
+    document.getElementById('flagged-count').textContent = flaggedQuestions.length;
+
+    if (approvedQuestions.length === 0) {
         questionsList.innerHTML = `
             <div class="empty-state" role="status">
                 <div class="empty-state-icon" aria-hidden="true">💭</div>
@@ -172,7 +197,7 @@ function renderQuestions() {
     }
 
     // Sort by upvotes (descending), then by creation time
-    const sortedQuestions = [...questions].sort((a, b) => {
+    const sortedQuestions = [...approvedQuestions].sort((a, b) => {
         if (b.upvotes !== a.upvotes) {
             return b.upvotes - a.upvotes;
         }
@@ -222,6 +247,11 @@ function renderQuestions() {
                                 onclick="openAnswerDialog(${q.id}, '${escapeHtml(q.text).replace(/'/g, "\\'")}', ${q.has_written_answer})"
                                 aria-label="Write answer for this question">
                             ${q.has_written_answer ? '✏️ Edit Answer' : '📝 Write Answer'}
+                        </button>
+                        <button class="btn btn-danger"
+                                onclick="deleteQuestion(${q.id})"
+                                aria-label="Delete this question">
+                            🗑️ Delete
                         </button>
                     </div>
                 </div>
@@ -682,6 +712,199 @@ function openStudentView() {
         window.open(studentUrl, '_blank', 'noopener,noreferrer');
     } else {
         showNotification('Meeting data not loaded yet', 'error');
+    }
+}
+
+// Tab Switching for Flagged Questions
+function switchQuestionTab(tab) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tab}-questions-tab`).classList.add('active');
+
+    // Load flagged questions if switching to that tab
+    if (tab === 'flagged') {
+        loadFlaggedQuestions();
+    }
+}
+
+// Load Flagged Questions
+async function loadFlaggedQuestions() {
+    if (!instructorCode) {
+        console.error('No instructorCode available');
+        return;
+    }
+
+    console.log('[FLAGGED] Loading flagged questions for instructor code:', instructorCode);
+
+    try {
+        const url = `/api/meetings/${instructorCode}/flagged-questions`;
+        console.log('[FLAGGED] Fetching from URL:', url);
+
+        const response = await authenticatedFetch(url);
+        console.log('[FLAGGED] Response status:', response.status);
+
+        const data = await response.json();
+        console.log('[FLAGGED] Data received:', data);
+
+        const flaggedList = document.getElementById('flagged-questions-list');
+        const flaggedCount = document.getElementById('flagged-count');
+
+        if (data.questions && data.questions.length > 0) {
+            console.log('[FLAGGED] Found', data.questions.length, 'flagged questions');
+            flaggedCount.textContent = data.questions.length;
+            flaggedList.innerHTML = data.questions.map(q => renderFlaggedQuestion(q)).join('');
+        } else {
+            console.log('[FLAGGED] No flagged questions found');
+            flaggedCount.textContent = '0';
+            flaggedList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">✅</div>
+                    <div class="empty-state-text">No flagged questions. All questions are approved!</div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('[FLAGGED] Failed to load flagged questions:', error);
+        showNotification('Failed to load flagged questions', 'error');
+    }
+}
+
+// Render a Flagged Question Card
+function renderFlaggedQuestion(q) {
+    // Use sanitized text for display (profanity censored)
+    const textToShow = q.sanitized_text || q.text;
+    const questionHtml = renderMarkdownNoImages(textToShow);
+    const reason = q.flagged_reason || 'inappropriate content';
+    const isRejected = q.status === 'rejected';
+    const isFlagged = q.status === 'flagged';
+
+    // Show original text for comparison if there's a sanitized version
+    const showComparison = q.sanitized_text && q.sanitized_text !== q.text;
+
+    // Determine button states based on current status
+    const approveButtonClass = isRejected ? 'btn-secondary' : 'btn-success';
+    const rejectButtonClass = isRejected ? 'btn-success' : 'btn-secondary';
+    const approveButtonLabel = isRejected ? '↩️ Approve' : '✓ Approve & Show';
+    const rejectButtonLabel = isRejected ? '✗ Rejected' : '✗ Reject & Hide';
+
+    return `
+        <div class="question-card flagged ${isRejected ? 'rejected' : ''}" data-question-id="${q.id}">
+            <div class="question-header">
+                <span class="question-badge" aria-label="Question number ${q.question_number}">Q${q.question_number}</span>
+                <div class="question-content">
+                    <div class="question-text markdown-content">${questionHtml}</div>
+                    <div class="question-meta">
+                        <span class="flagged-badge">🚩 ${reason.charAt(0).toUpperCase() + reason.slice(1)}</span>
+                        ${isRejected ? '<span class="status-badge rejected">Rejected</span>' : '<span class="status-badge flagged">Flagged</span>'}
+                        <time datetime="${q.created_at}">${new Date(q.created_at).toLocaleString()}</time>
+                    </div>
+                </div>
+            </div>
+            ${showComparison ? `
+                <div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #ff9800; border-radius: 4px; font-size: 0.9em;">
+                    <strong>Original text:</strong> ${escapeHtml(q.text)}<br>
+                    <strong>Censored as:</strong> ${escapeHtml(q.sanitized_text)}<br>
+                    <em>Profanity detected and censored</em>
+                </div>
+            ` : ''}
+            <div class="question-actions moderation-actions">
+                <button class="btn ${approveButtonClass}" 
+                        onclick="approveQuestion(${q.id})"
+                        aria-label="Approve this question"
+                        ${isRejected ? '' : 'disabled'}>
+                    ${approveButtonLabel}
+                </button>
+                <button class="btn ${rejectButtonClass}" 
+                        onclick="rejectQuestion(${q.id})"
+                        aria-label="Reject and hide this question"
+                        ${isRejected ? 'disabled' : ''}>
+                    ${rejectButtonLabel}
+                </button>
+                <button class="btn btn-danger"
+                        onclick="deleteQuestion(${q.id})"
+                        aria-label="Delete this question">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Approve a Flagged Question
+async function approveQuestion(questionId) {
+    try {
+        const response = await authenticatedFetch(`/api/questions/${questionId}/approve`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            showNotification('Question approved!', 'success');
+            // Reload both lists
+            loadFlaggedQuestions();
+            loadSession(); // Reload main questions list
+        } else {
+            throw new Error('Failed to approve question');
+        }
+    } catch (error) {
+        console.error('Failed to approve question:', error);
+        showNotification('Failed to approve question', 'error');
+    }
+}
+
+// Reject a Flagged Question
+async function rejectQuestion(questionId) {
+    if (!confirm('Are you sure you want to reject and hide this question?')) {
+        return;
+    }
+
+    try {
+        const response = await authenticatedFetch(`/api/questions/${questionId}/reject`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            showNotification('Question rejected', 'success');
+            // Reload both lists
+            loadFlaggedQuestions();
+            loadSession(); // Reload main questions list
+        } else {
+            throw new Error('Failed to reject question');
+        }
+    } catch (error) {
+        console.error('Failed to reject question:', error);
+        showNotification('Failed to reject question', 'error');
+    }
+}
+
+// Delete a Question
+async function deleteQuestion(questionId) {
+    if (!confirm('Are you sure you want to permanently delete this question? This cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await authenticatedFetch(`/api/questions/${questionId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showNotification('Question deleted successfully', 'success');
+            // Reload the questions list
+            loadSession();
+        } else {
+            throw new Error('Failed to delete question');
+        }
+    } catch (error) {
+        console.error('Failed to delete question:', error);
+        showNotification('Failed to delete question', 'error');
     }
 }
 

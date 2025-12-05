@@ -160,6 +160,7 @@ class QuestionResponse(BaseModel):
     student_id: str
     question_number: int
     text: str  # Sanitized for students, original for instructor
+    sanitized_text: Optional[str] = None  # Censored version for display to instructors
     upvotes: int
     status: str
     flagged_reason: Optional[str]

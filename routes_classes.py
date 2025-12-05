@@ -368,20 +368,96 @@ def get_meeting_by_code(
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
+    # Determine if this is an instructor view (using instructor_code) or student view
+    is_instructor_view = (meeting_code == meeting.instructor_code)
+
     # Add computed fields
     meeting.has_password = bool(meeting.password_hash)
     meeting.student_url = f"{settings.base_url}/student?code={meeting.meeting_code}"
     meeting.instructor_url = f"{settings.base_url}/instructor?code={meeting.instructor_code}"
-    meeting.question_count = db.query(func.count(Question.id)).filter(
-        Question.meeting_id == meeting.id
-    ).scalar()
-
+    
     # Load questions with their answers (eager loading)
-    meeting.questions = db.query(Question).options(
+    query = db.query(Question).options(
         selectinload(Question.answer)
     ).filter(
         Question.meeting_id == meeting.id
+    )
+    
+    # SECURITY: For students, only show approved questions (both clean and approved-with-profanity)
+    # For instructors, show all questions
+    if not is_instructor_view:
+        query = query.filter(Question.status == 'approved')
+    
+    questions = query.order_by(Question.created_at.desc()).all()
+    
+    # SECURITY: For students, use sanitized text for approved questions with profanity
+    if not is_instructor_view:
+        for q in questions:
+            # If profanity was flagged and sanitized version exists, use it for approved questions
+            if q.flagged_reason == 'profanity' and q.sanitized_text:
+                q.text = q.sanitized_text
+    
+    # For instructors, mark approved profane questions as "flagged" for visual distinction
+    # Keep rejected ones as "rejected"
+    if is_instructor_view:
+        for q in questions:
+            if q.flagged_reason == 'profanity' and q.status == 'approved':
+                # Mark approved-but-profane questions as flagged for review
+                q.status = 'flagged'
+            # Rejected questions stay as "rejected"
+    
+    meeting.questions = questions
+    
+    # Only count approved questions for students
+    if is_instructor_view:
+        meeting.question_count = len(questions)
+    else:
+        meeting.question_count = db.query(func.count(Question.id)).filter(
+            Question.meeting_id == meeting.id,
+            Question.status == 'approved'
+        ).scalar()
+
+    return meeting
+
+
+@router.get("/api/meetings/{instructor_code}/flagged-questions", response_model=ClassMeetingWithQuestions)
+def get_flagged_questions(
+    instructor_code: str,
+    db: DBSession = Depends(get_db)
+):
+    """Get flagged questions for an instructor (for review and moderation)."""
+    # Find meeting by instructor_code only (not meeting_code)
+    meeting = db.query(ClassMeeting).filter(
+        ClassMeeting.instructor_code == instructor_code
+    ).first()
+
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # Add computed fields
+    meeting.has_password = bool(meeting.password_hash)
+    meeting.student_url = f"{settings.base_url}/student?code={meeting.meeting_code}"
+    meeting.instructor_url = f"{settings.base_url}/instructor?code={meeting.instructor_code}"
+    
+    # Load only flagged and rejected questions (approved-with-profanity or rejected)
+    questions = db.query(Question).options(
+        selectinload(Question.answer)
+    ).filter(
+        (Question.meeting_id == meeting.id) &
+        (
+            (Question.flagged_reason == 'profanity') |
+            (Question.status == 'rejected')
+        )
     ).order_by(Question.created_at.desc()).all()
+    
+    # Mark approved-but-profane questions as "flagged" for UI
+    for q in questions:
+        if q.flagged_reason == 'profanity' and q.status == 'approved':
+            q.status = 'flagged'
+        # Keep rejected ones as "rejected"
+    
+    meeting.questions = questions
+    meeting.question_count = len(questions)
 
     return meeting
 

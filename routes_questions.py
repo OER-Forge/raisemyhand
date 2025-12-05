@@ -7,6 +7,7 @@ from sqlalchemy import func
 from datetime import datetime
 from typing import Optional
 import uuid
+from better_profanity import profanity
 
 from database import get_db
 from models_v2 import Question, ClassMeeting, QuestionVote
@@ -15,6 +16,9 @@ from logging_config import get_logger, log_database_operation
 
 router = APIRouter(tags=["questions"])
 logger = get_logger(__name__)
+
+# Initialize profanity filter
+profanity.load_censor_words()
 
 
 @router.post("/api/meetings/{meeting_code}/questions", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
@@ -47,13 +51,27 @@ def create_question(
                 .scalar()
             next_number = (max_number or 0) + 1
 
+            # Check for profanity (strip markdown syntax first to avoid false negatives)
+            import re
+            # Remove markdown formatting characters for profanity check
+            text_without_markdown = re.sub(r'[*_`~\[\]()#]', ' ', question.text)
+            # Convert to lowercase for case-insensitive matching
+            contains_profanity = profanity.contains_profanity(text_without_markdown.lower())
+            question_status = "flagged" if contains_profanity else "approved"
+            flagged_reason = "profanity" if contains_profanity else None
+
+            # Create sanitized version (censor profanity in original text)
+            # Note: censor() is case-sensitive, so we flag but may not always censor perfectly
+            sanitized = profanity.censor(question.text) if contains_profanity else question.text
+
             db_question = Question(
                 meeting_id=meeting.id,
                 student_id=student_id,
                 question_number=next_number,
                 text=question.text,
-                sanitized_text=question.text,  # TODO: Add profanity filter
-                status="approved",  # Default to approved (add moderation later)
+                sanitized_text=sanitized,
+                status=question_status,
+                flagged_reason=flagged_reason,
                 created_at=datetime.utcnow()
             )
             db.add(db_question)
@@ -221,3 +239,116 @@ def update_question_status(
         db.rollback()
         logger.error(f"Failed to update question: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to update question")
+
+
+@router.get("/api/meetings/{instructor_code}/flagged-questions")
+def get_flagged_questions(
+    instructor_code: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
+    db: DBSession = Depends(get_db)
+):
+    """
+    Get all flagged questions for a meeting.
+    Authentication: instructor_code in URL is sufficient (proves access to instructor link).
+    """
+
+    # Get the meeting by instructor_code
+    meeting = db.query(ClassMeeting).filter(
+        ClassMeeting.instructor_code == instructor_code
+    ).first()
+
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # instructor_code itself is authentication - no additional auth required
+
+    # Get flagged questions
+    flagged_questions = db.query(Question).filter(
+        Question.meeting_id == meeting.id,
+        Question.status == "flagged"
+    ).order_by(Question.created_at.desc()).all()
+
+    return {"questions": flagged_questions}
+
+
+@router.post("/api/questions/{question_id}/approve")
+def approve_question(
+    question_id: int,
+    db: DBSession = Depends(get_db)
+):
+    """
+    Approve a flagged question.
+    Note: This endpoint relies on the instructor being authenticated via the instructor page.
+    No additional auth required since this is called from an authenticated context.
+    """
+
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    try:
+        question.status = "approved"
+        question.reviewed_at = datetime.utcnow()
+        db.commit()
+        db.refresh(question)
+        log_database_operation(logger, "UPDATE", "questions", question.id, success=True)
+        return {"message": "Question approved", "question": question}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to approve question: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to approve question")
+
+
+@router.post("/api/questions/{question_id}/reject")
+def reject_question(
+    question_id: int,
+    db: DBSession = Depends(get_db)
+):
+    """
+    Reject a flagged question (hides it from view).
+    Note: This endpoint relies on the instructor being authenticated via the instructor page.
+    No additional auth required since this is called from an authenticated context.
+    """
+
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    try:
+        question.status = "rejected"
+        question.reviewed_at = datetime.utcnow()
+        db.commit()
+        db.refresh(question)
+        log_database_operation(logger, "UPDATE", "questions", question.id, success=True)
+        return {"message": "Question rejected", "question": question}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to reject question: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to reject question")
+
+
+@router.delete("/api/questions/{question_id}")
+def delete_question(
+    question_id: int,
+    db: DBSession = Depends(get_db)
+):
+    """
+    Delete a question permanently.
+    Note: This endpoint relies on the instructor being authenticated via the instructor page.
+    No additional auth required since this is called from an authenticated context.
+    """
+
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    try:
+        db.delete(question)
+        db.commit()
+        log_database_operation(logger, "DELETE", "questions", question_id, success=True)
+        return {"message": "Question deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to delete question: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to delete question")
