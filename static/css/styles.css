@@ -333,6 +333,123 @@ header .subtitle {
     color: var(--text-color);
 }
 
+/* Written Answer Styles */
+.written-answer {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+    background: #f0f8ff;
+}
+
+.written-answer.published {
+    border-left-color: var(--success-color);
+    background: #f0fff4;
+}
+
+.written-answer.draft {
+    border-left-color: var(--secondary-color);
+    background: #fffaf0;
+}
+
+.written-answer-header {
+    margin-bottom: 10px;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.written-answer-text {
+    color: var(--text-color);
+    font-size: 1rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Markdown Content Styles */
+.markdown-content {
+    line-height: 1.7;
+}
+
+.markdown-content p {
+    margin: 0.5em 0;
+}
+
+.markdown-content h1, .markdown-content h2, .markdown-content h3,
+.markdown-content h4, .markdown-content h5, .markdown-content h6 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
+
+.markdown-content h1 { font-size: 1.6em; }
+.markdown-content h2 { font-size: 1.4em; }
+.markdown-content h3 { font-size: 1.2em; }
+
+.markdown-content ul, .markdown-content ol {
+    margin: 0.5em 0;
+    padding-left: 2em;
+}
+
+.markdown-content li {
+    margin: 0.25em 0;
+}
+
+.markdown-content code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.markdown-content pre {
+    background: #2d2d2d;
+    color: #f8f8f8;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0.75em 0;
+}
+
+.markdown-content pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+.markdown-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    margin: 0.75em 0;
+    padding-left: 1em;
+    color: #666;
+    font-style: italic;
+}
+
+.markdown-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.markdown-content a:hover {
+    text-decoration: underline;
+}
+
+.markdown-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 0.5em 0;
+}
+
+.markdown-content strong {
+    font-weight: 600;
+}
+
+.markdown-content em {
+    font-style: italic;
+}
+
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -372,6 +489,25 @@ header .subtitle {
     max-width: 500px;
     width: 90%;
     text-align: center;
+}
+
+/* Override center alignment for answer modal (needs left-aligned text editor) */
+#answer-modal .modal-content {
+    text-align: left;
+    max-width: 800px;
+}
+
+#answer-modal h2,
+#answer-modal .form-group label {
+    text-align: left;
+}
+
+/* EasyMDE editor should be left-aligned */
+.EasyMDEContainer,
+.EasyMDEContainer .CodeMirror,
+.EasyMDEContainer .editor-toolbar,
+.EasyMDEContainer .editor-preview {
+    text-align: left;
 }
 
 .modal-content img {

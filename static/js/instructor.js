@@ -6,6 +6,26 @@ const instructorCode = new URLSearchParams(window.location.search).get('code');
 let meetingData = null; // v2: renamed from sessionData
 let ws = null;
 let config = null;
+let easyMDE = null; // Markdown editor instance
+
+// Markdown rendering helpers (same as student.js but instructors see both)
+function renderMarkdownNoImages(text) {
+    const rawHtml = marked.parse(text);
+    const cleanHtml = DOMPurify.sanitize(rawHtml, {
+        FORBID_TAGS: ['img'],
+        FORBID_ATTR: ['src', 'srcset']
+    });
+    return cleanHtml;
+}
+
+function renderMarkdownFull(text) {
+    const rawHtml = marked.parse(text);
+    const cleanHtml = DOMPurify.sanitize(rawHtml, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'img'],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class']
+    });
+    return cleanHtml;
+}
 
 // Load configuration
 async function loadConfig() {
@@ -51,8 +71,9 @@ async function loadSession() {
 
         const baseUrl = config.base_url;
         const studentUrl = `${baseUrl}/student?code=${meetingData.meeting_code}`;
-        document.getElementById('student-url').textContent = studentUrl;
-        document.getElementById('student-url').setAttribute('aria-label', `Student join URL: ${studentUrl}`);
+        const studentUrlEl = document.getElementById('student-url');
+        studentUrlEl.innerHTML = `<a href="${studentUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color); text-decoration: none; word-break: break-all;">${studentUrl}</a>`;
+        studentUrlEl.setAttribute('aria-label', `Student join URL: ${studentUrl}`);
 
         // Update status and buttons
         const statusEl = document.getElementById('session-status');
@@ -165,12 +186,23 @@ function renderQuestions() {
         const questionNumber = q.question_number || '?';
         const answerLabel = isAnswered ? 'Mark as unanswered' : 'Mark as answered';
 
+        // Check if question has a written answer (published or draft)
+        const hasWrittenAnswer = q.answer && q.answer.answer_text;
+        const isPublished = hasWrittenAnswer && q.answer.is_approved;
+        const answerText = hasWrittenAnswer ? q.answer.answer_text : '';
+
+        // Render question text with markdown (no images - student submitted)
+        const questionHtml = renderMarkdownNoImages(q.text);
+
+        // Render answer text with full markdown (images allowed - instructor created)
+        const answerHtml = hasWrittenAnswer ? renderMarkdownFull(answerText) : '';
+
         return `
             <article class="question-card ${answeredClass}" role="article">
                 <div class="question-header">
                     <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}</div>
                     <div class="question-content">
-                        <div class="question-text">${escapeHtml(q.text)}</div>
+                        <div class="question-text markdown-content">${questionHtml}</div>
                         <div class="question-meta">
                             <time datetime="${q.created_at}">Asked at ${createdTime}</time>
                         </div>
@@ -193,6 +225,14 @@ function renderQuestions() {
                         </button>
                     </div>
                 </div>
+                ${hasWrittenAnswer ? `
+                <div class="written-answer ${isPublished ? 'published' : 'draft'}" role="region" aria-label="${isPublished ? 'Published written answer' : 'Draft answer (not visible to students)'}">
+                    <div class="written-answer-header">
+                        <strong>📝 ${isPublished ? 'Published Answer' : 'Draft Answer (Not Published)'}</strong>
+                    </div>
+                    <div class="written-answer-text markdown-content">${answerHtml}</div>
+                </div>
+                ` : ''}
             </article>
         `;
     }).join('');
@@ -351,10 +391,6 @@ async function endSession() {
 }
 
 async function restartSession() {
-    if (!confirm('Are you sure you want to restart this meeting? Students will be able to submit questions again.')) {
-        return;
-    }
-
     const restartBtn = document.getElementById('restart-session-btn');
     showButtonLoading(restartBtn);
 
@@ -453,9 +489,37 @@ async function openAnswerDialog(questionId, questionText, hasAnswer) {
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
 
-    // Focus textarea
+    // Initialize EasyMDE markdown editor
+    // Destroy existing instance if it exists to avoid conflicts
+    if (easyMDE) {
+        easyMDE.toTextArea();
+        easyMDE = null;
+    }
+
+    // Create new instance
     setTimeout(() => {
-        document.getElementById('answer-text').focus();
+        easyMDE = new EasyMDE({
+            element: document.getElementById('answer-text'),
+            spellChecker: false,
+            toolbar: [
+                'bold', 'italic', 'heading', '|',
+                'quote', 'unordered-list', 'ordered-list', '|',
+                'link', 'image', '|',
+                'preview', 'side-by-side', 'fullscreen', '|',
+                'guide'
+            ],
+            placeholder: 'Write your answer using markdown...',
+            previewRender: (plainText) => {
+                return marked.parse(plainText);
+            },
+            autofocus: true,
+            status: false
+        });
+
+        // Set initial value if loading existing answer
+        if (document.getElementById('answer-text').value) {
+            easyMDE.value(document.getElementById('answer-text').value);
+        }
     }, 100);
 }
 
@@ -463,17 +527,29 @@ function closeAnswerDialog() {
     const modal = document.getElementById('answer-modal');
     modal.classList.remove('active');
     modal.setAttribute('aria-hidden', 'true');
+
+    // Clean up EasyMDE instance
+    if (easyMDE) {
+        easyMDE.toTextArea();
+        easyMDE = null;
+    }
+
     currentAnswerQuestionId = null;
     currentAnswerData = null;
 }
 
 async function submitAnswer(event) {
     event.preventDefault();
+    console.log('submitAnswer called');
 
     const questionId = document.getElementById('answer-question-id').value;
-    const answerText = document.getElementById('answer-text').value;
+    console.log('Question ID:', questionId);
 
-    if (!answerText.trim()) {
+    // Get value from EasyMDE editor
+    const answerText = easyMDE ? easyMDE.value() : document.getElementById('answer-text').value;
+    console.log('Answer text length:', answerText ? answerText.length : 0);
+
+    if (!answerText || !answerText.trim()) {
         showNotification('Please enter an answer', 'error');
         return;
     }
@@ -595,6 +671,17 @@ async function deleteAnswer() {
     } catch (error) {
         console.error('Error deleting answer:', error);
         showNotification('Failed to delete answer', 'error');
+    }
+}
+
+// Open student view in new tab
+function openStudentView() {
+    if (meetingData && meetingData.meeting_code) {
+        const baseUrl = config.base_url;
+        const studentUrl = `${baseUrl}/student?code=${meetingData.meeting_code}`;
+        window.open(studentUrl, '_blank', 'noopener,noreferrer');
+    } else {
+        showNotification('Meeting data not loaded yet', 'error');
     }
 }
 

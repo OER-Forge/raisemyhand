@@ -22,6 +22,33 @@ function getStudentId() {
 
 studentId = getStudentId();
 
+// Markdown rendering helpers
+function renderMarkdownNoImages(text) {
+    // Parse markdown to HTML
+    const rawHtml = marked.parse(text);
+
+    // Sanitize HTML and strip images (students can't use images)
+    const cleanHtml = DOMPurify.sanitize(rawHtml, {
+        FORBID_TAGS: ['img'],
+        FORBID_ATTR: ['src', 'srcset']
+    });
+
+    return cleanHtml;
+}
+
+function renderMarkdownFull(text) {
+    // Parse markdown to HTML
+    const rawHtml = marked.parse(text);
+
+    // Sanitize HTML but allow images (for instructor answers)
+    const cleanHtml = DOMPurify.sanitize(rawHtml, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'img'],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class']
+    });
+
+    return cleanHtml;
+}
+
 async function loadSession() {
     try {
         const response = await fetch(`/api/meetings/${meetingCode}`);
@@ -60,20 +87,15 @@ async function loadSession() {
         document.getElementById('session-code').textContent = meetingData.meeting_code;
 
         if (!meetingData.is_active) {
-            // Disable question submission
+            // Hide the question submission form entirely when meeting has ended
             const form = document.getElementById('question-form');
-            const textarea = document.getElementById('question-text');
-            const submitBtn = form.querySelector('button[type="submit"]');
+            const formContainer = document.querySelector('.question-form');
 
-            textarea.disabled = true;
-            textarea.setAttribute('aria-disabled', 'true');
-            submitBtn.disabled = true;
-            submitBtn.setAttribute('aria-disabled', 'true');
-            submitBtn.textContent = 'Meeting Ended';
-            submitBtn.style.cursor = 'not-allowed';
+            // Hide the form
+            form.style.display = 'none';
+            form.setAttribute('aria-hidden', 'true');
 
             // Show prominent message
-            const formContainer = document.querySelector('.question-form');
             const endedMessage = document.createElement('div');
             endedMessage.className = 'session-ended-warning';
             endedMessage.setAttribute('role', 'alert');
@@ -172,12 +194,22 @@ function renderQuestions() {
         const questionNumber = q.question_number || '?';
         const voteLabel = hasUpvoted ? 'Remove upvote' : 'Upvote question';
 
+        // Check if question has a published written answer
+        const hasWrittenAnswer = q.answer && q.answer.is_approved;
+        const answerText = hasWrittenAnswer ? q.answer.answer_text : '';
+
+        // Render question text with markdown (no images allowed for students)
+        const questionHtml = renderMarkdownNoImages(q.text);
+
+        // Render answer text with full markdown (images allowed for instructors)
+        const answerHtml = hasWrittenAnswer ? renderMarkdownFull(answerText) : '';
+
         return `
             <article class="question-card ${answeredClass}" role="article">
                 <div class="question-header">
                     <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}</div>
                     <div class="question-content">
-                        <div class="question-text">${escapeHtml(q.text)}</div>
+                        <div class="question-text markdown-content">${questionHtml}</div>
                         <div class="question-meta">
                             <time datetime="${q.created_at}">Asked at ${createdTime}</time>
                         </div>
@@ -194,6 +226,14 @@ function renderQuestions() {
                         </button>
                     </div>
                 </div>
+                ${hasWrittenAnswer ? `
+                <div class="written-answer" role="region" aria-label="Instructor's written answer">
+                    <div class="written-answer-header">
+                        <strong>📝 Instructor's Answer:</strong>
+                    </div>
+                    <div class="written-answer-text markdown-content">${answerHtml}</div>
+                </div>
+                ` : ''}
             </article>
         `;
     }).join('');

@@ -236,8 +236,8 @@ class QuestionVoteResponse(BaseModel):
 # ============================================================================
 
 class ClassMeetingWithQuestions(ClassMeetingResponse):
-    """Class meeting with questions included."""
-    questions: List[QuestionResponse] = []
+    """Class meeting with questions included (with answers for approved ones)."""
+    questions: List[QuestionWithAnswer] = []
 
     class Config:
         from_attributes = True

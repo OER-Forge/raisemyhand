@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RaiseMyHand - Instructor Dashboard</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <!-- EasyMDE markdown editor CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
     <style>
         header {
             background: var(--primary-color);
@@ -120,6 +122,9 @@
                 <div class="info-item">
                     <label>Student URL (Share this with students)</label>
                     <div class="value" id="student-url"></div>
+                    <button id="view-student-btn" class="btn btn-secondary" style="margin-top: 8px;" onclick="openStudentView()" aria-label="Open student view in new tab">
+                        👁️ View Student Page
+                    </button>
                 </div>
                 <div class="info-item">
                     <label>Session Code</label>
@@ -183,12 +188,11 @@
                         id="answer-text"
                         name="answer_text"
                         rows="10"
-                        placeholder="Write your answer here. You can use plain text."
-                        required
+                        placeholder="Write your answer using markdown..."
                         style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; resize: vertical;"
                     ></textarea>
                     <small style="color: #7f8c8d; display: block; margin-top: 8px;">
-                        Students will see this answer once you publish it.
+                        Use markdown for formatting. Students will see this answer once you publish it.
                     </small>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -204,6 +208,11 @@
             </form>
         </div>
     </div>
+
+    <!-- Markdown libraries for rendering and editing -->
+    <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <script src="/static/js/shared.js"></script>
     <script src="/static/js/instructor.js"></script>

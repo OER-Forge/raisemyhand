@@ -3,7 +3,7 @@ Class and ClassMeeting management routes for v2 API
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session as DBSession
+from sqlalchemy.orm import Session as DBSession, selectinload
 from sqlalchemy import func
 from datetime import datetime
 from typing import List, Optional
@@ -376,8 +376,10 @@ def get_meeting_by_code(
         Question.meeting_id == meeting.id
     ).scalar()
 
-    # Load questions
-    meeting.questions = db.query(Question).filter(
+    # Load questions with their answers (eager loading)
+    meeting.questions = db.query(Question).options(
+        selectinload(Question.answer)
+    ).filter(
         Question.meeting_id == meeting.id
     ).order_by(Question.created_at.desc()).all()
 
@@ -391,26 +393,12 @@ def end_meeting(
     authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """End a class meeting. Supports both JWT token and API key auth."""
-    instructor_id = None
-    
-    # Try JWT authentication first
-    if authorization and authorization.startswith("Bearer "):
-        try:
-            from routes_instructor import verify_instructor_token
-            token = authorization.split(" ")[1]
-            payload = verify_instructor_token(token)
-            instructor_id = int(payload.get("sub"))
-        except Exception:
-            pass
-    
-    # Fall back to API key
-    if instructor_id is None and api_key:
-        key_record = verify_api_key_v2(api_key, db)
-        instructor_id = key_record.instructor_id
-    elif instructor_id is None:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
+    """
+    End a class meeting.
+    Authentication: instructor_code in URL is sufficient (proves access to instructor link).
+    Also supports JWT token and API key auth for backwards compatibility.
+    """
+    # First, verify the meeting exists and get it by instructor_code
     meeting = db.query(ClassMeeting).filter(
         ClassMeeting.instructor_code == instructor_code
     ).first()
@@ -418,10 +406,32 @@ def end_meeting(
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
-    # Verify ownership - check if meeting belongs to this instructor's class
-    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
-    if not cls or cls.instructor_id != instructor_id:
-        raise HTTPException(status_code=403, detail="Not authorized to end this meeting")
+    # The instructor_code itself is authentication - if you have it, you can control the meeting
+    # This is the same security model as accessing the instructor page
+    # Optional: Also verify JWT/API key if provided for additional security
+    if authorization or api_key:
+        instructor_id = None
+
+        # Try JWT authentication
+        if authorization and authorization.startswith("Bearer "):
+            try:
+                from routes_instructor import verify_instructor_token
+                token = authorization.split(" ")[1]
+                payload = verify_instructor_token(token)
+                instructor_id = int(payload.get("sub"))
+            except Exception:
+                pass
+
+        # Try API key
+        if instructor_id is None and api_key:
+            key_record = verify_api_key_v2(api_key, db)
+            instructor_id = key_record.instructor_id
+
+        # If auth was provided, verify ownership
+        if instructor_id is not None:
+            cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+            if not cls or cls.instructor_id != instructor_id:
+                raise HTTPException(status_code=403, detail="Not authorized to end this meeting")
 
     try:
         meeting.ended_at = datetime.utcnow()
@@ -442,26 +452,12 @@ def restart_meeting(
     authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """Restart an ended meeting. Supports both JWT token and API key auth."""
-    instructor_id = None
-    
-    # Try JWT authentication first
-    if authorization and authorization.startswith("Bearer "):
-        try:
-            from routes_instructor import verify_instructor_token
-            token = authorization.split(" ")[1]
-            payload = verify_instructor_token(token)
-            instructor_id = int(payload.get("sub"))
-        except Exception:
-            pass
-    
-    # Fall back to API key
-    if instructor_id is None and api_key:
-        key_record = verify_api_key_v2(api_key, db)
-        instructor_id = key_record.instructor_id
-    elif instructor_id is None:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
+    """
+    Restart an ended meeting.
+    Authentication: instructor_code in URL is sufficient (proves access to instructor link).
+    Also supports JWT token and API key auth for backwards compatibility.
+    """
+    # First, verify the meeting exists and get it by instructor_code
     meeting = db.query(ClassMeeting).filter(
         ClassMeeting.instructor_code == instructor_code
     ).first()
@@ -469,10 +465,32 @@ def restart_meeting(
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
-    # Verify ownership - check if meeting belongs to this instructor's class
-    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
-    if not cls or cls.instructor_id != instructor_id:
-        raise HTTPException(status_code=403, detail="Not authorized to restart this meeting")
+    # The instructor_code itself is authentication - if you have it, you can control the meeting
+    # This is the same security model as accessing the instructor page
+    # Optional: Also verify JWT/API key if provided for additional security
+    if authorization or api_key:
+        instructor_id = None
+
+        # Try JWT authentication
+        if authorization and authorization.startswith("Bearer "):
+            try:
+                from routes_instructor import verify_instructor_token
+                token = authorization.split(" ")[1]
+                payload = verify_instructor_token(token)
+                instructor_id = int(payload.get("sub"))
+            except Exception:
+                pass
+
+        # Try API key
+        if instructor_id is None and api_key:
+            key_record = verify_api_key_v2(api_key, db)
+            instructor_id = key_record.instructor_id
+
+        # If auth was provided, verify ownership
+        if instructor_id is not None:
+            cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+            if not cls or cls.instructor_id != instructor_id:
+                raise HTTPException(status_code=403, detail="Not authorized to restart this meeting")
 
     try:
         meeting.ended_at = None
