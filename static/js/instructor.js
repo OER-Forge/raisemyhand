@@ -316,19 +316,86 @@ async function toggleAnswered(questionId) {
 function showQRCode() {
     const baseUrl = config.base_url;
     const qrUrl = `/api/meetings/${meetingData.meeting_code}/qr?url_base=${encodeURIComponent(baseUrl)}`;
-    const modal = document.getElementById('qr-modal');
-    const qrImage = document.getElementById('qr-image');
-
-    qrImage.src = qrUrl;
-    qrImage.setAttribute('alt', `QR code for meeting ${meetingData.title}`);
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
-
-    // Focus management
-    const closeBtn = modal.querySelector('[onclick="hideQRCode()"]');
-    if (closeBtn) {
-        closeBtn.focus();
+    
+    // Open QR code in a new window that can be moved to another screen
+    const qrWindow = window.open('', 'RaiseMyHandQR', 'width=600,height=700');
+    
+    if (!qrWindow) {
+        showNotification('Please allow pop-ups to display QR code', 'error');
+        return;
     }
+    
+    // Create a simple page with just the QR code
+    const qrPageHTML = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>RaiseMyHand - Scan to Join</title>
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                body {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    background: white;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    padding: 20px;
+                }
+                .qr-container {
+                    text-align: center;
+                }
+                .qr-title {
+                    font-size: 2rem;
+                    color: #2c3e50;
+                    margin-bottom: 1rem;
+                    font-weight: 700;
+                }
+                .qr-subtitle {
+                    font-size: 1.1rem;
+                    color: #7f8c8d;
+                    margin-bottom: 2rem;
+                }
+                img {
+                    max-width: 100%;
+                    width: 400px;
+                    height: 400px;
+                    border: 4px solid #3498db;
+                    border-radius: 12px;
+                    padding: 10px;
+                    background: white;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+                .instruction {
+                    margin-top: 2rem;
+                    font-size: 1rem;
+                    color: #34495e;
+                    line-height: 1.6;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="qr-container">
+                <div class="qr-title">✋ RaiseMyHand</div>
+                <div class="qr-subtitle">Scan to Join Session</div>
+                <img src="${qrUrl}" alt="QR Code - Scan to join session">
+                <div class="instruction">
+                    Point your phone camera at this QR code to join the session
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    qrWindow.document.write(qrPageHTML);
+    qrWindow.document.close();
 }
 
 function hideQRCode() {
