@@ -1,10 +1,11 @@
 """
 Question management routes for v2 API
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import func
 from datetime import datetime
+from typing import Optional
 import uuid
 
 from database import get_db
@@ -122,19 +123,34 @@ def toggle_vote(
 @router.post("/api/questions/{question_id}/mark-answered-in-class")
 def mark_answered_in_class(
     question_id: int,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """Mark question as answered in class (verbal answer)."""
-    # Verify API key exists (simplified - full auth in routes_classes)
-    from models_v2 import APIKey as APIKeyV2
-    key_record = db.query(APIKeyV2).filter(
-        APIKeyV2.key == api_key,
-        APIKeyV2.is_active == True
-    ).first()
-
-    if not key_record:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+    """Mark question as answered in class (verbal answer) - supports JWT and API key auth."""
+    instructor_id = None
+    
+    # Try JWT authentication first
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            from routes_instructor import verify_instructor_token
+            token = authorization.split(" ")[1]
+            payload = verify_instructor_token(token)
+            instructor_id = int(payload.get("sub"))
+        except Exception:
+            pass
+    
+    # Fall back to API key
+    if instructor_id is None and api_key:
+        from models_v2 import APIKey as APIKeyV2
+        key_record = db.query(APIKeyV2).filter(
+            APIKeyV2.key == api_key,
+            APIKeyV2.is_active == True
+        ).first()
+        if not key_record:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+    elif instructor_id is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     question = db.query(Question).filter(Question.id == question_id).first()
     if not question:
@@ -156,19 +172,34 @@ def mark_answered_in_class(
 def update_question_status(
     question_id: int,
     data: QuestionUpdate,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """Update question status (for moderation)."""
-    # Verify API key
-    from models_v2 import APIKey as APIKeyV2
-    key_record = db.query(APIKeyV2).filter(
-        APIKeyV2.key == api_key,
-        APIKeyV2.is_active == True
-    ).first()
-
-    if not key_record:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+    """Update question status (for moderation) - supports JWT and API key auth."""
+    instructor_id = None
+    
+    # Try JWT authentication first
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            from routes_instructor import verify_instructor_token
+            token = authorization.split(" ")[1]
+            payload = verify_instructor_token(token)
+            instructor_id = int(payload.get("sub"))
+        except Exception:
+            pass
+    
+    # Fall back to API key
+    if instructor_id is None and api_key:
+        from models_v2 import APIKey as APIKeyV2
+        key_record = db.query(APIKeyV2).filter(
+            APIKeyV2.key == api_key,
+            APIKeyV2.is_active == True
+        ).first()
+        if not key_record:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+    elif instructor_id is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     question = db.query(Question).filter(Question.id == question_id).first()
     if not question:

@@ -12,64 +12,28 @@ function checkAuth() {
     const urlParams = new URLSearchParams(window.location.search);
     filterClassId = urlParams.get('class_id');
 
-    // Check for instructor JWT token first (preferred method)
-    const instructorToken = localStorage.getItem('instructor_token');
-    if (instructorToken) {
-        loadMeetings();
-        return;
-    }
-
-    // Fall back to API key for backward compatibility
-    const apiKey = getApiKey();
-    if (!apiKey) {
+    // Check for instructor JWT token or API key
+    if (!isAuthenticated()) {
         // No authentication found - redirect to login
         showNotification('Please log in to view your meetings.', 'error');
         setTimeout(() => {
             window.location.href = '/instructor-login';
         }, 1500);
-    } else {
-        loadMeetings();
+        return;
     }
+
+    // Load meetings
+    loadMeetings();
 }
 
 // Load all meetings (supports both JWT and API key auth)
 async function loadMeetings() {
     try {
-        // Try instructor JWT authentication first
-        const instructorToken = localStorage.getItem('instructor_token');
-        let url = '/api/meetings?include_ended=true';
-        let headers = {
-            'Content-Type': 'application/json'
-        };
-
-        if (instructorToken) {
-            // Use JWT authentication
-            headers['Authorization'] = `Bearer ${instructorToken}`;
-        } else {
-            // Fall back to API key
-            const apiKey = getApiKey();
-            if (apiKey) {
-                url += `&api_key=${apiKey}`;
-            }
-        }
-
-        const response = await fetch(url, { headers });
+        const response = await authenticatedFetch('/api/meetings?include_ended=true');
 
         if (response.status === 401) {
-            // Authentication failed
-            if (instructorToken) {
-                localStorage.removeItem('instructor_token');
-                showNotification('Session expired. Please log in again.', 'error');
-                setTimeout(() => {
-                    window.location.href = '/instructor-login';
-                }, 1500);
-            } else {
-                clearApiKey();
-                showNotification('Invalid API key. Please log in again.', 'error');
-                setTimeout(() => {
-                    checkAuth();
-                }, 2000);
-            }
+            // Authentication failed - redirect to login
+            handleAuthError();
             return;
         }
 
@@ -346,20 +310,21 @@ async function endMeeting(instructorCode) {
     }
 
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/meetings/${instructorCode}/end?api_key=${apiKey}`, {
+        // Use authenticatedFetch which handles both JWT and API key
+        const response = await authenticatedFetch(`/api/meetings/${instructorCode}/end`, {
             method: 'POST'
         });
 
         if (!response.ok) {
-            throw new Error('Failed to end meeting');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || 'Failed to end meeting');
         }
 
         showNotification('Meeting ended successfully', 'success');
         loadMeetings(); // Reload to update
     } catch (error) {
         console.error('Error ending meeting:', error);
-        showNotification('Failed to end meeting', 'error');
+        showNotification(`Failed to end meeting: ${error.message}`, 'error');
     }
 }
 
@@ -394,8 +359,12 @@ async function openCreateSessionModal() {
 // Load classes into the dropdown
 async function loadClassesForDropdown() {
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/classes?api_key=${apiKey}`);
+        const response = await authenticatedFetch('/api/classes');
+
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
 
         if (!response.ok) {
             throw new Error('Failed to load classes');
@@ -448,7 +417,6 @@ async function createSession(event) {
     const selectedClassId = classSelect.value;
     const title = document.getElementById('session-title').value.trim();
     const password = document.getElementById('session-password').value;
-    const apiKey = getApiKey();
 
     if (!selectedClassId) {
         showNotification('Please select a class', 'error');
@@ -475,22 +443,25 @@ async function createSession(event) {
             payload.password = password;
         }
 
-        const response = await fetch(`/api/classes/${selectedClassId}/meetings?api_key=${encodeURIComponent(apiKey)}`, {
+        const response = await authenticatedFetch(`/api/classes/${selectedClassId}/meetings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
         if (response.status === 401) {
-            showNotification('Invalid API key', 'error');
-            clearApiKey();
-            setTimeout(() => window.location.href = '/instructor-login', 2000);
+            handleAuthError();
             return;
         }
 
         if (!response.ok) {
-            const error = await response.json();
-            showNotification(error.detail || 'Failed to create meeting', 'error');
+            try {
+                const error = await response.json();
+                showNotification(error.detail || 'Failed to create meeting', 'error');
+            } catch (e) {
+                // If response is not JSON, show status text
+                showNotification(`Failed to create meeting: ${response.statusText}`, 'error');
+            }
             return;
         }
 
@@ -506,8 +477,8 @@ async function createSession(event) {
         }, 1000);
 
     } catch (error) {
-        console.error('Error creating meeting:', error);
-        showNotification('Failed to create meeting. Please try again.', 'error');
+        console.error('Error creating meeting:', error.message);
+        showNotification(`Failed to create meeting: ${error.message}`, 'error');
     }
 }
 

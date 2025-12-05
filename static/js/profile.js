@@ -13,29 +13,20 @@ let originalData = {};
 async function loadProfile() {
     try {
         console.log('[Profile] loadProfile() called');
-        const token = getJwtToken();
-        console.log('[Profile] Token found:', !!token);
-        
-        if (!token) {
-            console.warn('[Profile] No token found, redirecting to login');
+
+        if (!isAuthenticated()) {
+            console.warn('[Profile] No authentication found, redirecting to login');
             window.location.href = '/instructor-login';
             return;
         }
 
-        const response = await fetch('/api/instructors/profile', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        const response = await authenticatedFetch('/api/instructors/profile');
 
         console.log('[Profile] API response status:', response.status);
-        
+
         if (response.status === 401) {
             console.error('[Profile] 401 Unauthorized');
-            clearJwtToken();
-            window.location.href = '/instructor-login';
+            handleAuthError();
             return;
         }
 
@@ -76,13 +67,12 @@ function populateProfile(data) {
 async function saveProfile() {
     try {
         console.log('[Profile] saveProfile() called');
-        
+
         if (!validateForm()) {
             return;
         }
 
-        const token = getJwtToken();
-        if (!token) {
+        if (!isAuthenticated()) {
             window.location.href = '/instructor-login';
             return;
         }
@@ -95,7 +85,7 @@ async function saveProfile() {
         // Only include password if user entered one
         const currentPassword = document.getElementById('currentPassword').value;
         const newPassword = document.getElementById('newPassword').value;
-        
+
         if (newPassword) {
             if (!currentPassword) {
                 document.getElementById('error').textContent = 'Current password required to change password';
@@ -106,18 +96,16 @@ async function saveProfile() {
             payload.new_password = newPassword;
         }
 
-        const response = await fetch('/api/instructors/profile', {
+        const response = await authenticatedFetch('/api/instructors/profile', {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         });
 
         if (response.status === 401) {
-            clearJwtToken();
-            window.location.href = '/instructor-login';
+            handleAuthError();
             return;
         }
 

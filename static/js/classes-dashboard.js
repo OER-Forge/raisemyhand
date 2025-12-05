@@ -11,10 +11,13 @@ function checkAuth() {
     const apiKey = getApiKey();
     console.log('JWT token:', jwtToken ? jwtToken.substring(0, 20) + '...' : 'None');
     console.log('API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'None');
-    
+
     if (!isAuthenticated()) {
-        console.error('No authentication found');
-        promptForApiKey();
+        console.error('No authentication found - redirecting to login');
+        showNotification('Please log in to view your classes.', 'error');
+        setTimeout(() => {
+            window.location.href = '/instructor-login';
+        }, 1500);
         return;
     }
     console.log('Authentication found, loading classes...');

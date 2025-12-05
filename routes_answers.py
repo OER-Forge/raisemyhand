@@ -2,7 +2,7 @@
 Written answer management routes for v2 API (Phase 5 - Issue #21)
 Instructors can write, edit, publish, and delete answers to questions.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session as DBSession
 from datetime import datetime
 from typing import Optional
@@ -33,6 +33,29 @@ def verify_api_key_v2(api_key: str, db: DBSession) -> APIKeyV2:
     return key_record
 
 
+def get_instructor_id_from_auth(authorization: Optional[str], api_key: Optional[str], db: DBSession) -> int:
+    """Extract instructor_id from JWT token or API key."""
+    instructor_id = None
+    
+    # Try JWT authentication first
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            from routes_instructor import verify_instructor_token
+            token = authorization.split(" ")[1]
+            payload = verify_instructor_token(token)
+            instructor_id = int(payload.get("sub"))
+            return instructor_id
+        except Exception:
+            pass
+    
+    # Fall back to API key
+    if api_key:
+        key_record = verify_api_key_v2(api_key, db)
+        return key_record.instructor_id
+    
+    raise HTTPException(status_code=401, detail="Authentication required")
+
+
 def verify_question_ownership(question_id: int, key_record: APIKeyV2, db: DBSession) -> Question:
     """Verify that the question belongs to a meeting owned by the instructor."""
     question = db.query(Question).filter(Question.id == question_id).first()
@@ -57,15 +80,32 @@ def verify_question_ownership(question_id: int, key_record: APIKeyV2, db: DBSess
 def create_or_update_answer(
     question_id: int,
     data: AnswerCreate,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
     """
     Create or update a written answer to a question.
     Instructors can save answers as drafts (is_approved=false) or publish immediately.
+    Supports both JWT token and API key authentication.
     """
-    key_record = verify_api_key_v2(api_key, db)
-    question = verify_question_ownership(question_id, key_record, db)
+    instructor_id = get_instructor_id_from_auth(authorization, api_key, db)
+    
+    # Get the question
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    # Verify the meeting belongs to this instructor
+    meeting = db.query(ClassMeeting).filter(ClassMeeting.id == question.meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    # Check if instructor owns this class
+    from models_v2 import Class
+    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+    if not cls or cls.instructor_id != instructor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to answer this question")
 
     try:
         # Check if answer already exists
@@ -84,7 +124,7 @@ def create_or_update_answer(
             # Create new answer
             new_answer = Answer(
                 question_id=question_id,
-                instructor_id=key_record.instructor_id,
+                instructor_id=instructor_id,
                 answer_text=data.answer_text,
                 is_approved=data.is_approved,
                 created_at=datetime.utcnow(),
@@ -105,15 +145,31 @@ def create_or_update_answer(
 @router.get("/api/questions/{question_id}/answer", response_model=AnswerResponse)
 def get_answer(
     question_id: int,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
     """
     Get the answer for a question.
     Instructors can see their own answers (approved or not).
+    Supports both JWT token and API key authentication.
     """
-    key_record = verify_api_key_v2(api_key, db)
-    question = verify_question_ownership(question_id, key_record, db)
+    instructor_id = get_instructor_id_from_auth(authorization, api_key, db)
+    
+    # Get the question
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    # Verify the meeting belongs to this instructor
+    meeting = db.query(ClassMeeting).filter(ClassMeeting.id == question.meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    from models_v2 import Class
+    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+    if not cls or cls.instructor_id != instructor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this answer")
 
     answer = db.query(Answer).filter(Answer.question_id == question_id).first()
 
@@ -127,12 +183,27 @@ def get_answer(
 def update_answer(
     question_id: int,
     data: AnswerUpdate,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """Update an existing answer."""
-    key_record = verify_api_key_v2(api_key, db)
-    question = verify_question_ownership(question_id, key_record, db)
+    """Update an existing answer. Supports both JWT token and API key authentication."""
+    instructor_id = get_instructor_id_from_auth(authorization, api_key, db)
+    
+    # Get the question
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    # Verify the meeting belongs to this instructor
+    meeting = db.query(ClassMeeting).filter(ClassMeeting.id == question.meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    from models_v2 import Class
+    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+    if not cls or cls.instructor_id != instructor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this answer")
 
     answer = db.query(Answer).filter(Answer.question_id == question_id).first()
 
@@ -161,12 +232,27 @@ def update_answer(
 @router.delete("/api/questions/{question_id}/answer")
 def delete_answer(
     question_id: int,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """Delete an answer."""
-    key_record = verify_api_key_v2(api_key, db)
-    question = verify_question_ownership(question_id, key_record, db)
+    """Delete an answer. Supports both JWT token and API key authentication."""
+    instructor_id = get_instructor_id_from_auth(authorization, api_key, db)
+    
+    # Get the question
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    # Verify the meeting belongs to this instructor
+    meeting = db.query(ClassMeeting).filter(ClassMeeting.id == question.meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    from models_v2 import Class
+    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+    if not cls or cls.instructor_id != instructor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this answer")
 
     answer = db.query(Answer).filter(Answer.question_id == question_id).first()
 
@@ -188,15 +274,31 @@ def delete_answer(
 @router.post("/api/questions/{question_id}/answer/publish")
 def publish_answer(
     question_id: int,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
     """
     Publish an answer (set is_approved=true).
     Once published, students can see the answer.
+    Supports both JWT token and API key authentication.
     """
-    key_record = verify_api_key_v2(api_key, db)
-    question = verify_question_ownership(question_id, key_record, db)
+    instructor_id = get_instructor_id_from_auth(authorization, api_key, db)
+    
+    # Get the question
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    # Verify the meeting belongs to this instructor
+    meeting = db.query(ClassMeeting).filter(ClassMeeting.id == question.meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    from models_v2 import Class
+    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+    if not cls or cls.instructor_id != instructor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to publish this answer")
 
     answer = db.query(Answer).filter(Answer.question_id == question_id).first()
 

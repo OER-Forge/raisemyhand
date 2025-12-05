@@ -23,13 +23,6 @@ async function loadSession() {
     try {
         await loadConfig(); // Load config first
 
-        // Check if user is authenticated (JWT token or API key)
-        if (!isAuthenticated()) {
-            console.error('No authentication found');
-            promptForApiKey();
-            return;
-        }
-
         // v2 API: GET /api/meetings/{instructor_code}
         const response = await authenticatedFetch(`/api/meetings/${instructorCode}`);
 
@@ -207,10 +200,8 @@ function renderQuestions() {
 
 async function toggleAnswered(questionId) {
     try {
-        const apiKey = getApiKey();
-
         // v2 API: POST /api/questions/{id}/mark-answered-in-class
-        const response = await fetch(`/api/questions/${questionId}/mark-answered-in-class?api_key=${apiKey}`, {
+        const response = await authenticatedFetch(`/api/questions/${questionId}/mark-answered-in-class`, {
             method: 'POST'
         });
 
@@ -320,21 +311,15 @@ async function endSession() {
     showButtonLoading(endBtn);
 
     try {
-        const apiKey = getApiKey();
-
-        // v2 API: POST /api/meetings/{instructor_code}/end
-        const response = await fetch(`/api/meetings/${instructorCode}/end?api_key=${apiKey}`, {
+        // Use authenticatedFetch which handles both JWT and API key
+        const response = await authenticatedFetch(`/api/meetings/${instructorCode}/end`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
 
-        if (response.status === 401) {
-            handleAuthError();
-            return;
-        }
-
         if (!response.ok) {
-            throw new Error('Failed to end meeting');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || 'Failed to end meeting');
         }
 
         showNotification('Meeting ended successfully', 'success');
@@ -359,7 +344,7 @@ async function endSession() {
         }
     } catch (error) {
         console.error('Error ending meeting:', error);
-        showNotification('Failed to end meeting', 'error');
+        showNotification(`Failed to end meeting: ${error.message}`, 'error');
     } finally {
         hideButtonLoading(endBtn);
     }
@@ -374,21 +359,15 @@ async function restartSession() {
     showButtonLoading(restartBtn);
 
     try {
-        const apiKey = getApiKey();
-
-        // v2 API: POST /api/meetings/{instructor_code}/restart
-        const response = await fetch(`/api/meetings/${instructorCode}/restart?api_key=${apiKey}`, {
+        // Use authenticatedFetch which handles both JWT and API key
+        const response = await authenticatedFetch(`/api/meetings/${instructorCode}/restart`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
 
-        if (response.status === 401) {
-            handleAuthError();
-            return;
-        }
-
         if (!response.ok) {
-            throw new Error('Failed to restart meeting');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || 'Failed to restart meeting');
         }
 
         showNotification('Meeting restarted successfully', 'success');
@@ -411,7 +390,7 @@ async function restartSession() {
         connectWebSocket();
     } catch (error) {
         console.error('Error restarting meeting:', error);
-        showNotification('Failed to restart meeting', 'error');
+        showNotification(`Failed to restart meeting: ${error.message}`, 'error');
     } finally {
         hideButtonLoading(restartBtn);
     }
@@ -449,8 +428,7 @@ async function openAnswerDialog(questionId, questionText, hasAnswer) {
     // If answer exists, load it
     if (hasAnswer) {
         try {
-            const apiKey = getApiKey();
-            const response = await fetch(`/api/questions/${questionId}/answer?api_key=${apiKey}`);
+            const response = await authenticatedFetch(`/api/questions/${questionId}/answer`);
 
             if (response.ok) {
                 currentAnswerData = await response.json();
@@ -501,8 +479,7 @@ async function submitAnswer(event) {
     }
 
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/questions/${questionId}/answer?api_key=${apiKey}`, {
+        const response = await authenticatedFetch(`/api/questions/${questionId}/answer`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -552,8 +529,7 @@ async function publishAnswer() {
     }
 
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/questions/${currentAnswerQuestionId}/answer/publish?api_key=${apiKey}`, {
+        const response = await authenticatedFetch(`/api/questions/${currentAnswerQuestionId}/answer/publish`, {
             method: 'POST'
         });
 
@@ -590,8 +566,7 @@ async function deleteAnswer() {
     }
 
     try {
-        const apiKey = getApiKey();
-        const response = await fetch(`/api/questions/${currentAnswerQuestionId}/answer?api_key=${apiKey}`, {
+        const response = await authenticatedFetch(`/api/questions/${currentAnswerQuestionId}/answer`, {
             method: 'DELETE'
         });
 
@@ -627,10 +602,9 @@ async function deleteAnswer() {
 if (!instructorCode) {
     alert('Invalid instructor code');
     window.location.href = '/';
-} else if (!getApiKey()) {
-    // Prompt for API key if not found
-    promptForApiKey();
 } else {
-    // Load session immediately if we have both code and API key
+    console.log('[INSTRUCTOR] Page initialized with code:', instructorCode);
+    console.log('[INSTRUCTOR] Starting to load session...');
+    // Always try to load - handleAuth errors will redirect if needed
     loadSession();
 }

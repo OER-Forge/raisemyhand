@@ -142,15 +142,24 @@ def list_classes(
 @router.get("/api/classes/{class_id}", response_model=ClassWithMeetings)
 def get_class(
     class_id: int,
-    api_key: str,
+    api_key: Optional[str] = None,
+    instructor: Optional[Instructor] = Depends(get_instructor_from_token_optional),
     db: DBSession = Depends(get_db)
 ):
-    """Get class details with meetings."""
-    key_record = verify_api_key_v2(api_key, db)
+    """Get class details with meetings. Supports both JWT token and API key auth."""
+    # Try JWT token authentication first
+    if instructor:
+        instructor_id = instructor.id
+    elif api_key:
+        # Fallback to API key authentication
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    else:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     cls = db.query(Class).filter(
         Class.id == class_id,
-        Class.instructor_id == key_record.instructor_id
+        Class.instructor_id == instructor_id
     ).first()
 
     if not cls:
@@ -291,16 +300,26 @@ def unarchive_class(
 def create_meeting(
     class_id: int,
     data: ClassMeetingCreate,
-    api_key: str,
+    api_key: Optional[str] = None,
+    instructor: Optional[Instructor] = Depends(get_instructor_from_token_optional),
     db: DBSession = Depends(get_db)
 ):
-    """Create a new class meeting."""
-    key_record = verify_api_key_v2(api_key, db)
+    """Create a new class meeting (supports both JWT token and API key auth)."""
+    # Try JWT token authentication first
+    if instructor:
+        instructor_id = instructor.id
+        key_record = None
+    elif api_key:
+        # Fallback to API key authentication
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    else:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     # Verify class belongs to instructor
     cls = db.query(Class).filter(
         Class.id == class_id,
-        Class.instructor_id == key_record.instructor_id
+        Class.instructor_id == instructor_id
     ).first()
 
     if not cls:
@@ -309,7 +328,7 @@ def create_meeting(
     try:
         meeting = ClassMeeting(
             class_id=class_id,
-            api_key_id=key_record.id,
+            api_key_id=key_record.id if key_record else None,
             meeting_code=ClassMeeting.generate_code(),
             instructor_code=ClassMeeting.generate_code(),
             title=data.title,
@@ -368,11 +387,29 @@ def get_meeting_by_code(
 @router.post("/api/meetings/{instructor_code}/end")
 def end_meeting(
     instructor_code: str,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """End a class meeting."""
-    key_record = verify_api_key_v2(api_key, db)
+    """End a class meeting. Supports both JWT token and API key auth."""
+    instructor_id = None
+    
+    # Try JWT authentication first
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            from routes_instructor import verify_instructor_token
+            token = authorization.split(" ")[1]
+            payload = verify_instructor_token(token)
+            instructor_id = int(payload.get("sub"))
+        except Exception:
+            pass
+    
+    # Fall back to API key
+    if instructor_id is None and api_key:
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    elif instructor_id is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     meeting = db.query(ClassMeeting).filter(
         ClassMeeting.instructor_code == instructor_code
@@ -381,8 +418,9 @@ def end_meeting(
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
-    # Verify ownership
-    if meeting.api_key_id != key_record.id:
+    # Verify ownership - check if meeting belongs to this instructor's class
+    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+    if not cls or cls.instructor_id != instructor_id:
         raise HTTPException(status_code=403, detail="Not authorized to end this meeting")
 
     try:
@@ -400,11 +438,29 @@ def end_meeting(
 @router.post("/api/meetings/{instructor_code}/restart")
 def restart_meeting(
     instructor_code: str,
-    api_key: str,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """Restart an ended meeting."""
-    key_record = verify_api_key_v2(api_key, db)
+    """Restart an ended meeting. Supports both JWT token and API key auth."""
+    instructor_id = None
+    
+    # Try JWT authentication first
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            from routes_instructor import verify_instructor_token
+            token = authorization.split(" ")[1]
+            payload = verify_instructor_token(token)
+            instructor_id = int(payload.get("sub"))
+        except Exception:
+            pass
+    
+    # Fall back to API key
+    if instructor_id is None and api_key:
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    elif instructor_id is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     meeting = db.query(ClassMeeting).filter(
         ClassMeeting.instructor_code == instructor_code
@@ -413,8 +469,9 @@ def restart_meeting(
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
-    # Verify ownership
-    if meeting.api_key_id != key_record.id:
+    # Verify ownership - check if meeting belongs to this instructor's class
+    cls = db.query(Class).filter(Class.id == meeting.class_id).first()
+    if not cls or cls.instructor_id != instructor_id:
         raise HTTPException(status_code=403, detail="Not authorized to restart this meeting")
 
     try:
@@ -559,13 +616,28 @@ def verify_meeting_password(
 def get_meeting_report(
     instructor_code: str,
     format: str = "json",
-    api_key: str = None,
+    api_key: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """Generate a report for a meeting (v2 API)."""
-    # Verify API key if provided
-    if api_key:
-        verify_api_key_v2(api_key, db)
+    """Generate a report for a meeting. Supports both JWT token and API key auth."""
+    instructor_id = None
+    
+    # Try JWT authentication first
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            from routes_instructor import verify_instructor_token
+            token = authorization.split(" ")[1]
+            payload = verify_instructor_token(token)
+            instructor_id = int(payload.get("sub"))
+        except Exception:
+            pass
+    
+    # Fall back to API key
+    if instructor_id is None and api_key:
+        key_record = verify_api_key_v2(api_key, db)
+        instructor_id = key_record.instructor_id
+    # Note: report can also be generated without auth for public access (optional)
 
     meeting = db.query(ClassMeeting).filter(
         ClassMeeting.instructor_code == instructor_code

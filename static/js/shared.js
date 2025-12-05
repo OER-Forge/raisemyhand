@@ -42,23 +42,14 @@ function clearJwtToken() {
  * @returns {boolean} True if authenticated
  */
 function isAuthenticated() {
-    return getJwtToken() !== null || getApiKey() !== null;
-}
-
-/**
- * Get appropriate authorization headers based on available authentication
- * @returns {Object} Headers object with Authorization bearer token
- */
-function getAuthHeaders() {
-    const jwtToken = getJwtToken();
+    const token = getJwtToken();
     const apiKey = getApiKey();
-    
-    if (jwtToken) {
-        return { 'Authorization': `Bearer ${jwtToken}` };
-    } else if (apiKey) {
-        return { 'Authorization': `Bearer ${apiKey}` };
-    }
-    return {};
+    console.log('[SHARED] isAuthenticated check:');
+    console.log('  - JWT token:', token ? 'EXISTS' : 'NULL');
+    console.log('  - API key:', apiKey ? 'EXISTS' : 'NULL');
+    const result = token !== null || apiKey !== null;
+    console.log('  - Result:', result);
+    return result;
 }
 
 // ============================================================================
@@ -138,10 +129,23 @@ function clearCsrfToken() {
  * @returns {Promise<Response>} Fetch response
  */
 async function authenticatedFetch(url, options = {}) {
+    let finalUrl = url;
+    const jwtToken = getJwtToken();
+    const apiKey = getApiKey();
+    
     const headers = {
-        ...getAuthHeaders(),
-        ...(options.headers || {})
+        ...options.headers || {}
     };
+
+    // Add authentication
+    if (jwtToken) {
+        // Use JWT token in Authorization header
+        headers['Authorization'] = `Bearer ${jwtToken}`;
+    } else if (apiKey) {
+        // Add API key as query parameter (not as Bearer token)
+        const separator = url.includes('?') ? '&' : '?';
+        finalUrl = `${url}${separator}api_key=${encodeURIComponent(apiKey)}`;
+    }
 
     // Add CSRF token for state-changing requests
     const method = (options.method || 'GET').toUpperCase();
@@ -155,7 +159,7 @@ async function authenticatedFetch(url, options = {}) {
         }
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(finalUrl, {
         ...options,
         headers
     });
