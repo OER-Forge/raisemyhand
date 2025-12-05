@@ -1,210 +1,160 @@
-# 🙋 RaiseMyHand - Student Question Aggregator
+# 🙋 RaiseMyHand - Student Question System
 
-A real-time web-based tool for collecting, organizing, and managing student questions during live classes. Built for physics and computational science education.
+A real-time web application for collecting and managing student questions during live classes. Students submit questions anonymously, vote on popular questions, and view instructor responses in real-time.
 
-[![Code Quality](https://img.shields.io/badge/code%20quality-9.7%2F10-brightgreen)]()
-[![Production Ready](https://img.shields.io/badge/production-ready-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.9+-blue)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-latest-009688)]()
+[![Production Ready](https://img.shields.io/badge/production-ready-brightgreen)]()
 
 ---
 
-## ✨ What It Does
+## ✨ What This System Does
 
-### ✅ **Fully Implemented Features**
+### **Core Features**
 
-- 📝 **Anonymous Question Submission** - Students ask questions without revealing identity
-- ⬆️ **Reddit-style Upvoting** - Popular questions rise to the top automatically
-- ⚡ **Real-time Updates** - Questions and votes appear instantly via WebSockets
-- 📱 **QR Code Access** - Students scan and join in seconds
-- 👨‍🏫 **Instructor Dashboard** - Monitor, answer, and manage all questions in real-time
-- 🔢 **Question Numbering** - Track questions by order for easy reference
-- 🔐 **Optional Session Passwords** - Protect private sessions
-- 📊 **Export Reports** - Download session data in JSON or CSV format
-- 🔒 **Admin Panel** - Secure administrative interface with JWT authentication
-- 🔑 **API Key Management** - Create and manage instructor API keys
-- 📈 **Session Statistics** - Public stats view for ended sessions
-- ⏰ **Toggle Voting** - Enable/disable voting during sessions
-- 🐳 **Docker-ready** - Deploy with a single command
-- 🔄 **Session Restart** - Reactivate ended sessions
-- 🌍 **Timezone Support** - Display times in any timezone
-- 🛡️ **CSRF Protection** - Secure against cross-site attacks
-- ⚖️ **Rate Limiting** - DDoS and brute-force protection
+- **Anonymous Question Submission** - Students submit questions without revealing identity
+- **Real-time Upvoting** - Questions with more votes appear higher in the list
+- **WebSocket Updates** - New questions and votes appear instantly for everyone
+- **QR Code Access** - Students scan QR codes to join sessions quickly
+- **Session Management** - Instructors create, start, pause, and end question sessions
+- **Content Moderation** - Three-state profanity filtering (approved/flagged/rejected)
+- **Markdown Support** - Rich text formatting in instructor answers with WYSIWYG editor
+- **Presentation Mode** - Full-screen view optimized for classroom projection
+- **Multi-monitor Support** - Pop-out windows for QR codes and presentation view
+- **Written Answers** - Instructors can write detailed responses with markdown formatting
+- **Session Statistics** - Public stats page showing question activity
+- **Data Export** - Download session data as JSON or CSV
+- **API Key Authentication** - Secure instructor access via API keys
 
-### 🚧 **Not Yet Implemented**
+### **User Interface**
 
-- 📊 **Advanced Analytics** - Historical trends, engagement metrics
-- 🎨 **Themes** - Dark mode, custom branding
-- 📤 **PDF Export** - Formatted question reports
-- 🏷️ **Question Tags/Categories** - Organize by topic
-- 🔍 **Search & Filter** - Find specific questions
-- 🌐 **Internationalization** - Multi-language support
-- ♿ **Full WCAG Compliance** - Complete accessibility features
-- 🔗 **LMS Integration** - Canvas, Moodle, Blackboard
-- 👥 **Multi-instructor Sessions** - Team teaching support
-- 🤖 **AI Features** - Auto-categorization, answer suggestions
+- **Student View** - Clean question submission and voting interface
+- **Instructor Dashboard** - Real-time question monitoring with moderation tools
+- **Admin Panel** - User management and API key creation
+- **Stats Page** - Large-text presentation view for classroom displays
+- **Responsive Design** - Works on desktop, tablet, and mobile devices
+
+### **Security & Moderation**
+
+- **Profanity Filter** - Automatic detection using `better-profanity` library
+- **Three-state Moderation** - Clean (auto-approved), Flagged (needs review), Rejected (hidden)
+- **Server-side Filtering** - Security enforcement at the API level
+- **Rate Limiting** - DDoS protection and submission throttling
+- **CSRF Protection** - Cross-site request forgery prevention
+- **JWT Authentication** - Secure admin authentication with bcrypt password hashing
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Setup
 
-### For Individual Instructors (Run on Your Laptop)
+### **Option 1: Docker (Recommended)**
 
 ```bash
-# Clone and setup
+# Clone the repository
+git clone <your-repo-url>
+cd raisemyhand
+
+# Configure environment
+cp .env.example .env
+echo "YourSecureAdminPassword" > secrets/admin_password.txt
+
+# Build and start
+docker compose up --build -d
+```
+
+The application will be available at **http://localhost:8000**
+
+### **Option 2: Local Python Development**
+
+```bash
+# Clone and setup virtual environment
 git clone <your-repo-url>
 cd raisemyhand
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
 
-# Set admin password in .env
+# Configure environment
 cp .env.example .env
-# Edit .env: ADMIN_PASSWORD=YourSecurePassword
+# Edit .env file and set ADMIN_PASSWORD=YourSecurePassword
 
-# Run the server
+# Initialize database and start server
 python main.py
 ```
 
-Open **http://localhost:8000** and start your session!
+The application will be available at **http://localhost:8000**
 
-🔑 **Get Your API Key:**
+---
+
+## 📖 Getting Started
+
+See [GETTING_STARTED.md](GETTING_STARTED.md) for a complete step-by-step walkthrough.
+
+### **1. Admin Setup (First Time Only)**
+
 1. Go to **http://localhost:8000/admin-login**
-2. Login with `admin` / (your password from .env)
-3. Create an API key in the dashboard
-4. Use the key to create instructor sessions
+2. Login with username `admin` and your password from .env or secrets file
+3. Create an API key for instructors in the admin dashboard
 
-📖 **New to RaiseMyHand?** See [docs/setup/GETTING_STARTED.md](docs/setup/GETTING_STARTED.md) for a complete step-by-step guide.
+### **2. Instructor Workflow**
 
-📖 See [docs/setup/DATABASE_SETUP.md](docs/setup/DATABASE_SETUP.md) for detailed configuration.
+1. **Create Session**: Enter your API key and session title at home page
+2. **Share Access**: Display QR code or share the generated student URL
+3. **Monitor Questions**: Watch questions appear in real-time, sorted by votes
+4. **Moderate Content**: Review flagged questions, approve or reject as needed
+5. **Answer Questions**: Mark questions as answered or write detailed responses
+6. **Manage Session**: Toggle voting, end session, download reports
 
----
+### **3. Student Experience**
 
-### For Departments/Colleges (Shared Server)
-
-**Using Docker (Recommended):**
-
-```bash
-cd raisemyhand
-cp .env.example .env
-# Edit .env with your settings (BASE_URL, TIMEZONE, etc.)
-echo "YourSecurePassword" > secrets/admin_password.txt
-docker compose up -d
-```
-
-Server available at `http://your-server:8000`
-
-🐳 **See [docs/deployment/DOCKER.md](docs/deployment/DOCKER.md) for:**
-- Complete Docker setup guide
-- Production deployment with nginx/SSL
-- Backup and monitoring strategies
-
-📦 **See [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md) for:**
-- Cloud hosting options (AWS, Heroku, DigitalOcean)
-- nginx configuration
-- Scaling strategies
-
----
-
-## 📖 Usage Guide
-
-📘 **First time using RaiseMyHand?** Check out [docs/setup/GETTING_STARTED.md](docs/setup/GETTING_STARTED.md) for a comprehensive step-by-step walkthrough.
-
-### 👨‍🏫 For Instructors
-
-#### 1️⃣ **Create a Session**
-- Go to the home page
-- Enter your API key (from admin panel)
-- Add a session title (e.g., "Quantum Mechanics - Week 5")
-- Optionally add a password for private sessions
-- Click "Create Session"
-
-#### 2️⃣ **Share with Students**
-- Share the student URL with your class
-- **OR** click "Show QR Code" and display on screen for instant access
-- Students can scan with their phone camera
-
-#### 3️⃣ **Monitor Questions in Real-Time**
-- Questions appear instantly as students submit them
-- Sorted by upvotes (most popular at top)
-- Question numbers for easy reference
-- Click to mark questions as "Answered" ✓
-
-#### 4️⃣ **Control the Session**
-- 🔄 Toggle voting on/off during the session
-- 🛑 End session when finished (students can't submit new questions)
-- 📊 View public statistics page
-- 📥 Download complete report (JSON/CSV)
-
----
-
-### 🎓 For Students
-
-#### 1️⃣ **Join a Session**
-- Visit URL shared by your instructor
-- **OR** scan the QR code displayed in class
-- If password-protected, enter the session password
-
-#### 2️⃣ **Submit Questions**
-- Type your question in the text box
-- Click "Submit Question"
-- Your question appears immediately for everyone (anonymously)
-
-#### 3️⃣ **Upvote Questions**
-- Click ⬆️ on questions you're interested in
-- You can only upvote each question once
-- Popular questions rise to the top automatically
-- Click again to remove your upvote
+1. **Join Session**: Scan QR code or visit shared URL
+2. **Submit Questions**: Type questions and submit anonymously
+3. **Vote on Questions**: Upvote questions you want answered
+4. **Real-time Updates**: See new questions and instructor responses instantly
 
 ---
 
 ## 🏗️ Architecture
 
-### Backend (FastAPI)
+**Backend (Python/FastAPI):**
+- FastAPI web framework with automatic OpenAPI documentation
+- SQLAlchemy ORM with SQLite database (PostgreSQL-ready)
+- WebSocket connections for real-time updates
+- Pydantic data validation and serialization
+- bcrypt password hashing and JWT authentication
+- SlowAPI rate limiting and CSRF protection
 
-- ⚡ **FastAPI** - Modern, fast web framework with auto API docs
-- 🗄️ **SQLAlchemy** - Robust ORM for database management
-- 💾 **SQLite** - Lightweight database (easily swappable for PostgreSQL)
-- 🔌 **WebSockets** - Real-time bidirectional communication
-- ✅ **Pydantic** - Data validation and serialization
-- 🔐 **JWT** - Secure admin authentication
-- 🛡️ **Bcrypt** - Password hashing
-- ⚖️ **SlowAPI** - Rate limiting
-- 📊 **Centralized Logging** - Structured logging with security/database/WebSocket event tracking
+**Frontend (Vanilla JavaScript):**
+- WebSocket client for real-time communication
+- EasyMDE markdown editor for instructor answers
+- Marked.js and DOMPurify for safe markdown rendering
+- Responsive CSS design without framework dependencies
+- QR code generation and display
 
-### Frontend
+**Database Schema:**
+- `class_meetings` - Session information and settings
+- `questions` - Student questions with moderation status
+- `answers` - Instructor written responses with markdown
+- `question_votes` - Upvote tracking per student
+- `api_keys` - Instructor authentication tokens
 
-- 📝 **Vanilla JavaScript** - No framework dependencies, easy to understand
-- 🔌 **WebSocket Client** - Real-time updates without polling
-- 🎨 **Responsive CSS** - Works on desktop, tablet, and mobile
-- 📱 **QR Code Generation** - Built-in QR code display
-
-### Database Schema
-
-**Sessions Table:**
-- `id`, `session_code`, `instructor_code`
-- `title`, `password_hash` (optional)
-- `created_at`, `ended_at`, `is_active`
-
-**Questions Table:**
-- `id`, `session_id`, `question_number`, `text`
-- `upvotes`, `is_answered`
-- `created_at`, `answered_at`
-
-**API Keys Table:**
-- `id`, `key`, `name`
-- `created_at`, `last_used`, `is_active`
+**Dependencies:**
+- `better-profanity` - Content moderation
+- `qrcode[pil]` - QR code generation
+- `python-jose[cryptography]` - JWT tokens
+- `passlib[bcrypt]` - Password hashing
+- CDN libraries: EasyMDE, Marked.js, DOMPurify
 
 ---
 
-## 🔧 Configuration
+## ⚙️ Configuration
 
-### Environment Variables
-
-See [.env.example](.env.example) for all options:
+### **Environment Variables (.env file)**
 
 ```bash
-# Server
+# Server Configuration
 HOST=0.0.0.0
 PORT=8000
 BASE_URL=http://localhost:8000
@@ -212,247 +162,231 @@ BASE_URL=http://localhost:8000
 # Database
 DATABASE_URL=sqlite:///./data/raisemyhand.db
 
-# Admin (choose ONE method)
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=YourSecurePassword  # For local dev
+# Admin Authentication (choose one)
+ADMIN_PASSWORD=YourSecurePassword    # For development
+# OR use Docker secrets: secrets/admin_password.txt
 
-# Timezone
-TIMEZONE=America/New_York  # IANA timezone name
-
-# Optional
-CREATE_DEFAULT_API_KEY=false  # Set true for first run
+# Optional Settings
+TIMEZONE=America/New_York
+CREATE_DEFAULT_API_KEY=false
 ```
 
-📖 **Detailed guides:**
-- [docs/setup/URL_CONFIGURATION.md](docs/setup/URL_CONFIGURATION.md) - URL and timezone setup
-- [docs/setup/DATABASE_SETUP.md](docs/setup/DATABASE_SETUP.md) - Database configuration
-- [docs/deployment/SECURITY.md](docs/deployment/SECURITY.md) - Security best practices
-- [docs/deployment/LOGGING.md](docs/deployment/LOGGING.md) - Logging system and monitoring
+### **Production Deployment**
 
----
-
-## 🔐 Security Features
-
-✅ **Admin Authentication** - JWT-based secure login
-✅ **API Key System** - Instructor authentication via bearer tokens
-✅ **Password Hashing** - Bcrypt for all passwords
-✅ **CSRF Protection** - Token-based protection for state-changing operations
-✅ **Rate Limiting** - Protection against brute force and DDoS
-✅ **Session Passwords** - Optional password protection for sensitive sessions
-✅ **Secrets Management** - Docker secrets support for production
-✅ **No Hardcoded Credentials** - All sensitive data in environment/secrets
-
-🔒 See [docs/deployment/SECURITY.md](docs/deployment/SECURITY.md) for security best practices.
-
----
-
-## 🛠️ API Documentation
-
-Once running, visit **http://localhost:8000/docs** for interactive API documentation (Swagger UI).
-
-### Key Endpoints
-
-**Session Management:**
-- `POST /api/sessions` - Create new session (requires API key)
-- `GET /api/sessions/{session_code}` - Get session details
-- `POST /api/sessions/{instructor_code}/end` - End session
-- `POST /api/sessions/{instructor_code}/restart` - Restart session
-- `GET /api/sessions/{session_code}/stats` - Public statistics
-- `GET /api/sessions/{instructor_code}/report` - Export report
-
-**Question Management:**
-- `POST /api/sessions/{session_code}/questions` - Submit question
-- `POST /api/questions/{question_id}/vote` - Toggle vote
-- `POST /api/questions/{question_id}/answer` - Mark as answered
-
-**Admin:**
-- `POST /api/admin/login` - Admin login (JWT)
-- `GET /api/admin/stats` - System statistics
-- `POST /api/admin/api-keys` - Create API key
-- `GET /api/admin/sessions` - List all sessions
-
-**Real-time:**
-- `WS /ws/{session_code}` - WebSocket for live updates
-
----
-
-## 🚀 Extending RaiseMyHand
-
-### Switching to PostgreSQL
+For production, set `BASE_URL` to your actual domain and use Docker secrets:
 
 ```bash
-# 1. Update DATABASE_URL in .env
-DATABASE_URL=postgresql://user:password@localhost/raisemyhand
+# Production example
+BASE_URL=https://questions.university.edu
+echo "ProductionPassword123!" > secrets/admin_password.txt
+docker compose up -d
+```
 
-# 2. Install PostgreSQL driver
+### **Database Migration (PostgreSQL)**
+
+To switch from SQLite to PostgreSQL:
+
+```bash
+# Update .env
+DATABASE_URL=postgresql://user:password@host:5432/database
+
+# Install driver
 pip install psycopg2-binary
 
-# 3. Run - no code changes needed!
+# Run normally - tables auto-created
 python main.py
 ```
 
-### Using Alembic for Migrations (Optional)
+---
 
-For professional database migration management:
+## 🔒 Security Features
 
-```bash
-# Install dependencies (already in requirements.txt)
-pip install -r requirements.txt
-
-# Follow setup guide
-```
-
-📖 See [docs/setup/ALEMBIC_SETUP.md](docs/setup/ALEMBIC_SETUP.md) for complete Alembic configuration.
+- **Content Moderation**: Server-side profanity detection with three-state system
+- **Authentication**: JWT tokens for admin, API keys for instructors
+- **Rate Limiting**: Prevents spam and DDoS attacks
+- **CSRF Protection**: Secure state-changing operations
+- **XSS Prevention**: HTML sanitization with DOMPurify
+- **Password Security**: bcrypt hashing with salt
+- **Session Isolation**: Students only see approved content
 
 ---
 
-## 📂 Project Structure
+## 📊 API Documentation
+
+Interactive API documentation is available at **http://localhost:8000/docs** when the server is running.
+
+### **Key Endpoints**
+
+**Session Management:**
+- `POST /api/meetings` - Create new session (requires API key)
+- `GET /api/meetings/{meeting_code}` - Get session details and questions
+- `POST /api/meetings/{instructor_code}/end` - End session
+- `GET /api/meetings/{instructor_code}/flagged-questions` - Review flagged content
+
+**Question Operations:**
+- `POST /api/meetings/{meeting_code}/questions` - Submit question
+- `POST /api/questions/{question_id}/vote` - Toggle upvote
+- `POST /api/questions/{question_id}/approve` - Approve flagged question
+- `POST /api/questions/{question_id}/reject` - Reject flagged question
+
+**Answer Management:**
+- `POST /api/questions/{question_id}/answer` - Create/update written answer
+- `POST /api/questions/{question_id}/answer/publish` - Make answer public
+
+**Real-time:**
+- `WS /ws/{meeting_code}` - WebSocket for live updates
+
+---
+
+## 🐳 Docker Details
+
+The included `docker-compose.yml` sets up:
+- FastAPI application container
+- Volume mounting for persistent data
+- Environment variable configuration
+- Docker secrets support for production
+
+**Container Structure:**
+```
+/app/
+├── main.py (application entry point)
+├── data/ (SQLite database storage)
+├── static/ (CSS/JS assets)
+├── templates/ (HTML templates)
+└── secrets/ (password files)
+```
+
+---
+
+## 📁 Project Structure
 
 ```
 raisemyhand/
-├── 🐍 main.py               # FastAPI application and routes
-├── 🗄️ models.py             # SQLAlchemy database models
-├── ✅ schemas.py            # Pydantic validation schemas
-├── 💾 database.py           # Database configuration
-├── ⚙️ config.py             # Configuration management (Pydantic Settings)
-├── 📦 requirements.txt      # Python dependencies
-├── 🐳 Dockerfile            # Docker image definition
-├── 🐳 docker-compose.yml    # Docker Compose configuration
-├── 📁 static/
-│   ├── 🎨 css/
-│   │   └── styles.css       # Application styles
-│   └── 📝 js/
-│       ├── shared.js        # Shared utility functions
-│       ├── admin.js         # Admin dashboard logic
-│       ├── instructor.js    # Instructor dashboard logic
-│       ├── student.js       # Student interface logic
-│       └── sessions-dashboard.js  # Session management
-├── 📄 templates/
-│   ├── home.html            # Landing page
-│   ├── admin.html           # Admin panel
-│   ├── admin-login.html     # Admin login
-│   ├── instructor.html      # Instructor dashboard
-│   ├── instructor-login.html  # Instructor login
-│   ├── student.html         # Student interface
-│   ├── student-login.html   # Student session password
-│   ├── sessions.html        # Session management
-│   └── stats.html           # Public statistics
-└── 📚 docs/
-    └── archive/             # Historical documentation
+├── main.py                    # Application entry point
+├── models_v2.py               # Database models (SQLAlchemy)
+├── schemas_v2.py              # API schemas (Pydantic)
+├── routes_classes.py          # Session management routes
+├── routes_questions.py        # Question handling routes
+├── routes_answers.py          # Answer management routes
+├── database.py                # Database configuration
+├── logging_config.py          # Logging setup
+├── static/
+│   ├── css/styles.css         # Application styles
+│   └── js/
+│       ├── shared.js          # Common utilities
+│       ├── student.js         # Student interface
+│       ├── instructor.js      # Instructor dashboard
+│       └── admin.js           # Admin panel
+├── templates/
+│   ├── student.html           # Student question interface
+│   ├── instructor.html        # Instructor dashboard
+│   ├── stats.html             # Presentation view
+│   ├── admin.html             # Admin panel
+│   └── *.html                 # Other UI templates
+├── requirements.txt           # Python dependencies
+├── Dockerfile                 # Container definition
+├── docker-compose.yml         # Container orchestration
+└── .env.example               # Configuration template
 ```
 
 ---
 
-## 🧪 Testing Locally
+## 🧪 Testing & Development
+
+### **Local Testing**
 
 ```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Run the server
+# Start the server
 python main.py
 
-# 3. Test in browser
-# - Open multiple tabs to simulate instructor and students
-# - Test real-time updates by submitting questions and upvoting
-# - Try ending/restarting sessions
-# - Test with and without session passwords
+# Test workflow:
+# 1. Create admin account at /admin-login
+# 2. Create API key in admin dashboard
+# 3. Start new session at home page
+# 4. Open student URL in different browser/tab
+# 5. Submit questions and test voting
+# 6. Try content moderation with test profanity
 ```
+
+### **Multi-user Testing**
+
+Open multiple browser tabs/windows:
+- **Tab 1**: Instructor dashboard (with API key)
+- **Tab 2+**: Student views (different browsers to simulate multiple students)
+- Test real-time updates by submitting questions and votes
+
+### **Content Moderation Testing**
+
+Submit questions with profanity to test the three-state moderation system:
+- Clean questions → Auto-approved and visible
+- Flagged questions → Require instructor review
+- Rejected questions → Hidden from students
+
+---
+
+## 📈 Monitoring & Logs
+
+The application logs all operations including:
+- Database operations (CREATE, UPDATE, DELETE)
+- WebSocket connections and disconnections
+- Security events (authentication, rate limiting)
+- Content moderation actions
+
+Logs are structured for production monitoring and include timestamps, operation types, and success/failure status.
+
+---
+
+## 🔧 Troubleshooting
+
+**Common Issues:**
+
+1. **Port already in use**: Change `PORT` in .env file
+2. **Database errors**: Check write permissions in `data/` directory
+3. **WebSocket connection failed**: Verify `BASE_URL` matches actual domain
+4. **QR code not loading**: Check network connectivity and BASE_URL configuration
+5. **Markdown not rendering**: Ensure CDN libraries load (check browser console)
+
+**Development Issues:**
+
+1. **Changes not visible**: Clear browser cache or hard refresh (Ctrl+Shift+R)
+2. **API key authentication fails**: Verify API key was created in admin panel
+3. **Real-time updates not working**: Check WebSocket connection in browser dev tools
 
 ---
 
 ## 🤝 Contributing
 
-This is an open-source educational tool. Contributions are welcome!
+This is educational software built for classroom use. The codebase follows professional standards with comprehensive error handling, security measures, and clean architecture.
 
-**Priority areas:**
-- 📊 Analytics dashboard (see Phase 3A roadmap)
-- ♿ Accessibility improvements (WCAG 2.1 AA)
-- 🌐 Internationalization (i18n)
-- 📱 Mobile app (React Native / Flutter)
-- 🔗 LMS integrations (Canvas, Moodle)
-
-**Development process:**
-1. Check [docs/archive/](docs/archive/) for roadmap and phase plans
-2. Open an issue to discuss your idea
-3. Fork and create a feature branch
-4. Submit a PR with tests and documentation
-
----
-
-## 📊 Code Quality
-
-**Current Status:** 9.7/10 ⭐⭐⭐⭐⭐
-
-- ✅ Zero critical security issues
-- ✅ Professional error handling
-- ✅ Comprehensive rate limiting
-- ✅ No duplicate code
-- ✅ Clean architecture
-- ✅ Production-ready
-
-**Recent improvements:**
-- Phase 1: Security hardening (JWT, CSRF, rate limiting)
-- Phase 2: Code quality (removed duplicates, improved organization)
-
-📖 See [PHASE2_BCD_COMPLETE.md](PHASE2_BCD_COMPLETE.md) for detailed improvement history.
+**Development Guidelines:**
+- Follow existing code structure and naming conventions
+- Add tests for new features
+- Update documentation for any changes
+- Ensure mobile responsiveness for UI changes
 
 ---
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
+MIT License - See LICENSE file for details.
 
 ---
 
-## 👏 Credits
+## 🏫 Use Cases
 
-Built for physics and computational science education by educators, for educators.
+**Physics Classes**: Students ask questions about complex topics during lectures
+**Computer Science**: Debugging help and concept clarification during coding sessions  
+**Mathematics**: Step-by-step explanations and problem-solving guidance
+**General Education**: Any classroom where anonymous question collection improves participation
 
-**Powered by:**
-- FastAPI - Modern Python web framework
-- SQLAlchemy - Python SQL toolkit
-- WebSockets - Real-time communication
-- QRCode - QR code generation
-
----
-
-## 💬 Support
-
-- 📖 **Documentation:** See `/docs` directory for guides
-- 🐛 **Bug Reports:** Open an issue on GitHub
-- 💡 **Feature Requests:** Open an issue with `enhancement` label
-- 🔒 **Security Issues:** Email maintainers directly (never public)
-
----
-
-## 🗺️ Roadmap
-
-### ✅ Phase 1 & 2: Complete (Security & Code Quality)
-- Professional codebase
-- Production-ready security
-- Clean architecture
-
-### 🚀 Phase 3: Enhanced Features (Planned)
-- Analytics dashboard
-- Accessibility improvements
-- Advanced session management
-- LMS integrations
-
-### 🔮 Phase 4+: Future Vision
-- Multi-language support
-- AI-powered features
-- Mobile apps
-- Advanced analytics
-
-📖 See [docs/archive/](docs/archive/) for detailed phase documentation.
+The presentation mode and QR code features are specifically designed for classroom projection systems and student mobile device access.
 
 ---
 
 <div align="center">
 
-**[⬆ Back to Top](#-raisemyhand---student-question-aggregator)**
+**[Visit GitHub Repository](#) • [Report Issues](#) • [Documentation](#)**
 
-Made with ❤️ for education
+Built for education with ❤️
 
 </div>
