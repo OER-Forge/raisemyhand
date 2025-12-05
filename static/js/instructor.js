@@ -407,16 +407,8 @@ function hideQRCode() {
 function openPublicStats() {
     const baseUrl = config.base_url;
     const statsUrl = `${baseUrl}/stats?code=${meetingData.meeting_code}`;
-
-    // Open in new tab
     window.open(statsUrl, '_blank', 'noopener,noreferrer');
-
-    // Also copy to clipboard
-    navigator.clipboard.writeText(statsUrl).then(() => {
-        alert('📊 Public stats page opened!\n\n✅ URL copied to clipboard:\n' + statsUrl + '\n\nShare this link to display live statistics without revealing question text.');
-    }).catch(() => {
-        alert('📊 Public stats page opened!\n\n📋 Share this URL:\n' + statsUrl);
-    });
+    navigator.clipboard.writeText(statsUrl).catch(() => {});
 }
 
 async function downloadReport(format) {

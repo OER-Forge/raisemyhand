@@ -4,6 +4,7 @@ Admin user management endpoints for creating and managing instructors.
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session as DBSession
+from sqlalchemy import func
 from typing import List, Optional
 from pydantic import BaseModel
 import secrets
@@ -134,7 +135,13 @@ def list_instructors(
             "display_name": i.display_name,
             "created_at": i.created_at,
             "last_login": i.last_login,
-            "is_active": i.is_active
+            "is_active": i.is_active,
+            "classes_count": db.query(func.count(Class.id)).filter(Class.instructor_id == i.id).scalar() or 0,
+            "sessions_count": db.query(func.count(ClassMeeting.id)).join(Class).filter(Class.instructor_id == i.id).scalar() or 0,
+            "active_sessions_count": db.query(func.count(ClassMeeting.id)).join(Class).filter(
+                Class.instructor_id == i.id,
+                ClassMeeting.is_active == True
+            ).scalar() or 0
         }
         for i in instructors
     ]

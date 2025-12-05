@@ -904,6 +904,7 @@ def get_all_sessions(
     # Use eager loading to avoid N+1 queries
     sessions = query\
         .options(selectinload(Session.questions))\
+        .options(selectinload(Session.class_obj).selectinload(Class.instructor))\
         .order_by(Session.created_at.desc())\
         .offset(skip)\
         .limit(limit)\
@@ -913,11 +914,16 @@ def get_all_sessions(
     result = []
     for session in sessions:
         question_count = len(session.questions)
+        # Get instructor name from the class
+        instructor_name = "Unknown"
+        if session.class_obj and session.class_obj.instructor:
+            instructor_name = session.class_obj.instructor.display_name or session.class_obj.instructor.username
+        
         result.append({
             "id": session.id,
             "title": session.title,
-            "session_code": session.meeting_code,
             "instructor_code": session.instructor_code,
+            "instructor_name": instructor_name,
             "created_at": session.created_at.isoformat(),
             "ended_at": session.ended_at.isoformat() if session.ended_at else None,
             "is_active": session.is_active,

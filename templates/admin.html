@@ -828,13 +828,13 @@
                 <li role="presentation">
                     <button
                         role="tab"
-                        id="tab-api-keys"
+                        id="tab-users"
                         class="tab-button"
                         aria-selected="false"
-                        aria-controls="panel-api-keys"
+                        aria-controls="panel-users"
                         tabindex="-1"
-                        onclick="switchTab('api-keys')">
-                        🔑 API Keys
+                        onclick="switchTab('users')">
+                        👥 Users
                     </button>
                 </li>
                 <li role="presentation">
@@ -852,13 +852,13 @@
                 <li role="presentation">
                     <button
                         role="tab"
-                        id="tab-users"
+                        id="tab-api-keys"
                         class="tab-button"
                         aria-selected="false"
-                        aria-controls="panel-users"
+                        aria-controls="panel-api-keys"
                         tabindex="-1"
-                        onclick="switchTab('users')">
-                        👥 Users
+                        onclick="switchTab('api-keys')">
+                        🔑 API Keys
                     </button>
                 </li>
                 <li role="presentation">
@@ -1494,6 +1494,16 @@
                     </div>
                     <div>
                         <strong>API Keys:</strong> <span id="modal-api-keys-count">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classes -->
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 1rem;">Classes</h3>
+                <div id="modal-classes-list" style="max-height: 200px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        Loading classes...
                     </div>
                 </div>
             </div>
