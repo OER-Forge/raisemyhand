@@ -334,7 +334,9 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
         });
 
         if (!response.ok) {
-            throw new Error('Failed to submit question');
+            const error = await response.json().catch(() => ({}));
+            console.error('Submit question error:', response.status, error);
+            throw new Error(error.detail || 'Failed to submit question');
         }
 
         showNotification('Question submitted successfully!', 'success');
@@ -342,7 +344,8 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
 
         // WebSocket will handle adding the question to the UI
     } catch (error) {
-        showNotification('Failed to submit question', 'error');
+        console.error('Question submission error:', error);
+        showNotification('Failed to submit question: ' + error.message, 'error');
     } finally {
         hideButtonLoading(submitBtn);
     }
