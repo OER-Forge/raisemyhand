@@ -328,8 +328,7 @@
 
             <ul id="nav-menu" class="nav-menu" role="menu" aria-hidden="false">
                 <li role="none"><a href="/classes" class="nav-link" role="menuitem" aria-label="My Classes (current page)" aria-current="page">📚 My Classes</a></li>
-                <li role="none"><a href="/sessions" class="nav-link" role="menuitem" aria-label="All Meetings">📊 All Meetings</a></li>
-                <li role="none"><button onclick="openCreateClassModal()" class="nav-link" role="menuitem" aria-label="Create New Class">+ New Class</button></li>
+                <li role="none"><a href="/sessions" class="nav-link" role="menuitem" aria-label="All Sessions">📊 All Sessions</a></li>
                 <li role="none"><a href="/profile" class="nav-link" role="menuitem" aria-label="Profile Settings">⚙️ Profile</a></li>
                 <li role="none"><button onclick="logout()" class="nav-link logout-btn" role="menuitem" aria-label="Logout">Logout</button></li>
             </ul>
@@ -353,9 +352,20 @@
                 <div class="stat-value" id="archived-classes" style="color: #ff9800;">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total Meetings</div>
-                <div class="stat-value" id="total-meetings">0</div>
+                <div class="stat-label">Total Sessions</div>
+                <div class="stat-value" id="total-sessions">0</div>
             </div>
+        </div>
+
+        <!-- Create Class Button -->
+        <div style="margin-bottom: 2rem;">
+            <button 
+                class="btn btn-primary"
+                onclick="openCreateClassModal()"
+                aria-label="Open create new class dialog"
+                style="min-height: 44px; padding: 10px 20px; font-weight: 600;">
+                ➕ Create New Class
+            </button>
         </div>
 
         <!-- Filter Bar -->
@@ -428,7 +438,7 @@
         <div id="empty-state" class="empty-state" style="display: none;">
             <div class="empty-state-icon">📚</div>
             <h2>No classes yet</h2>
-            <p>Create your first class to organize your meetings!</p>
+            <p>Create your first class to organize your sessions!</p>
             <button onclick="openCreateClassModal()" class="btn btn-primary">Create Class</button>
         </div>
     </div>

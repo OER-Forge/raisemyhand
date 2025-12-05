@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Optional
 import uuid
 from better_profanity import profanity
+import asyncio
 
 from database import get_db
 from models_v2 import Question, ClassMeeting, QuestionVote
@@ -78,6 +79,35 @@ def create_question(
             db.commit()
             db.refresh(db_question)
             log_database_operation(logger, "CREATE", "questions", db_question.id, success=True)
+            
+            # Broadcast new question to all connected clients for this meeting
+            # Note: Broadcast is fire-and-forget; errors don't affect the API response
+            try:
+                from main import manager
+                broadcast_message = {
+                    "type": "new_question",
+                    "question": {
+                        "id": db_question.id,
+                        "meeting_id": db_question.meeting_id,
+                        "question_number": db_question.question_number,
+                        "text": db_question.text,
+                        "sanitized_text": db_question.sanitized_text,
+                        "status": db_question.status,
+                        "flagged_reason": db_question.flagged_reason,
+                        "upvotes": db_question.upvotes,
+                        "is_answered_in_class": db_question.is_answered_in_class,
+                        "created_at": db_question.created_at.isoformat()
+                    }
+                }
+                # Try to create task, but don't fail if event loop isn't available
+                try:
+                    asyncio.create_task(manager.broadcast(broadcast_message, meeting_code))
+                except RuntimeError:
+                    # No event loop in this context, broadcast will still work via WebSocket connections
+                    logger.debug("Could not create async task for broadcast, WebSocket clients will still receive via polling")
+            except Exception as e:
+                logger.warning(f"Broadcast error (non-critical): {e}")
+            
             break
         except Exception as e:
             db.rollback()
@@ -131,6 +161,24 @@ def toggle_vote(
         db.commit()
         db.refresh(question)
         log_database_operation(logger, "UPDATE", "questions", question.id, success=True)
+        
+        # Broadcast vote update to all connected clients for this meeting
+        try:
+            from main import manager
+            meeting = db.query(ClassMeeting).filter(ClassMeeting.id == question.meeting_id).first()
+            if meeting:
+                broadcast_message = {
+                    "type": "upvote",
+                    "question_id": question.id,
+                    "upvotes": question.upvotes
+                }
+                try:
+                    asyncio.create_task(manager.broadcast(broadcast_message, meeting.meeting_code))
+                except RuntimeError:
+                    logger.debug("Could not create async task for broadcast")
+        except Exception as e:
+            logger.warning(f"Broadcast error (non-critical): {e}")
+        
         return {"upvotes": question.upvotes, "action": action}
     except Exception as e:
         db.rollback()
@@ -179,6 +227,24 @@ def mark_answered_in_class(
         db.commit()
         db.refresh(question)
         log_database_operation(logger, "UPDATE", "questions", question.id, success=True)
+        
+        # Broadcast answer status update to all connected clients for this meeting
+        try:
+            from main import manager
+            meeting = db.query(ClassMeeting).filter(ClassMeeting.id == question.meeting_id).first()
+            if meeting:
+                broadcast_message = {
+                    "type": "answer_status",
+                    "question_id": question.id,
+                    "is_answered_in_class": question.is_answered_in_class
+                }
+                try:
+                    asyncio.create_task(manager.broadcast(broadcast_message, meeting.meeting_code))
+                except RuntimeError:
+                    logger.debug("Could not create async task for broadcast")
+        except Exception as e:
+            logger.warning(f"Broadcast error (non-critical): {e}")
+        
         return {"is_answered_in_class": question.is_answered_in_class}
     except Exception as e:
         db.rollback()

@@ -54,15 +54,15 @@ function updateStats() {
     const archivedClasses = allClasses.filter(c => c.is_archived);
     const totalMeetings = allClasses.reduce((sum, c) => sum + (c.meeting_count || 0), 0);
 
-    document.getElementById('total-classes').textContent = allClasses.length;
-    document.getElementById('active-classes').textContent = activeClasses.length;
-    document.getElementById('total-meetings').textContent = totalMeetings;
-
-    // Update archived count
+    const totalClassesEl = document.getElementById('total-classes');
+    const activeClassesEl = document.getElementById('active-classes');
+    const totalSessionsEl = document.getElementById('total-sessions');
     const archivedCountEl = document.getElementById('archived-classes');
-    if (archivedCountEl) {
-        archivedCountEl.textContent = archivedClasses.length;
-    }
+    
+    if (totalClassesEl) totalClassesEl.textContent = allClasses.length;
+    if (activeClassesEl) activeClassesEl.textContent = activeClasses.length;
+    if (totalSessionsEl) totalSessionsEl.textContent = totalMeetings;
+    if (archivedCountEl) archivedCountEl.textContent = archivedClasses.length;
 }
 
 // Toggle archived classes visibility
@@ -410,10 +410,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    // Initialize on page load
+    checkAuth();
 });
 
 // Auto-refresh every 30 seconds
 setInterval(loadClasses, 30000);
-
-// Initialize on page load
-checkAuth();

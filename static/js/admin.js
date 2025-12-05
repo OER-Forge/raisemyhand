@@ -1,3 +1,6 @@
+// Variable declarations
+let currentInstructorId = null;
+
 // Tab Switching with Persistence
 function switchTab(tabName) {
     // Close any open modals
@@ -324,8 +327,7 @@ function filterSessions() {
                 </div>
 
                 <div class="session-card-codes">
-                    <div>📱 Student: <strong>${session.meeting_code}</strong></div>
-                    <div>👨‍🏫 Instructor: <strong>${session.instructor_code}</strong></div>
+                    <div>👨‍🏫 Instructor: <strong>${escapeHtml(session.instructor_name)}</strong></div>
                 </div>
 
                 <div class="session-card-actions">
@@ -576,9 +578,6 @@ function toggleSelectAll() {
 }
 
 // escapeHtml() is provided by shared.js
-
-// Event listeners
-document.getElementById('active-only').addEventListener('change', loadSessions);
 
 // Auto-refresh every 30 seconds
 setInterval(() => {
@@ -1159,8 +1158,6 @@ async function bulkDeleteInstructors() {
 // Quick View Modal Functions
 // ============================================================================
 
-let currentInstructorId = null;
-
 async function viewInstructorDetail(instructorId) {
     if (!instructorId || instructorId === 'null' || isNaN(instructorId)) {
         console.error('Invalid instructor ID:', instructorId);
@@ -1232,6 +1229,37 @@ function populateInstructorModal(instructor) {
     document.getElementById('modal-created-at').textContent = createdDate.toLocaleString();
     document.getElementById('modal-last-login').textContent = lastLogin ? lastLogin.toLocaleString() : 'Never';
     document.getElementById('modal-api-keys-count').textContent = `${instructor.api_keys.length} key(s)`;
+
+    // Classes list
+    const classesContainer = document.getElementById('modal-classes-list');
+    if (instructor.classes.length === 0) {
+        classesContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #666;">
+                No classes found
+            </div>
+        `;
+    } else {
+        classesContainer.innerHTML = instructor.classes.map(cls => {
+            const classDate = new Date(cls.created_at);
+            const archivedBadge = cls.is_archived
+                ? '<span class="badge badge-ended" style="font-size: 0.75rem;">Archived</span>'
+                : '<span class="badge badge-active" style="font-size: 0.75rem;">Active</span>';
+
+            return `
+                <div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <div style="font-weight: 600;">${escapeHtml(cls.name)}</div>
+                        <div>
+                            ${archivedBadge}
+                        </div>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #666;">
+                        Created: ${classDate.toLocaleDateString()} • ${cls.meeting_count} sessions
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
     // Recent sessions
     const sessionsContainer = document.getElementById('modal-recent-sessions');

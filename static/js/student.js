@@ -1,4 +1,4 @@
-// Get meeting code from URL (v2 API uses "meeting_code")
+// Get session code from URL (v2 API uses "meeting_code" field)
 const meetingCode = new URLSearchParams(window.location.search).get('code');
 let meetingData = null;
 let ws = null;
@@ -9,8 +9,8 @@ console.log('[STUDENT] Meeting code from URL:', meetingCode);
 console.log('[STUDENT] Full URL:', window.location.href);
 
 if (!meetingCode) {
-    console.error('[STUDENT] No meeting code found in URL');
-    alert('Invalid meeting code');
+    console.error('[STUDENT] No session code found in URL');
+    alert('Invalid session code');
     window.location.href = '/';
 }
 
@@ -334,7 +334,9 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
         });
 
         if (!response.ok) {
-            throw new Error('Failed to submit question');
+            const error = await response.json().catch(() => ({}));
+            console.error('Submit question error:', response.status, error);
+            throw new Error(error.detail || 'Failed to submit question');
         }
 
         showNotification('Question submitted successfully!', 'success');
@@ -342,7 +344,8 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
 
         // WebSocket will handle adding the question to the UI
     } catch (error) {
-        showNotification('Failed to submit question', 'error');
+        console.error('Question submission error:', error);
+        showNotification('Failed to submit question: ' + error.message, 'error');
     } finally {
         hideButtonLoading(submitBtn);
     }
