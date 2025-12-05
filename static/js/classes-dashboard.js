@@ -75,6 +75,68 @@ function toggleArchivedClasses() {
     renderClasses();
 }
 
+// Filter classes by search, status, and sort
+function filterClasses() {
+    const searchTerm = document.getElementById('classes-search')?.value.toLowerCase() || '';
+    const statusFilter = document.querySelector('input[name="classes-status"]:checked')?.value || 'all';
+    const sortBy = document.getElementById('classes-sort')?.value || 'name-az';
+
+    let filtered = allClasses.filter(cls => {
+        // Search filter
+        if (searchTerm && !cls.name.toLowerCase().includes(searchTerm)) {
+            return false;
+        }
+
+        // Status filter
+        if (statusFilter === 'active' && cls.is_archived) return false;
+        if (statusFilter === 'archived' && !cls.is_archived) return false;
+
+        return true;
+    });
+
+    // Sort
+    switch(sortBy) {
+        case 'name-za':
+            filtered.sort((a, b) => b.name.localeCompare(a.name));
+            break;
+        case 'created-newest':
+            filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            break;
+        case 'created-oldest':
+            filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            break;
+        case 'sessions-most':
+            filtered.sort((a, b) => (b.meeting_count || 0) - (a.meeting_count || 0));
+            break;
+        case 'name-az':
+        default:
+            filtered.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    // Update the display temporarily
+    const container = document.getElementById('classes-list');
+    const emptyState = document.getElementById('empty-state');
+
+    if (filtered.length === 0) {
+        container.style.display = 'none';
+        emptyState.style.display = 'block';
+        emptyState.innerHTML = '<p>No classes match your filters.</p>';
+        return;
+    }
+
+    container.style.display = 'grid';
+    emptyState.style.display = 'none';
+    container.innerHTML = renderClassCards(filtered, false);
+}
+
+// Clear all filters
+function clearClassFilters() {
+    document.getElementById('classes-search').value = '';
+    document.querySelector('input[name="classes-status"][value="all"]').checked = true;
+    document.getElementById('classes-sort').value = 'name-az';
+    filterClasses();
+}
+
 // Render classes
 function renderClasses() {
     const container = document.getElementById('classes-list');

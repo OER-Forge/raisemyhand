@@ -189,6 +189,280 @@
             background: #0056b3;
         }
 
+        /* Session Card Styles */
+        .session-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .session-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .session-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .session-card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin: 0;
+            flex: 1;
+            min-width: 150px;
+            line-height: 1.3;
+        }
+
+        .session-card-meta {
+            display: flex;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .session-card-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            padding: 12px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .session-card-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .session-card-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        .session-card-stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .session-card-codes {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .session-card-codes div {
+            margin-bottom: 4px;
+        }
+
+        .session-card-codes div:last-child {
+            margin-bottom: 0;
+        }
+
+        .session-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .session-card-actions button {
+            flex: 1;
+            min-width: 80px;
+            min-height: 40px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        /* Instructor Card Styles */
+        .instructor-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .instructor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .instructor-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .instructor-card-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin: 0;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .instructor-card-email {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .instructor-card-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            padding: 12px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .instructor-card-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .instructor-card-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        .instructor-card-stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .instructor-card-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .instructor-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .instructor-card-actions button {
+            flex: 1;
+            min-width: 70px;
+            min-height: 40px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .date-filter-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            color: var(--text-primary);
+        }
+
+        .date-filter-btn:hover {
+            background-color: #f0f0f0;
+            border-color: var(--primary-color);
+        }
+
+        .date-filter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .date-filter-btn:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .session-card {
+                padding: 16px;
+            }
+
+            .session-card-title {
+                font-size: 16px;
+            }
+
+            .session-card-stat-value {
+                font-size: 16px;
+            }
+
+            #sessions-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-group {
+                min-width: unset;
+            }
+
+            .search-group input {
+                width: 100%;
+            }
+        }
+
         .filters {
             margin-bottom: 20px;
             display: flex;
@@ -554,14 +828,6 @@
             <!-- Header -->
             <div class="section-header">
                 <h2>Instructor Management</h2>
-                <div class="button-group">
-                    <button
-                        class="btn btn-secondary"
-                        onclick="refreshInstructors()"
-                        aria-label="Refresh instructor list">
-                        🔄 Refresh
-                    </button>
-                </div>
             </div>
 
             <!-- Search and Filters -->
@@ -653,8 +919,8 @@
                 </button>
             </div>
 
-            <!-- Instructors Table -->
-            <div class="sessions-table">
+            <!-- Instructors Table (Hidden - using cards instead) -->
+            <div class="sessions-table" style="display: none;">
                 <table role="table" aria-label="Instructors list">
                     <thead>
                         <tr>
@@ -683,6 +949,14 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Instructors Grid (Card View) -->
+            <div id="instructors-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                <div style="text-align: center; padding: 40px; color: #666; grid-column: 1 / -1;">
+                    <div class="spinner" style="margin: 0 auto 10px;"></div>
+                    Loading instructors...
+                </div>
             </div>
         </div>
 
@@ -732,43 +1006,93 @@
 
             <div class="section-header">
                 <h2>All Sessions</h2>
-                <div class="filters">
-                    <label>
-                        <input type="checkbox" id="active-only"> Active only
-                    </label>
-                    <button class="btn btn-secondary" onclick="refreshSessions()">
-                        🔄 Refresh
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filters" style="background: var(--card-bg); padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: var(--shadow); display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                
+                <!-- Search Group -->
+                <div class="search-group" style="flex: 1; min-width: 200px;">
+                    <label for="sessions-search" style="font-weight: 500; color: var(--text-primary); margin-bottom: 5px; display: block;">Search</label>
+                    <input
+                        type="text"
+                        id="sessions-search"
+                        placeholder="Search sessions by title..."
+                        onkeyup="filterSessions()"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                </div>
+
+                <!-- Status Filter -->
+                <div class="filter-group" style="display: flex; flex-direction: column;">
+                    <label style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">Status</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="sessions-status" value="all" checked onchange="filterSessions()" style="cursor: pointer;">
+                            All
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="sessions-status" value="active" onchange="filterSessions()" style="cursor: pointer;">
+                            Active
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                            <input type="radio" name="sessions-status" value="ended" onchange="filterSessions()" style="cursor: pointer;">
+                            Ended
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div style="display: flex; flex-direction: column;">
+                    <label for="sessions-sort" style="font-weight: 500; color: var(--text-primary); margin-bottom: 5px; display: block;">Sort By</label>
+                    <select
+                        id="sessions-sort"
+                        onchange="filterSessions()"
+                        style="padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; background-color: white; cursor: pointer; min-width: 150px;">
+                        <option value="created-newest">Newest First</option>
+                        <option value="created-oldest">Oldest First</option>
+                        <option value="questions-most">Most Questions</option>
+                        <option value="title-az">Title (A-Z)</option>
+                    </select>
+                </div>
+
+                <!-- Date Range Buttons -->
+                <div style="display: flex; flex-direction: column;">
+                    <label style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">Date Range</label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button class="date-filter-btn active" data-range="all" onclick="setSessionDateRange('all')" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background-color: white; cursor: pointer; font-size: 13px; transition: all 0.2s;">All Time</button>
+                        <button class="date-filter-btn" data-range="today" onclick="setSessionDateRange('today')" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background-color: white; cursor: pointer; font-size: 13px; transition: all 0.2s;">Today</button>
+                        <button class="date-filter-btn" data-range="week" onclick="setSessionDateRange('week')" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background-color: white; cursor: pointer; font-size: 13px; transition: all 0.2s;">This Week</button>
+                        <button class="date-filter-btn" data-range="month" onclick="setSessionDateRange('month')" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; background-color: white; cursor: pointer; font-size: 13px; transition: all 0.2s;">This Month</button>
+                    </div>
+                </div>
+
+                <!-- Clear Button -->
+                <div style="display: flex; align-items: flex-end;">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="clearSessionFilters()"
+                        style="padding: 10px 16px; font-size: 14px; height: 44px;">
+                        ✕ Clear Filters
                     </button>
                 </div>
+
             </div>
 
             <!-- Bulk Actions -->
-            <div class="bulk-actions" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center;">
+            <div class="bulk-actions" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <strong>Bulk Actions:</strong>
-                <button class="btn btn-secondary" onclick="bulkEndSessions()">🛑 End Selected</button>
-                <button class="btn btn-secondary" onclick="bulkRestartSessions()">🔄 Restart Selected</button>
-                <button class="btn btn-danger" onclick="bulkDeleteSessions()">🗑️ Delete Selected</button>
+                <button class="btn btn-secondary" onclick="bulkEndSessions()" style="min-width: 44px; min-height: 44px;">🛑 End Selected</button>
+                <button class="btn btn-secondary" onclick="bulkRestartSessions()" style="min-width: 44px; min-height: 44px;">🔄 Restart Selected</button>
+                <button class="btn btn-danger" onclick="bulkDeleteSessions()" style="min-width: 44px; min-height: 44px;">🗑️ Delete Selected</button>
+                <span id="sessions-count" style="margin-left: auto; color: var(--text-secondary); font-size: 14px;">Loading...</span>
             </div>
 
-            <div class="sessions-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" id="select-all" onchange="toggleSelectAll()"></th>
-                            <th>Title</th>
-                            <th>Created</th>
-                            <th>Status</th>
-                            <th>Questions</th>
-                            <th>Codes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sessions-tbody">
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px;">Loading...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Sessions Grid -->
+            <div id="sessions-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                <div style="text-align: center; padding: 40px; color: #666; grid-column: 1 / -1;">
+                    <div class="spinner" style="margin: 0 auto 10px;"></div>
+                    Loading sessions...
+                </div>
             </div>
         </div>
 
@@ -1844,10 +2168,7 @@
             }
         }
 
-        // Initialize: Load overview on page load
-        window.addEventListener('load', function() {
-            switchTab('overview');
-        });
+        // Initialize: Load overview on page load (moved to admin.js)
     </script>
 </body>
 </html>

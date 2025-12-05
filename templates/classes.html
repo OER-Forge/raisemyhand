@@ -257,6 +257,59 @@
         .modal-actions .btn {
             flex: 1;
         }
+
+        /* Filter Bar Responsive Styles */
+        .search-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-group input:focus {
+            outline: 2px solid #1976d2;
+            border-color: #1976d2;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+        }
+
+        .filter-group input[type="radio"] {
+            cursor: pointer;
+            accent-color: #1976d2;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 15px !important;
+            }
+
+            .search-group {
+                min-width: unset !important;
+            }
+
+            .search-group input {
+                width: 100%;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -303,6 +356,63 @@
                 <div class="stat-label">Total Meetings</div>
                 <div class="stat-value" id="total-meetings">0</div>
             </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filters" style="background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+            
+            <!-- Search -->
+            <div class="search-group" style="flex: 1; min-width: 200px;">
+                <label for="classes-search" style="font-weight: 500; color: #333; margin-bottom: 5px; display: block;">Search</label>
+                <input
+                    type="text"
+                    id="classes-search"
+                    placeholder="Search classes by name..."
+                    onkeyup="filterClasses()"
+                    style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-group" style="display: flex; flex-direction: column;">
+                <label style="font-weight: 500; color: #333; margin-bottom: 8px;">Status</label>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal; font-size: 14px;">
+                        <input type="radio" name="classes-status" value="all" checked onchange="filterClasses()" style="cursor: pointer;">
+                        All
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal; font-size: 14px;">
+                        <input type="radio" name="classes-status" value="active" onchange="filterClasses()" style="cursor: pointer;">
+                        Active
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal; font-size: 14px;">
+                        <input type="radio" name="classes-status" value="archived" onchange="filterClasses()" style="cursor: pointer;">
+                        Archived
+                    </label>
+                </div>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="classes-sort" style="font-weight: 500; color: #333; margin-bottom: 5px; display: block;">Sort By</label>
+                <select
+                    id="classes-sort"
+                    onchange="filterClasses()"
+                    style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: white; cursor: pointer; min-width: 150px;">
+                    <option value="name-az">Name (A-Z)</option>
+                    <option value="name-za">Name (Z-A)</option>
+                    <option value="created-newest">Newest First</option>
+                    <option value="created-oldest">Oldest First</option>
+                    <option value="sessions-most">Most Sessions</option>
+                </select>
+            </div>
+
+            <!-- Clear Button -->
+            <button
+                class="btn btn-secondary"
+                onclick="clearClassFilters()"
+                style="padding: 8px 16px; font-size: 14px; height: 44px;">
+                ✕ Clear
+            </button>
         </div>
 
         <div style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
