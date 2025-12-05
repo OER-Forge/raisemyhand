@@ -15,6 +15,10 @@
             top: 0;
             z-index: 100;
             box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
         }
 
         .tab-list {
@@ -24,6 +28,7 @@
             padding: 0;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            flex: 1;
         }
 
         .tab-list li {
@@ -32,11 +37,11 @@
 
         .tab-button {
             display: block;
-            padding: 15px 25px;
+            padding: 15px 20px;
             border: none;
             background: none;
             color: var(--text-secondary);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -76,11 +81,105 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Mobile: Stack tabs */
+        /* Prevent scroll-to-anchor behavior */
+        html {
+            scroll-behavior: auto;
+        }
+
+        /* Tab Hamburger Menu for Mobile */
+        .tab-hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            min-width: 44px;
+            min-height: 44px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .tab-hamburger-btn:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        /* Tab Menu Overlay */
+        .tab-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 199;
+        }
+
+        .tab-menu-overlay.open {
+            display: block;
+        }
+
+        /* Mobile: Convert tabs to hamburger menu */
         @media (max-width: 768px) {
+            .tab-navigation {
+                padding: 0;
+                flex-wrap: wrap;
+            }
+
+            .tab-hamburger-btn {
+                display: block;
+                margin: 0;
+            }
+
+            .tab-list {
+                display: none;
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
+                background: var(--card-bg);
+                flex-direction: column;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                transition: right 0.3s ease;
+                padding-top: 60px;
+                border-left: 1px solid var(--border-color);
+                z-index: 200;
+                margin: 0;
+            }
+
+            .tab-list.open {
+                display: flex;
+                right: 0;
+            }
+
+            .tab-list li {
+                width: 100%;
+                flex-shrink: 1;
+            }
+
             .tab-button {
-                padding: 12px 20px;
-                font-size: 0.9rem;
+                padding: 15px 20px;
+                border-bottom: 1px solid var(--border-color);
+                border-right: 4px solid transparent;
+                width: 100%;
+                text-align: left;
+                font-size: 1rem;
+            }
+
+            .tab-button[aria-selected="true"] {
+                border-bottom: 1px solid var(--border-color);
+                border-right: 4px solid var(--primary-color);
+                background: rgba(74, 144, 226, 0.05);
+            }
+
+            .tab-button:hover {
+                background: rgba(74, 144, 226, 0.05);
             }
         }
 
@@ -704,7 +803,16 @@
     <div class="container">
         <!-- Tab Navigation -->
         <nav class="tab-navigation" role="tablist" aria-label="Admin dashboard sections">
-            <ul class="tab-list">
+            <button
+                class="tab-hamburger-btn"
+                id="tab-hamburger-btn"
+                aria-label="Toggle tab menu"
+                aria-expanded="false"
+                aria-controls="tab-menu-list">
+                ☰
+            </button>
+            <div class="tab-menu-overlay" id="tab-menu-overlay"></div>
+            <ul class="tab-list" id="tab-menu-list">
                 <li role="presentation">
                     <button
                         role="tab"

@@ -3,6 +3,9 @@ function switchTab(tabName) {
     // Save active tab to localStorage
     localStorage.setItem('adminActiveTab', tabName);
 
+    // Update URL without page reload using history.replaceState
+    window.history.replaceState({ tab: tabName }, '', window.location.pathname);
+
     // Hide all panels
     document.querySelectorAll('[role="tabpanel"]').forEach(panel => {
         panel.setAttribute('aria-hidden', 'true');
@@ -48,10 +51,100 @@ function switchTab(tabName) {
     }
 }
 
+// Tab Hamburger Menu (Mobile)
+function initTabHamburgerMenu() {
+    const hamburgerBtn = document.getElementById('tab-hamburger-btn');
+    const tabList = document.getElementById('tab-menu-list');
+    const overlay = document.getElementById('tab-menu-overlay');
+    
+    if (!hamburgerBtn || !tabList || !overlay) return;
+    
+    // Toggle menu on hamburger click
+    hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = tabList.classList.contains('open');
+        if (isOpen) {
+            closeTabMenu();
+        } else {
+            openTabMenu();
+        }
+    });
+    
+    // Close menu on overlay click
+    overlay.addEventListener('click', closeTabMenu);
+    
+    // Close menu on tab button click
+    tabList.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', closeTabMenu);
+    });
+    
+    // Close menu on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && tabList.classList.contains('open')) {
+            closeTabMenu();
+            hamburgerBtn.focus();
+        }
+    });
+    
+    // Close menu on window resize (when switching to desktop)
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (window.innerWidth > 768 && tabList.classList.contains('open')) {
+                closeTabMenu();
+            }
+        }, 250);
+    });
+}
+
+function openTabMenu() {
+    const hamburgerBtn = document.getElementById('tab-hamburger-btn');
+    const tabList = document.getElementById('tab-menu-list');
+    const overlay = document.getElementById('tab-menu-overlay');
+    
+    if (tabList) {
+        tabList.classList.add('open');
+        hamburgerBtn.setAttribute('aria-expanded', 'true');
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeTabMenu() {
+    const hamburgerBtn = document.getElementById('tab-hamburger-btn');
+    const tabList = document.getElementById('tab-menu-list');
+    const overlay = document.getElementById('tab-menu-overlay');
+    
+    if (tabList) {
+        tabList.classList.remove('open');
+        hamburgerBtn.setAttribute('aria-expanded', 'false');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
 // Initialize tab on page load - restore from localStorage or use default
 window.addEventListener('load', function() {
+    // First, check if URL has a hash (anchor) - ignore it
+    // Instead, use localStorage to remember the last tab
     const savedTab = localStorage.getItem('adminActiveTab') || 'overview';
+    
+    // Remove any hash from URL to prevent browser jumping
+    if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname);
+    }
+    
+    // Initialize hamburger menu for mobile
+    initTabHamburgerMenu();
+    
     switchTab(savedTab);
+});
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', function(event) {
+    const tabName = event.state?.tab || localStorage.getItem('adminActiveTab') || 'overview';
+    switchTab(tabName);
 });
 
 // Admin-specific authentication helper functions
