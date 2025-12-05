@@ -68,6 +68,18 @@ def get_current_instructor(
 @router.post("/register", response_model=InstructorResponse, status_code=status.HTTP_201_CREATED)
 def register_instructor(data: InstructorRegister, db: DBSession = Depends(get_db)):
     """Register a new instructor."""
+    # Check if registration is enabled
+    from models_config import SystemConfig
+    registration_enabled = SystemConfig.get_value(db, "instructor_registration_enabled", default=True)
+    
+    if not registration_enabled:
+        disabled_reason = SystemConfig.get_value(db, "instructor_registration_disabled_reason", default="Registration is currently disabled")
+        log_security_event(logger, "REGISTRATION_BLOCKED", f"Registration attempt blocked: {data.username}", severity="warning")
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Instructor registration is currently disabled. {disabled_reason}"
+        )
+    
     # Check if username already exists
     existing = db.query(Instructor).filter(Instructor.username == data.username).first()
     if existing:

@@ -299,6 +299,18 @@
                         📝 Sessions
                     </button>
                 </li>
+                <li role="presentation">
+                    <button
+                        role="tab"
+                        id="tab-settings"
+                        class="tab-button"
+                        aria-selected="false"
+                        aria-controls="panel-settings"
+                        tabindex="-1"
+                        onclick="switchTab('settings')">
+                        ⚙️ Settings
+                    </button>
+                </li>
             </ul>
         </nav>
 
@@ -567,6 +579,131 @@
                 </table>
             </div>
         </div>
+
+        <!-- Tab Panel: Settings -->
+        <div
+            role="tabpanel"
+            id="panel-settings"
+            class="tab-panel"
+            aria-labelledby="tab-settings"
+            aria-hidden="true">
+
+            <div class="section-header">
+                <h2>System Settings</h2>
+                <div class="button-group">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="refreshSettings()"
+                        aria-label="Refresh settings">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registration Settings -->
+            <div class="settings-section" style="background: var(--card-bg); padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow);">
+                <h3 style="margin-top: 0; color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
+                    👥 Instructor Registration
+                </h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Control whether new instructors can register accounts on this system.
+                </p>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1rem;">
+                        <input type="checkbox" id="registration-enabled" onchange="toggleRegistration()" style="width: 18px; height: 18px;">
+                        <span id="registration-status-text">Enable instructor registration</span>
+                    </label>
+                </div>
+
+                <div id="registration-reason-container" style="display: none; margin-bottom: 15px;">
+                    <label for="registration-reason" style="display: block; font-weight: 600; margin-bottom: 5px;">
+                        Reason for disabling registration:
+                    </label>
+                    <input
+                        type="text"
+                        id="registration-reason"
+                        placeholder="e.g., Maintenance period, Registration closed for semester"
+                        style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.95rem;"
+                        maxlength="200">
+                    <small style="color: var(--text-secondary); margin-top: 5px; display: block;">
+                        This message will be shown to users attempting to register.
+                    </small>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button
+                        id="save-registration-btn"
+                        class="btn btn-primary"
+                        onclick="saveRegistrationSettings()"
+                        style="display: none;">
+                        💾 Save Changes
+                    </button>
+                    <span id="registration-status-indicator" class="badge" style="display: none;"></span>
+                </div>
+            </div>
+
+            <!-- Other System Settings -->
+            <div class="settings-section" style="background: var(--card-bg); padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow);">
+                <h3 style="margin-top: 0; color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
+                    ⚙️ System Configuration
+                </h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Advanced system settings and configuration options.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px;">
+                            Max Questions per Session:
+                        </label>
+                        <input
+                            type="number"
+                            id="max-questions"
+                            min="10"
+                            max="10000"
+                            value="1000"
+                            style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px;">
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px;">
+                            Session Timeout (hours):
+                        </label>
+                        <input
+                            type="number"
+                            id="session-timeout"
+                            min="1"
+                            max="168"
+                            value="24"
+                            style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px;">
+                    </div>
+
+                    <div>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600;">
+                            <input type="checkbox" id="profanity-filter" style="width: 18px; height: 18px;">
+                            Enable Profanity Filter
+                        </label>
+                    </div>
+
+                    <div>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600;">
+                            <input type="checkbox" id="maintenance-mode" style="width: 18px; height: 18px;">
+                            Maintenance Mode
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="saveSystemSettings()">
+                        💾 Save All Settings
+                    </button>
+                    <button class="btn btn-secondary" onclick="initializeDefaultSettings()">
+                        🔄 Initialize Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Create API Key Modal -->
@@ -829,6 +966,8 @@
                 loadApiKeys();
             } else if (tabName === 'sessions') {
                 loadSessions();
+            } else if (tabName === 'settings') {
+                loadSettings();
             }
         }
 
@@ -862,6 +1001,208 @@
                 tabs[tabs.length - 1].focus();
             }
         });
+
+        // ================================================================
+        // Settings Management Functions
+        // ================================================================
+
+        async function loadSettings() {
+            console.log('Loading settings...');
+            await loadRegistrationStatus();
+            await loadSystemSettings();
+        }
+
+        async function loadRegistrationStatus() {
+            try {
+                const response = await fetch('/api/admin/config/registration/status', {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) throw new Error('Failed to load registration status');
+
+                const data = await response.json();
+                const checkbox = document.getElementById('registration-enabled');
+                const statusText = document.getElementById('registration-status-text');
+                const reasonContainer = document.getElementById('registration-reason-container');
+                const reasonInput = document.getElementById('registration-reason');
+
+                checkbox.checked = data.enabled;
+                statusText.textContent = data.enabled ? 'Enable instructor registration' : 'Enable instructor registration (currently disabled)';
+                
+                if (!data.enabled) {
+                    reasonContainer.style.display = 'block';
+                    reasonInput.value = data.reason || '';
+                } else {
+                    reasonContainer.style.display = 'none';
+                }
+
+                updateRegistrationStatus(data.enabled);
+            } catch (error) {
+                console.error('Error loading registration status:', error);
+                showNotification('Failed to load registration status', 'error');
+            }
+        }
+
+        async function loadSystemSettings() {
+            try {
+                const response = await fetch('/api/admin/config/all', {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) throw new Error('Failed to load system settings');
+
+                const settings = await response.json();
+                
+                // Update form fields based on loaded settings
+                settings.forEach(setting => {
+                    if (setting.key === 'max_questions_per_session') {
+                        document.getElementById('max-questions').value = setting.parsed_value || 1000;
+                    } else if (setting.key === 'session_timeout_hours') {
+                        document.getElementById('session-timeout').value = setting.parsed_value || 24;
+                    } else if (setting.key === 'profanity_filter_enabled') {
+                        document.getElementById('profanity-filter').checked = setting.parsed_value === 'True';
+                    } else if (setting.key === 'system_maintenance_mode') {
+                        document.getElementById('maintenance-mode').checked = setting.parsed_value === 'True';
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading system settings:', error);
+                showNotification('Failed to load system settings', 'error');
+            }
+        }
+
+        function toggleRegistration() {
+            const checkbox = document.getElementById('registration-enabled');
+            const reasonContainer = document.getElementById('registration-reason-container');
+            const saveBtn = document.getElementById('save-registration-btn');
+
+            if (!checkbox.checked) {
+                reasonContainer.style.display = 'block';
+            } else {
+                reasonContainer.style.display = 'none';
+            }
+
+            saveBtn.style.display = 'inline-block';
+        }
+
+        async function saveRegistrationSettings() {
+            const checkbox = document.getElementById('registration-enabled');
+            const reasonInput = document.getElementById('registration-reason');
+            const saveBtn = document.getElementById('save-registration-btn');
+
+            const enabled = checkbox.checked;
+            const reason = reasonInput.value.trim();
+
+            if (!enabled && !reason) {
+                showNotification('Please provide a reason for disabling registration', 'error');
+                reasonInput.focus();
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/config/registration/toggle', {
+                    method: 'POST',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        enabled: enabled,
+                        reason: reason || null
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to update registration settings');
+
+                const result = await response.json();
+                showNotification(result.message, 'success');
+                saveBtn.style.display = 'none';
+                updateRegistrationStatus(enabled);
+            } catch (error) {
+                console.error('Error saving registration settings:', error);
+                showNotification('Failed to save registration settings', 'error');
+            }
+        }
+
+        function updateRegistrationStatus(enabled) {
+            const indicator = document.getElementById('registration-status-indicator');
+            indicator.style.display = 'inline-block';
+            
+            if (enabled) {
+                indicator.className = 'badge badge-active';
+                indicator.textContent = '🟢 Open';
+            } else {
+                indicator.className = 'badge badge-ended';
+                indicator.textContent = '🔴 Closed';
+            }
+        }
+
+        async function saveSystemSettings() {
+            const maxQuestions = document.getElementById('max-questions').value;
+            const sessionTimeout = document.getElementById('session-timeout').value;
+            const profanityFilter = document.getElementById('profanity-filter').checked;
+            const maintenanceMode = document.getElementById('maintenance-mode').checked;
+
+            const settings = [
+                { key: 'max_questions_per_session', value: maxQuestions },
+                { key: 'session_timeout_hours', value: sessionTimeout },
+                { key: 'profanity_filter_enabled', value: profanityFilter.toString() },
+                { key: 'system_maintenance_mode', value: maintenanceMode.toString() }
+            ];
+
+            try {
+                let savedCount = 0;
+                for (const setting of settings) {
+                    const response = await fetch(`/api/admin/config/${setting.key}`, {
+                        method: 'PUT',
+                        headers: {
+                            ...getAuthHeaders(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            value: setting.value
+                        })
+                    });
+
+                    if (response.ok) savedCount++;
+                }
+
+                showNotification(`Saved ${savedCount} system settings successfully`, 'success');
+            } catch (error) {
+                console.error('Error saving system settings:', error);
+                showNotification('Failed to save system settings', 'error');
+            }
+        }
+
+        async function initializeDefaultSettings() {
+            if (!confirm('Initialize default system settings? This will create default values for any missing configuration.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/config/initialize-defaults', {
+                    method: 'POST',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to initialize defaults');
+
+                const result = await response.json();
+                showNotification(result.message, 'success');
+                await loadSettings(); // Reload settings
+            } catch (error) {
+                console.error('Error initializing defaults:', error);
+                showNotification('Failed to initialize default settings', 'error');
+            }
+        }
+
+        function refreshSettings() {
+            loadSettings();
+            showNotification('Settings refreshed', 'success');
+        }
 
         // Initialize: Load overview on page load
         window.addEventListener('load', function() {

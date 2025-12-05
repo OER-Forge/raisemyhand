@@ -70,6 +70,7 @@ from routes_classes import router as classes_router
 from routes_questions import router as questions_router
 from routes_answers import router as answers_router
 from routes_admin import router as admin_router
+from routes_config import router as config_router
 from logging_config import setup_logging, get_logger, log_request, log_database_operation, log_websocket_event, log_security_event
 
 # Configure centralized logging
@@ -88,6 +89,7 @@ app.include_router(classes_router)
 app.include_router(questions_router)
 app.include_router(answers_router)
 app.include_router(admin_router)
+app.include_router(config_router)
 
 # Security Configuration
 security = HTTPBearer(auto_error=False)
@@ -637,9 +639,19 @@ async def instructor_login_view(request: Request):
 
 
 @app.get("/register", response_class=HTMLResponse)
-async def register_view(request: Request):
+async def register_view(request: Request, db: DBSession = Depends(get_db)):
     """Instructor registration page."""
-    return templates.TemplateResponse("register.html", {"request": request})
+    from models_config import SystemConfig
+    
+    # Check if registration is enabled
+    registration_enabled = SystemConfig.get_value(db, "instructor_registration_enabled", default=True)
+    disabled_reason = SystemConfig.get_value(db, "instructor_registration_disabled_reason", default="Registration is currently disabled")
+    
+    return templates.TemplateResponse("register.html", {
+        "request": request,
+        "registration_enabled": registration_enabled,
+        "disabled_reason": disabled_reason
+    })
 
 
 @app.get("/instructor", response_class=HTMLResponse)

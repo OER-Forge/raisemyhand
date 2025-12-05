@@ -205,6 +205,7 @@
                 <p>Register to start using RaiseMyHand</p>
             </div>
 
+            {% if registration_enabled %}
             <div class="error-message" id="error-message"></div>
             <div class="success-message" id="success-message"></div>
 
@@ -284,6 +285,13 @@
                 <button type="submit" class="btn btn-width-full" id="register-btn">Create Account</button>
                 <div class="loader" id="loader">Registering...</div>
             </form>
+            {% else %}
+            <div class="error-message" style="display: block;">
+                <h3>Registration Disabled</h3>
+                <p>{{ disabled_reason }}</p>
+                <p>Please contact an administrator if you need access.</p>
+            </div>
+            {% endif %}
 
             <div class="login-link">
                 Already have an account? <a href="/instructor-login">Login here</a>
@@ -296,6 +304,7 @@
     </div>
 
     <script src="/static/js/shared.js"></script>
+    {% if registration_enabled %}
     <script>
         const form = document.getElementById('register-form');
         const errorMsg = document.getElementById('error-message');
@@ -482,5 +491,6 @@
             { label: 'Register', href: '/register' }
         ]);
     </script>
+    {% endif %}
 </body>
 </html>

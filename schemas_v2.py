@@ -432,3 +432,34 @@ class BulkActionResponse(BaseModel):
     failed_count: int
 
 
+# ============================================================================
+# System Configuration Schemas
+# ============================================================================
+
+class ConfigUpdateRequest(BaseModel):
+    """Request to update a system configuration value."""
+    value: str
+    description: Optional[str] = None
+
+
+class ConfigResponse(BaseModel):
+    """System configuration setting."""
+    key: str
+    value: str
+    value_type: str
+    parsed_value: Optional[str] = None
+    description: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    updated_by: str
+
+    class Config:
+        from_attributes = True
+
+
+class RegistrationToggleRequest(BaseModel):
+    """Request to toggle instructor registration."""
+    enabled: bool
+    reason: Optional[str] = None
+
+
