@@ -129,7 +129,7 @@ function renderMeetings(filter = 'all', searchTerm = '', sortBy = 'created-newes
         });
     }
 
-    // Filter by search term (title or meeting code)
+    // Filter by search term (title or session code)
     if (searchTerm) {
         meetingsToShow = meetingsToShow.filter(m => 
             m.title.toLowerCase().includes(searchTerm) || 

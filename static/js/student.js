@@ -1,4 +1,4 @@
-// Get meeting code from URL (v2 API uses "meeting_code")
+// Get session code from URL (v2 API uses "meeting_code" field)
 const meetingCode = new URLSearchParams(window.location.search).get('code');
 let meetingData = null;
 let ws = null;
@@ -9,8 +9,8 @@ console.log('[STUDENT] Meeting code from URL:', meetingCode);
 console.log('[STUDENT] Full URL:', window.location.href);
 
 if (!meetingCode) {
-    console.error('[STUDENT] No meeting code found in URL');
-    alert('Invalid meeting code');
+    console.error('[STUDENT] No session code found in URL');
+    alert('Invalid session code');
     window.location.href = '/';
 }
 

@@ -781,7 +781,7 @@
                 <a href="/" aria-label="RaiseMyHand Home" style="text-decoration: none; color: white;">
                     <h1>✋ RaiseMyHand</h1>
                 </a>
-                <p class="subtitle" aria-label="Current page">📊 All Meetings</p>
+                <p class="subtitle" aria-label="Current page">📊 All Sessions</p>
             </div>
 
             <button id="hamburger-btn" class="hamburger-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
@@ -790,8 +790,7 @@
 
             <ul id="nav-menu" class="nav-menu" role="menu" aria-hidden="false">
                 <li role="none"><a href="/classes" class="nav-link" role="menuitem" aria-label="My Classes">📚 My Classes</a></li>
-                <li role="none"><a href="/sessions" class="nav-link" role="menuitem" aria-label="All Meetings (current page)" aria-current="page">📊 All Meetings</a></li>
-                <li role="none"><button onclick="openCreateSessionModal()" class="nav-link" role="menuitem" aria-label="Create New Session">+ New Meeting</button></li>
+                <li role="none"><a href="/sessions" class="nav-link" role="menuitem" aria-label="All Sessions (current page)" aria-current="page">📊 All Sessions</a></li>
                 <li role="none"><a href="/profile" class="nav-link" role="menuitem" aria-label="Profile Settings">⚙️ Profile</a></li>
                 <li role="none"><button onclick="logout()" class="nav-link logout-btn" role="menuitem" aria-label="Logout">Logout</button></li>
             </ul>
@@ -820,14 +819,25 @@
             </div>
         </div>
         
+        <!-- Create Session Button -->
+        <div style="margin-bottom: 2rem;">
+            <button 
+                class="btn btn-primary"
+                onclick="openCreateSessionModal()"
+                aria-label="Open create new session dialog"
+                style="min-height: 44px; padding: 10px 20px; font-weight: 600;">
+                ➕ Create New Session
+            </button>
+        </div>
+        
         <div class="filters" role="group" aria-labelledby="filter-legend">
             <div class="search-group">
                 <label for="search-sessions" style="font-weight: 600; color: #333;">Search:</label>
                 <input 
                     type="text" 
                     id="search-sessions"
-                    placeholder="Find by name or code..."
-                    aria-label="Search sessions by title or meeting code"
+                    placeholder="Find by name or session code..."
+                    aria-label="Search sessions by title or session code"
                     onkeyup="filterSessions()"
                 >
             </div>
