@@ -397,13 +397,17 @@ def get_meeting_by_code(
             if q.flagged_reason == 'profanity' and q.sanitized_text:
                 q.text = q.sanitized_text
     
-    # For instructors, mark approved profane questions as "flagged" for visual distinction
+    # For instructors, mark approved profane questions as "flagged" and use sanitized text for display
     # Keep rejected ones as "rejected"
     if is_instructor_view:
         for q in questions:
-            if q.flagged_reason == 'profanity' and q.status == 'approved':
-                # Mark approved-but-profane questions as flagged for review
-                q.status = 'flagged'
+            if q.flagged_reason == 'profanity':
+                if q.status == 'approved':
+                    # Mark approved-but-profane questions as flagged for visual distinction
+                    q.status = 'flagged'
+                    # Show sanitized text for approved profane questions
+                    if q.sanitized_text:
+                        q.text = q.sanitized_text
             # Rejected questions stay as "rejected"
     
     meeting.questions = questions
@@ -450,7 +454,7 @@ def get_flagged_questions(
         )
     ).order_by(Question.created_at.desc()).all()
     
-    # Mark approved-but-profane questions as "flagged" for UI
+    # Mark approved-but-profane questions as "flagged" for UI to show they need review
     for q in questions:
         if q.flagged_reason == 'profanity' and q.status == 'approved':
             q.status = 'flagged'

@@ -241,6 +241,11 @@ header .subtitle {
     border-left: 4px solid var(--success-color);
 }
 
+.question-card.previously-flagged {
+    border-left: 4px solid #27ae60;
+    background: #f0fdf4;
+}
+
 .question-header {
     display: flex;
     justify-content: space-between;
@@ -273,6 +278,20 @@ header .subtitle {
 .question-meta {
     font-size: 0.85rem;
     color: #7f8c8d;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.approved-badge {
+    display: inline-block;
+    background: #d4edda;
+    color: #155724;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid #c3e6cb;
 }
 
 .question-actions {

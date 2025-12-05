@@ -176,9 +176,14 @@ function renderQuestions() {
     const questionsList = document.getElementById('questions-list');
     const questions = meetingData.questions || [];
 
-    // Filter out flagged questions from the main list (they appear in the flagged tab)
-    const approvedQuestions = questions.filter(q => q.status !== 'flagged' && q.status !== 'rejected');
-    const flaggedQuestions = questions.filter(q => q.status === 'flagged' || q.status === 'rejected');
+    // Include approved questions AND approved flagged questions (flagged status but has flagged_reason showing it was reviewed)
+    // Only exclude rejected questions and questions still pending review (flagged without approval)
+    const approvedQuestions = questions.filter(q => {
+        if (q.status === 'rejected') return false; // Exclude rejected
+        if (q.status === 'flagged' && !q.flagged_reason) return false; // Exclude unapproved flagged
+        return true; // Include approved and approved-flagged
+    });
+    const flaggedQuestions = questions.filter(q => q.status === 'rejected' || (q.status === 'flagged' && !q.flagged_reason));
 
     // Update counts
     document.getElementById('question-count').textContent =
@@ -222,14 +227,20 @@ function renderQuestions() {
         // Render answer text with full markdown (images allowed - instructor created)
         const answerHtml = hasWrittenAnswer ? renderMarkdownFull(answerText) : '';
 
+        // Check if this question is flagged but has been approved and published
+        // (indicated by having flagged_reason but also being allowed to appear in main list)
+        // The status will be "flagged" if it has profanity, but we show "approved & published" badge if it has written answer or is not rejected
+        const isFlaggedAndApproved = q.flagged_reason && q.status === 'flagged' && q.status !== 'rejected';
+
         return `
-            <article class="question-card ${answeredClass}" role="article">
+            <article class="question-card ${answeredClass} ${isFlaggedAndApproved ? 'previously-flagged' : ''}" role="article">
                 <div class="question-header">
                     <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}</div>
                     <div class="question-content">
                         <div class="question-text markdown-content">${questionHtml}</div>
                         <div class="question-meta">
                             <time datetime="${q.created_at}">Asked at ${createdTime}</time>
+                            ${isFlaggedAndApproved ? '<span class="approved-badge">✅ Approved & Published</span>' : ''}
                         </div>
                     </div>
                     <div class="question-actions">
