@@ -34,14 +34,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 def verify_jwt_token(token: str) -> Optional[dict]:
     """Verify and decode a JWT token."""
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
         return payload
     except JWTError:
         return None

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaiseMyHand - Instructor Details</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .details-header {
+            background: linear-gradient(135deg, var(--primary-color), #2c5aa0);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+        .details-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .instructor-info h1 {
+            margin: 0 0 8px 0;
+            font-size: 2rem;
+        }
+        .instructor-meta {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        .instructor-meta div {
+            margin-bottom: 4px;
+        }
+        .actions-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .analytics-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        .analytics-card h3 {
+            margin: 0 0 20px 0;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .metric-value {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .data-table th {
+            background: var(--bg-color);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .data-table tr:hover {
+            background: rgba(74, 144, 226, 0.05);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        @media (max-width: 768px) {
+            .details-header .container {
+                flex-direction: column;
+                text-align: center;
+            }
+            .instructor-info h1 {
+                font-size: 1.5rem;
+            }
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="details-header">
+        <div class="container">
+            <div class="instructor-info">
+                <h1 id="instructor-name">Loading...</h1>
+                <div class="instructor-meta">
+                    <div><strong>Username:</strong> <span id="instructor-username">-</span></div>
+                    <div><strong>Email:</strong> <span id="instructor-email">-</span></div>
+                    <div><strong>Status:</strong> <span id="instructor-badge">-</span></div>
+                    <div><strong>Member Since:</strong> <span id="instructor-created">-</span></div>
+                    <div><strong>Last Login:</strong> <span id="instructor-last-login">-</span></div>
+                </div>
+            </div>
+            <div class="actions-group">
+                <button class="btn btn-back" onclick="goToAdminDashboard()" aria-label="Go back to admin dashboard">
+                    ← Back to Dashboard
+                </button>
+                <button id="activate-btn" class="btn btn-success" onclick="activateInstructor()" style="display: none;">
+                    ✅ Activate
+                </button>
+                <button id="deactivate-btn" class="btn btn-secondary" onclick="deactivateInstructor()" style="display: none;">
+                    🚫 Deactivate
+                </button>
+                <button class="btn btn-warning" onclick="resetPassword()">
+                    🔑 Reset Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Analytics Overview -->
+        <div class="analytics-grid">
+            <!-- Activity Summary -->
+            <div class="analytics-card">
+                <h3>📊 Activity Summary</h3>
+                <div class="metric-row">
+                    <span class="metric-label">Active Classes</span>
+                    <span class="metric-value" id="classes-count">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Archived Classes</span>
+                    <span class="metric-value" id="archived-classes-count">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Sessions</span>
+                    <span class="metric-value" id="sessions-count">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Active Sessions</span>
+                    <span class="metric-value" id="active-sessions-count">-</span>
+                </div>
+            </div>
+
+            <!-- Engagement Metrics -->
+            <div class="analytics-card">
+                <h3>💬 Engagement Metrics</h3>
+                <div class="metric-row">
+                    <span class="metric-label">Total Questions</span>
+                    <span class="metric-value" id="questions-count">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Upvotes</span>
+                    <span class="metric-value" id="upvotes-count">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Unique Students</span>
+                    <span class="metric-value" id="students-count">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Avg Questions/Session</span>
+                    <span class="metric-value" id="avg-questions">-</span>
+                </div>
+            </div>
+
+            <!-- Account Details -->
+            <div class="analytics-card">
+                <h3>👤 Account Details</h3>
+                <div class="metric-row">
+                    <span class="metric-label">API Keys</span>
+                    <span class="metric-value" id="api-keys-count">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Account Age</span>
+                    <span class="metric-value" id="account-age">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Login Frequency</span>
+                    <span class="metric-value" id="login-frequency">-</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Account Type</span>
+                    <span class="metric-value" id="account-type">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Classes Detail -->
+        <div class="analytics-card">
+            <h3>📚 Classes</h3>
+            <div id="classes-table-container">
+                <div class="empty-state">Loading classes...</div>
+            </div>
+        </div>
+
+        <!-- Recent Sessions -->
+        <div class="analytics-card">
+            <h3>📝 Recent Sessions</h3>
+            <div id="sessions-table-container">
+                <div class="empty-state">Loading sessions...</div>
+            </div>
+        </div>
+
+        <!-- API Keys -->
+        <div class="analytics-card">
+            <h3>🔑 API Keys</h3>
+            <div id="api-keys-table-container">
+                <div class="empty-state">Loading API keys...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Success Modal -->
+    <div class="modal" id="password-reset-modal" role="dialog" aria-labelledby="password-reset-title" aria-modal="true">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 id="password-reset-title" style="color: var(--success-color);">✓ Password Reset</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                A temporary password has been generated. Copy it now and give it to the instructor.
+            </p>
+
+            <div style="background: #f8f9fa; border: 2px solid var(--success-color); border-radius: 8px; padding: 1rem; margin: 1.5rem 0;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">
+                    Temporary Password:
+                </label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input
+                        type="text"
+                        id="temp-password-display"
+                        readonly
+                        style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 1.1rem; background: white;"
+                        value="Loading...">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="copyTempPassword()"
+                        style="min-width: 44px; min-height: 44px;">
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-primary" onclick="hidePasswordResetModal()">
+                    Got It
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/shared.js"></script>
+    <script>
+        // Immediate check to see if shared.js loaded
+        console.log('[DEBUG] Script tag executing, checking shared.js...');
+        console.log('[DEBUG] window.sharedJsLoaded:', window.sharedJsLoaded);
+        console.log('[DEBUG] getAuthHeaders type:', typeof getAuthHeaders);
+        console.log('[DEBUG] window.getAuthHeaders type:', typeof window.getAuthHeaders);
+        console.log('[DEBUG] testFunction type:', typeof window.testFunction);
+        
+        let currentInstructor = null;
+        const instructorId = new URLSearchParams(window.location.search).get('id');
+
+        // Load instructor details on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('[DEBUG] DOM loaded, waiting for shared.js...');
+            
+            // Wait for shared.js to be fully loaded (up to 5 seconds)
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds
+            while ((typeof getAuthHeaders !== 'function' && typeof window.getAuthHeaders !== 'function') && attempts < maxAttempts) {
+                console.log(`[DEBUG] Waiting for getAuthHeaders... attempt ${attempts + 1}`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            // Use either global or window version
+            const authHeadersFunction = (typeof getAuthHeaders === 'function') ? getAuthHeaders : window.getAuthHeaders;
+            
+            if (typeof authHeadersFunction !== 'function') {
+                showErrorState('Required scripts failed to load. Please refresh the page and try again.');
+                return;
+            }
+            
+            console.log('[DEBUG] Found getAuthHeaders function:', typeof authHeadersFunction);
+            console.log('[DEBUG] shared.js loaded successfully');
+            console.log('[DEBUG] Instructor ID from URL:', instructorId);
+            
+            if (!instructorId || instructorId === 'null' || instructorId === '') {
+                showErrorState('No instructor ID provided. Please select an instructor from the admin dashboard.');
+                return;
+            }
+
+            await loadInstructorDetails();
+        });
+
+        function showErrorState(message) {
+            document.body.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg-color);">
+                    <div style="text-align: center; padding: 40px; background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); max-width: 500px;">
+                        <h1 style="color: #dc3545; margin-top: 0;">⚠️ Error</h1>
+                        <p style="font-size: 1.1rem; color: var(--text-secondary); margin: 20px 0;">${message}</p>
+                        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <button 
+                                onclick="window.location.href = '/admin'"
+                                class="btn btn-primary">
+                                ← Back to Admin Dashboard
+                            </button>
+                            <button 
+                                onclick="window.location.href = '/admin-login'"
+                                class="btn btn-secondary">
+                                Admin Login
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadInstructorDetails() {
+            try {
+                // Use either global or window version of getAuthHeaders
+                const authHeadersFunction = (typeof getAuthHeaders === 'function') ? getAuthHeaders : window.getAuthHeaders;
+                
+                // Debug: Check if required functions are available
+                console.log('[DEBUG] Checking required functions...');
+                console.log('[DEBUG] authHeadersFunction available:', typeof authHeadersFunction);
+                console.log('[DEBUG] handleAuthError available:', typeof handleAuthError);
+                console.log('[DEBUG] showNotification available:', typeof showNotification);
+                
+                const authHeaders = authHeadersFunction();
+                console.log('[DEBUG] Auth headers:', authHeaders);
+                
+                // Check if we have an authorization header
+                if (!authHeaders.Authorization) {
+                    throw new Error('No authentication token found. Please log in as admin first.');
+                }
+                
+                console.log('[DEBUG] Making API request to /api/admin/instructors/' + instructorId);
+                const response = await fetch(`/api/admin/instructors/${instructorId}`, {
+                    headers: authHeaders
+                });
+
+                console.log('[DEBUG] API response status:', response.status);
+                
+                if (response.status === 401) {
+                    throw new Error('Authentication failed. Please log in as admin first.');
+                }
+                
+                if (typeof handleAuthError === 'function' && handleAuthError(response)) return;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to load instructor details (${response.status}): ${errorText}`);
+                }
+
+                currentInstructor = await response.json();
+                console.log('[DEBUG] Instructor data loaded successfully');
+                populateInstructorDetails(currentInstructor);
+            } catch (error) {
+                console.error('Error loading instructor details:', error);
+                
+                // Provide specific error messages
+                let errorMessage = error.message;
+                if (errorMessage.includes('No authentication token')) {
+                    errorMessage = 'Please log in as admin first, then try again.';
+                } else if (errorMessage.includes('Authentication failed')) {
+                    errorMessage = 'Your admin session has expired. Please log in again.';
+                }
+                
+                // Show error state with specific message
+                showErrorState(errorMessage);
+            }
+        }
+
+        function populateInstructorDetails(instructor) {
+            // Header info
+            document.getElementById('instructor-name').textContent = instructor.display_name || instructor.username;
+            document.getElementById('instructor-username').textContent = instructor.username;
+            document.getElementById('instructor-email').textContent = instructor.email || 'No email provided';
+            document.getElementById('instructor-created').textContent = new Date(instructor.created_at).toLocaleDateString();
+            
+            // Last login
+            const lastLoginEl = document.getElementById('instructor-last-login');
+            if (instructor.last_login) {
+                const loginDate = new Date(instructor.last_login);
+                const daysAgo = Math.floor((new Date() - loginDate) / (1000 * 60 * 60 * 24));
+                if (daysAgo === 0) {
+                    lastLoginEl.textContent = 'Today';
+                } else if (daysAgo === 1) {
+                    lastLoginEl.textContent = 'Yesterday';
+                } else if (daysAgo < 7) {
+                    lastLoginEl.textContent = `${daysAgo} days ago`;
+                } else {
+                    lastLoginEl.textContent = loginDate.toLocaleDateString();
+                }
+            } else {
+                lastLoginEl.textContent = 'Never';
+            }
+
+            // Badge
+            const badgeEl = document.getElementById('instructor-badge');
+            if (instructor.last_login === null) {
+                badgeEl.innerHTML = '<span class="badge badge-placeholder">🟡 Placeholder</span>';
+            } else if (instructor.is_active) {
+                badgeEl.innerHTML = '<span class="badge badge-active">🟢 Active</span>';
+            } else {
+                badgeEl.innerHTML = '<span class="badge badge-ended">🔴 Inactive</span>';
+            }
+
+            // Show appropriate action buttons
+            if (instructor.is_active) {
+                document.getElementById('deactivate-btn').style.display = 'inline-block';
+            } else {
+                document.getElementById('activate-btn').style.display = 'inline-block';
+            }
+
+            // Activity Summary
+            document.getElementById('classes-count').textContent = instructor.stats.classes_count;
+            document.getElementById('archived-classes-count').textContent = instructor.stats.archived_classes_count;
+            document.getElementById('sessions-count').textContent = instructor.stats.sessions_count;
+            document.getElementById('active-sessions-count').textContent = instructor.stats.active_sessions_count;
+
+            // Engagement Metrics
+            document.getElementById('questions-count').textContent = instructor.stats.questions_count;
+            document.getElementById('upvotes-count').textContent = instructor.stats.upvotes_count;
+            document.getElementById('students-count').textContent = instructor.stats.unique_students_count;
+            
+            // Calculate average questions per session
+            const avgQuestions = instructor.stats.sessions_count > 0 ? 
+                (instructor.stats.questions_count / instructor.stats.sessions_count).toFixed(1) : '0';
+            document.getElementById('avg-questions').textContent = avgQuestions;
+
+            // Account Details
+            document.getElementById('api-keys-count').textContent = instructor.api_keys.length;
+            
+            // Calculate account age
+            const accountAge = Math.floor((new Date() - new Date(instructor.created_at)) / (1000 * 60 * 60 * 24));
+            document.getElementById('account-age').textContent = `${accountAge} days`;
+            
+            // Login frequency
+            if (instructor.last_login) {
+                const daysSinceLogin = Math.floor((new Date() - new Date(instructor.last_login)) / (1000 * 60 * 60 * 24));
+                document.getElementById('login-frequency').textContent = daysSinceLogin === 0 ? 'Active today' : `${daysSinceLogin} days ago`;
+            } else {
+                document.getElementById('login-frequency').textContent = 'Never logged in';
+            }
+            
+            // Account type
+            const accountType = instructor.last_login === null ? 'Placeholder' : 'Registered';
+            document.getElementById('account-type').textContent = accountType;
+
+            // Populate tables
+            populateClassesTable(instructor.classes);
+            populateSessionsTable(instructor.recent_sessions);
+            populateApiKeysTable(instructor.api_keys);
+        }
+
+        function populateClassesTable(classes) {
+            const container = document.getElementById('classes-table-container');
+            
+            if (classes.length === 0) {
+                container.innerHTML = '<div class="empty-state">No classes found.</div>';
+                return;
+            }
+
+            const table = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Class Name</th>
+                            <th>Description</th>
+                            <th>Meetings</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${classes.map(cls => `
+                            <tr>
+                                <td><strong>${escapeHtml(cls.name)}</strong></td>
+                                <td>${escapeHtml(cls.description || 'No description')}</td>
+                                <td style="text-align: center;">${cls.meeting_count}</td>
+                                <td>
+                                    <span class="badge ${cls.is_archived ? 'badge-ended' : 'badge-active'}">
+                                        ${cls.is_archived ? '📁 Archived' : '📚 Active'}
+                                    </span>
+                                </td>
+                                <td>${new Date(cls.created_at).toLocaleDateString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+        }
+
+        function populateSessionsTable(sessions) {
+            const container = document.getElementById('sessions-table-container');
+            
+            if (sessions.length === 0) {
+                container.innerHTML = '<div class="empty-state">No sessions found.</div>';
+                return;
+            }
+
+            const table = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Session Title</th>
+                            <th>Questions</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Codes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sessions.map(session => `
+                            <tr>
+                                <td><strong>${escapeHtml(session.title)}</strong></td>
+                                <td style="text-align: center;">${session.question_count}</td>
+                                <td>
+                                    <span class="badge ${session.is_active ? 'badge-active' : 'badge-ended'}">
+                                        ${session.is_active ? '🟢 Active' : '🔴 Ended'}
+                                    </span>
+                                </td>
+                                <td>${new Date(session.created_at).toLocaleDateString()}</td>
+                                <td style="font-family: monospace; font-size: 0.8rem;">
+                                    S: ${session.meeting_code}<br>
+                                    I: ${session.instructor_code}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+        }
+
+        function populateApiKeysTable(apiKeys) {
+            const container = document.getElementById('api-keys-table-container');
+            
+            if (apiKeys.length === 0) {
+                container.innerHTML = '<div class="empty-state">No API keys found.</div>';
+                return;
+            }
+
+            const table = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Key Name</th>
+                            <th>Key (Partial)</th>
+                            <th>Created</th>
+                            <th>Last Used</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${apiKeys.map(key => `
+                            <tr>
+                                <td><strong>${escapeHtml(key.name || 'Unnamed')}</strong></td>
+                                <td style="font-family: monospace; font-size: 0.8rem;">${key.key_hash ? key.key_hash.substring(0, 12) + '...' : 'N/A'}</td>
+                                <td>${new Date(key.created_at).toLocaleDateString()}</td>
+                                <td>${key.last_used ? new Date(key.last_used).toLocaleDateString() : 'Never'}</td>
+                                <td>
+                                    <span class="badge ${key.is_active ? 'badge-active' : 'badge-ended'}">
+                                        ${key.is_active ? '🟢 Active' : '🔴 Inactive'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+        }
+
+        // Action functions
+        async function activateInstructor() {
+            if (!currentInstructor) return;
+            
+            if (!confirm(`Activate instructor "${currentInstructor.display_name || currentInstructor.username}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/instructors/${currentInstructor.id}/activate`, {
+                    method: 'PATCH',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) throw new Error('Failed to activate instructor');
+
+                showNotification('Instructor activated successfully', 'success');
+                await loadInstructorDetails();
+            } catch (error) {
+                console.error('Error activating instructor:', error);
+                showNotification('Failed to activate instructor', 'error');
+            }
+        }
+
+        async function deactivateInstructor() {
+            if (!currentInstructor) return;
+            
+            if (!confirm(`Deactivate instructor "${currentInstructor.display_name || currentInstructor.username}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/instructors/${currentInstructor.id}/deactivate`, {
+                    method: 'PATCH',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) throw new Error('Failed to deactivate instructor');
+
+                showNotification('Instructor deactivated successfully', 'success');
+                await loadInstructorDetails();
+            } catch (error) {
+                console.error('Error deactivating instructor:', error);
+                showNotification('Failed to deactivate instructor', 'error');
+            }
+        }
+
+        async function resetPassword() {
+            if (!currentInstructor) return;
+            
+            if (!confirm(`Reset password for "${currentInstructor.display_name || currentInstructor.username}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/instructors/${currentInstructor.id}/reset-password`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) throw new Error('Failed to reset password');
+
+                const result = await response.json();
+                document.getElementById('temp-password-display').value = result.temporary_password;
+                document.getElementById('password-reset-modal').classList.add('active');
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                showNotification('Failed to reset password', 'error');
+            }
+        }
+
+        function copyTempPassword() {
+            const input = document.getElementById('temp-password-display');
+            input.select();
+            document.execCommand('copy');
+            showNotification('Password copied to clipboard', 'success');
+        }
+
+        function hidePasswordResetModal() {
+            document.getElementById('password-reset-modal').classList.remove('active');
+        }
+
+        function goToAdminDashboard() {
+            // Navigate to admin dashboard
+            window.location.href = '/admin';
+        }
+    </script>
+</body>
+</html>

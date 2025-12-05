@@ -351,6 +351,7 @@ function logout() {
 loadStats();
 loadSessions();
 loadApiKeys();
+loadInstructors();
 
 // API Key Management Functions
 async function loadApiKeys() {
@@ -569,4 +570,595 @@ async function copyToClipboard(text) {
             return false;
         }
     }
+}
+
+// ============================================================================
+// Instructor Management Functions
+// ============================================================================
+
+let searchDebounceTimer = null;
+
+async function loadInstructors() {
+    const searchTerm = document.getElementById('instructor-search')?.value || '';
+    const statusFilter = document.getElementById('instructor-status-filter')?.value || '';
+    const loginFilter = document.getElementById('instructor-login-filter')?.value || '';
+
+    const tbody = document.getElementById('instructors-tbody');
+    if (!tbody) return; // Tab might not be loaded yet
+
+    try {
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (statusFilter) params.append('status', statusFilter);
+
+        // Handle login filter
+        if (loginFilter === 'never') {
+            params.append('has_login', 'false');
+        } else if (loginFilter) {
+            params.append('last_login_days', loginFilter);
+        }
+
+        const response = await fetch(`/api/admin/instructors?${params.toString()}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to load instructors');
+
+        const instructors = await response.json();
+        renderInstructorsTable(instructors);
+    } catch (error) {
+        console.error('Error loading instructors:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: #dc3545;">
+                    Error loading instructors. Please try again.
+                </td>
+            </tr>
+        `;
+        showNotification('Failed to load instructors', 'error');
+    }
+}
+
+function renderInstructorsTable(instructors) {
+    const tbody = document.getElementById('instructors-tbody');
+
+    if (instructors.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                    No instructors found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = instructors.map(instructor => {
+        const createdDate = new Date(instructor.created_at);
+        const lastLogin = instructor.last_login ? new Date(instructor.last_login) : null;
+
+        // Badge styling
+        let badgeClass = '';
+        let badgeText = '';
+        if (instructor.badge === 'active') {
+            badgeClass = 'badge-active';
+            badgeText = 'Active';
+        } else if (instructor.badge === 'inactive') {
+            badgeClass = 'badge-ended';
+            badgeText = 'Inactive';
+        } else if (instructor.badge === 'placeholder') {
+            badgeClass = 'badge-placeholder';
+            badgeText = 'Placeholder';
+        }
+
+        // Display name
+        const displayName = instructor.display_name || instructor.username;
+        const subtitle = instructor.email ? `<div style="font-size: 0.85rem; color: #666;">${escapeHtml(instructor.email)}</div>` : '';
+
+        return `
+            <tr data-instructor-id="${instructor.id}">
+                <td><input type="checkbox" class="instructor-checkbox" value="${instructor.id}"></td>
+                <td>
+                    <div><strong>${escapeHtml(displayName)}</strong></div>
+                    <div style="font-size: 0.85rem; color: #666;">@${escapeHtml(instructor.username)}</div>
+                    ${subtitle}
+                </td>
+                <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                <td>${instructor.classes_count}</td>
+                <td>
+                    ${instructor.sessions_count}
+                    ${instructor.active_sessions_count > 0 ? `<span class="badge badge-active" style="font-size: 0.75rem; margin-left: 4px;">${instructor.active_sessions_count} active</span>` : ''}
+                </td>
+                <td>${lastLogin ? lastLogin.toLocaleString() : 'Never'}</td>
+                <td>
+                    <button class="btn-view instructor-view-btn">
+                        👁️ View
+                    </button>
+                    ${instructor.is_active ? `
+                    <button class="btn-delete instructor-deactivate-btn" style="background: #ffc107; color: #000;">
+                        🚫 Deactivate
+                    </button>
+                    ` : `
+                    <button class="btn-success instructor-activate-btn">
+                        ✅ Activate
+                    </button>
+                    `}
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Add event listeners using event delegation
+    tbody.addEventListener('click', function(e) {
+        const viewBtn = e.target.closest('.instructor-view-btn');
+        const deactivateBtn = e.target.closest('.instructor-deactivate-btn');
+        const activateBtn = e.target.closest('.instructor-activate-btn');
+        
+        const row = e.target.closest('tr');
+        const instructorId = parseInt(row.getAttribute('data-instructor-id'));
+        
+        if (viewBtn) {
+            viewInstructorDetail(instructorId);
+        } else if (deactivateBtn) {
+            const username = row.querySelector('strong').textContent;
+            deactivateInstructor(instructorId, username);
+        } else if (activateBtn) {
+            const username = row.querySelector('strong').textContent;
+            activateInstructor(instructorId, username);
+        }
+    });
+}
+
+function debouncedSearchInstructors() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+        loadInstructors();
+    }, 500);
+}
+
+function filterInstructors() {
+    loadInstructors();
+}
+
+function clearInstructorFilters() {
+    document.getElementById('instructor-search').value = '';
+    document.getElementById('instructor-status-filter').value = '';
+    document.getElementById('instructor-login-filter').value = '';
+    loadInstructors();
+}
+
+function toggleSelectAllInstructors() {
+    const selectAllCheckbox = document.getElementById('select-all-instructors');
+    const checkboxes = document.querySelectorAll('.instructor-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+}
+
+function getSelectedInstructorIds() {
+    const checkboxes = document.querySelectorAll('.instructor-checkbox:checked');
+    return Array.from(checkboxes).map(cb => parseInt(cb.value));
+}
+
+async function activateInstructor(instructorId, username) {
+    if (!confirm(`Activate instructor "${username}"?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/instructors/${instructorId}/activate`, {
+            method: 'PATCH',
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to activate instructor');
+
+        const result = await response.json();
+        showNotification(result.message || 'Instructor activated successfully', 'success');
+        loadInstructors();
+    } catch (error) {
+        console.error('Error activating instructor:', error);
+        showNotification('Failed to activate instructor', 'error');
+    }
+}
+
+async function deactivateInstructor(instructorId, username) {
+    if (!confirm(`Deactivate instructor "${username}"?\n\nThey will not be able to login or access their sessions.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/instructors/${instructorId}/deactivate`, {
+            method: 'PATCH',
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to deactivate instructor');
+
+        const result = await response.json();
+        showNotification(result.message || 'Instructor deactivated successfully', 'success');
+        loadInstructors();
+    } catch (error) {
+        console.error('Error deactivating instructor:', error);
+        showNotification('Failed to deactivate instructor', 'error');
+    }
+}
+
+async function bulkActivateInstructors() {
+    const instructorIds = getSelectedInstructorIds();
+    if (instructorIds.length === 0) {
+        showNotification('Please select at least one instructor', 'error');
+        return;
+    }
+
+    if (!confirm(`Activate ${instructorIds.length} instructor(s)?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/instructors/bulk/activate', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ instructor_ids: instructorIds })
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to activate instructors');
+
+        const result = await response.json();
+        showNotification(result.message, 'success');
+        loadInstructors();
+
+        // Uncheck select all
+        document.getElementById('select-all-instructors').checked = false;
+    } catch (error) {
+        console.error('Error activating instructors:', error);
+        showNotification('Failed to activate instructors', 'error');
+    }
+}
+
+async function bulkDeactivateInstructors() {
+    const instructorIds = getSelectedInstructorIds();
+    if (instructorIds.length === 0) {
+        showNotification('Please select at least one instructor', 'error');
+        return;
+    }
+
+    if (!confirm(`Deactivate ${instructorIds.length} instructor(s)?\n\nThey will not be able to login or access their sessions.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/instructors/bulk/deactivate', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ instructor_ids: instructorIds })
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to deactivate instructors');
+
+        const result = await response.json();
+        showNotification(result.message, 'success');
+        loadInstructors();
+
+        // Uncheck select all
+        document.getElementById('select-all-instructors').checked = false;
+    } catch (error) {
+        console.error('Error deactivating instructors:', error);
+        showNotification('Failed to deactivate instructors', 'error');
+    }
+}
+
+async function bulkDeleteInstructors() {
+    const instructorIds = getSelectedInstructorIds();
+    if (instructorIds.length === 0) {
+        showNotification('Please select at least one instructor', 'error');
+        return;
+    }
+
+    if (!confirm(`⚠️ DELETE ${instructorIds.length} instructor(s)?\n\nThis will permanently delete:\n- All their classes\n- All their sessions\n- All questions in their sessions\n\nThis cannot be undone!`)) {
+        return;
+    }
+
+    // Double confirmation
+    if (!confirm('This is your last chance. Are you absolutely sure?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/instructors/bulk/delete', {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ instructor_ids: instructorIds })
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to delete instructors');
+
+        const result = await response.json();
+        showNotification(result.message, 'success');
+        loadInstructors();
+
+        // Uncheck select all
+        document.getElementById('select-all-instructors').checked = false;
+    } catch (error) {
+        console.error('Error deleting instructors:', error);
+        showNotification('Failed to delete instructors', 'error');
+    }
+}
+
+// ============================================================================
+// Quick View Modal Functions
+// ============================================================================
+
+let currentInstructorId = null;
+
+async function viewInstructorDetail(instructorId) {
+    console.log('viewInstructorDetail called with ID:', instructorId, 'Type:', typeof instructorId);
+    
+    if (!instructorId || instructorId === 'null' || isNaN(instructorId)) {
+        console.error('Invalid instructor ID:', instructorId);
+        showNotification('Error: Invalid instructor ID', 'error');
+        return;
+    }
+    
+    currentInstructorId = instructorId;
+
+    // Show modal
+    document.getElementById('instructor-detail-modal').classList.add('active');
+
+    try {
+        const response = await fetch(`/api/admin/instructors/${instructorId}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to load instructor details');
+
+        const instructor = await response.json();
+        populateInstructorModal(instructor);
+    } catch (error) {
+        console.error('Error loading instructor details:', error);
+        showNotification('Failed to load instructor details', 'error');
+        hideInstructorDetailModal();
+    }
+}
+
+function populateInstructorModal(instructor) {
+    // Header info
+    const displayName = instructor.display_name || instructor.username;
+    document.getElementById('modal-instructor-name').textContent = displayName;
+    document.getElementById('modal-instructor-username').textContent = `@${instructor.username}`;
+    document.getElementById('modal-instructor-email').textContent = instructor.email || 'No email';
+
+    // Badge
+    let badgeClass = '';
+    let badgeText = '';
+    if (instructor.last_login === null) {
+        badgeClass = 'badge-placeholder';
+        badgeText = 'Placeholder';
+    } else if (instructor.is_active) {
+        badgeClass = 'badge-active';
+        badgeText = 'Active';
+    } else {
+        badgeClass = 'badge-ended';
+        badgeText = 'Inactive';
+    }
+    document.getElementById('modal-instructor-badge').innerHTML = `<span class="badge ${badgeClass}">${badgeText}</span>`;
+
+    // Statistics
+    document.getElementById('modal-classes-count').textContent = instructor.stats.classes_count;
+    document.getElementById('modal-sessions-count').textContent = instructor.stats.sessions_count;
+    document.getElementById('modal-active-sessions').textContent = instructor.stats.active_sessions_count;
+    document.getElementById('modal-questions-count').textContent = instructor.stats.questions_count;
+    document.getElementById('modal-upvotes-count').textContent = instructor.stats.upvotes_count;
+    document.getElementById('modal-students-count').textContent = instructor.stats.unique_students_count;
+
+    // Account info
+    const createdDate = new Date(instructor.created_at);
+    const lastLogin = instructor.last_login ? new Date(instructor.last_login) : null;
+    document.getElementById('modal-created-at').textContent = createdDate.toLocaleString();
+    document.getElementById('modal-last-login').textContent = lastLogin ? lastLogin.toLocaleString() : 'Never';
+    document.getElementById('modal-api-keys-count').textContent = `${instructor.api_keys.length} key(s)`;
+
+    // Recent sessions
+    const sessionsContainer = document.getElementById('modal-recent-sessions');
+    if (instructor.recent_sessions.length === 0) {
+        sessionsContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #666;">
+                No sessions found
+            </div>
+        `;
+    } else {
+        sessionsContainer.innerHTML = instructor.recent_sessions.map(session => {
+            const sessionDate = new Date(session.created_at);
+            const statusBadge = session.is_active
+                ? '<span class="badge badge-active" style="font-size: 0.75rem;">Active</span>'
+                : '<span class="badge badge-ended" style="font-size: 0.75rem;">Ended</span>';
+
+            return `
+                <div style="padding: 10px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">${escapeHtml(session.title)}</div>
+                        <div style="font-size: 0.85rem; color: #666;">
+                            ${sessionDate.toLocaleDateString()} • ${session.question_count} questions
+                        </div>
+                    </div>
+                    <div>
+                        ${statusBadge}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Quick action buttons
+    const activateBtn = document.getElementById('modal-activate-btn');
+    const deactivateBtn = document.getElementById('modal-deactivate-btn');
+
+    if (instructor.is_active) {
+        activateBtn.style.display = 'none';
+        deactivateBtn.style.display = 'inline-block';
+    } else {
+        activateBtn.style.display = 'inline-block';
+        deactivateBtn.style.display = 'none';
+    }
+}
+
+function hideInstructorDetailModal() {
+    const modal = document.getElementById('instructor-detail-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    // Don't reset currentInstructorId here - we might need it for viewFullDetails()
+    // It will be reset when opening a new instructor or explicitly
+}
+
+async function activateFromModal() {
+    if (!currentInstructorId) return;
+
+    const username = document.getElementById('modal-instructor-username').textContent.replace('@', '');
+
+    if (!confirm(`Activate instructor "${username}"?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/instructors/${currentInstructorId}/activate`, {
+            method: 'PATCH',
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to activate instructor');
+
+        showNotification('Instructor activated successfully', 'success');
+
+        // Reload modal data
+        await viewInstructorDetail(currentInstructorId);
+
+        // Refresh list in background
+        loadInstructors();
+    } catch (error) {
+        console.error('Error activating instructor:', error);
+        showNotification('Failed to activate instructor', 'error');
+    }
+}
+
+async function deactivateFromModal() {
+    if (!currentInstructorId) return;
+
+    const username = document.getElementById('modal-instructor-username').textContent.replace('@', '');
+
+    if (!confirm(`Deactivate instructor "${username}"?\n\nThey will not be able to login or access their sessions.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/instructors/${currentInstructorId}/deactivate`, {
+            method: 'PATCH',
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to deactivate instructor');
+
+        showNotification('Instructor deactivated successfully', 'success');
+
+        // Reload modal data
+        await viewInstructorDetail(currentInstructorId);
+
+        // Refresh list in background
+        loadInstructors();
+    } catch (error) {
+        console.error('Error deactivating instructor:', error);
+        showNotification('Failed to deactivate instructor', 'error');
+    }
+}
+
+async function resetPasswordFromModal() {
+    if (!currentInstructorId) return;
+
+    const username = document.getElementById('modal-instructor-username').textContent.replace('@', '');
+
+    if (!confirm(`Reset password for instructor "${username}"?\n\nA temporary password will be generated.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/instructors/${currentInstructorId}/reset-password`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to reset password');
+
+        const result = await response.json();
+
+        // Show password reset modal
+        document.getElementById('reset-instructor-username').textContent = username;
+        document.getElementById('temp-password-display').value = result.temporary_password;
+        document.getElementById('password-reset-modal').classList.add('active');
+
+        // Auto-copy to clipboard
+        await copyToClipboard(result.temporary_password);
+        showNotification('Temporary password copied to clipboard', 'success');
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        showNotification('Failed to reset password', 'error');
+    }
+}
+
+function hidePasswordResetModal() {
+    document.getElementById('password-reset-modal').classList.remove('active');
+    document.getElementById('temp-password-display').value = '';
+}
+
+function copyTempPassword() {
+    const passwordInput = document.getElementById('temp-password-display');
+    const copyBtn = document.getElementById('copy-temp-password-btn');
+
+    navigator.clipboard.writeText(passwordInput.value).then(() => {
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '✓ Copied!';
+        copyBtn.style.background = '#27ae60';
+
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.style.background = '';
+        }, 2000);
+
+        showNotification('Password copied to clipboard', 'success');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        passwordInput.select();
+        showNotification('Please copy the password manually', 'warning');
+    });
+}
+
+function viewFullDetails() {
+    // Use currentInstructorId if available, otherwise log error
+    if (!currentInstructorId || currentInstructorId === null || currentInstructorId === 'null') {
+        console.error('No instructor ID available. currentInstructorId:', currentInstructorId);
+        showNotification('Error: No instructor selected. Please view an instructor first.', 'error');
+        return;
+    }
+
+    console.log('Opening full details for instructor ID:', currentInstructorId);
+
+    // Hide modal
+    hideInstructorDetailModal();
+
+    // Navigate to full details page
+    const url = `/admin/instructor-details?id=${currentInstructorId}`;
+    window.location.href = url;
+}
+
+function refreshInstructors() {
+    loadInstructors();
+    showNotification('Instructors refreshed', 'success');
 }

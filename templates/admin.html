@@ -6,6 +6,85 @@
     <title>RaiseMyHand - Admin Dashboard</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <style>
+        /* Tab Navigation Styles */
+        .tab-navigation {
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .tab-list {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-list li {
+            flex-shrink: 0;
+        }
+
+        .tab-button {
+            display: block;
+            padding: 15px 25px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        .tab-button:hover {
+            color: var(--primary-color);
+            background: rgba(74, 144, 226, 0.05);
+        }
+
+        .tab-button:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: -2px;
+        }
+
+        .tab-button[aria-selected="true"] {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel[aria-hidden="false"] {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile: Stack tabs */
+        @media (max-width: 768px) {
+            .tab-button {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Existing styles */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -169,99 +248,324 @@
     </header>
 
     <div class="container">
-        <!-- Statistics Overview -->
-        <h2>System Statistics</h2>
-        <div class="stats-grid" id="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Sessions</div>
-                <div class="stat-value" id="total-sessions">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Active Sessions</div>
-                <div class="stat-value" id="active-sessions">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Questions</div>
-                <div class="stat-value" id="total-questions">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Upvotes</div>
-                <div class="stat-value" id="total-upvotes">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Sessions (24h)</div>
-                <div class="stat-value" id="sessions-24h">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Ended Sessions</div>
-                <div class="stat-value" id="ended-sessions">-</div>
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation" role="tablist" aria-label="Admin dashboard sections">
+            <ul class="tab-list">
+                <li role="presentation">
+                    <button
+                        role="tab"
+                        id="tab-overview"
+                        class="tab-button"
+                        aria-selected="true"
+                        aria-controls="panel-overview"
+                        tabindex="0"
+                        onclick="switchTab('overview')">
+                        📊 Overview
+                    </button>
+                </li>
+                <li role="presentation">
+                    <button
+                        role="tab"
+                        id="tab-instructors"
+                        class="tab-button"
+                        aria-selected="false"
+                        aria-controls="panel-instructors"
+                        tabindex="-1"
+                        onclick="switchTab('instructors')">
+                        👥 Instructors
+                    </button>
+                </li>
+                <li role="presentation">
+                    <button
+                        role="tab"
+                        id="tab-api-keys"
+                        class="tab-button"
+                        aria-selected="false"
+                        aria-controls="panel-api-keys"
+                        tabindex="-1"
+                        onclick="switchTab('api-keys')">
+                        🔑 API Keys
+                    </button>
+                </li>
+                <li role="presentation">
+                    <button
+                        role="tab"
+                        id="tab-sessions"
+                        class="tab-button"
+                        aria-selected="false"
+                        aria-controls="panel-sessions"
+                        tabindex="-1"
+                        onclick="switchTab('sessions')">
+                        📝 Sessions
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Tab Panel: Overview -->
+        <div
+            role="tabpanel"
+            id="panel-overview"
+            class="tab-panel"
+            aria-labelledby="tab-overview"
+            aria-hidden="false">
+
+            <h2>System Statistics</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sessions</div>
+                    <div class="stat-value" id="total-sessions">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Sessions</div>
+                    <div class="stat-value" id="active-sessions">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Questions</div>
+                    <div class="stat-value" id="total-questions">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Upvotes</div>
+                    <div class="stat-value" id="total-upvotes">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Sessions (24h)</div>
+                    <div class="stat-value" id="sessions-24h">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ended Sessions</div>
+                    <div class="stat-value" id="ended-sessions">-</div>
+                </div>
             </div>
         </div>
 
-        <!-- API Key Management -->
-        <div class="section-header">
-            <h2>Instructor API Keys</h2>
-            <button class="btn btn-primary" onclick="showCreateApiKeyModal()">➕ Create New API Key</button>
-        </div>
-        
-        <div class="sessions-table" style="margin-bottom: 40px;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Key</th>
-                        <th>Created</th>
-                        <th>Last Used</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="api-keys-tbody">
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px;">Loading...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <!-- Tab Panel: Instructors -->
+        <div
+            role="tabpanel"
+            id="panel-instructors"
+            class="tab-panel"
+            aria-labelledby="tab-instructors"
+            aria-hidden="true">
 
-        <!-- Sessions List -->
-        <div class="section-header">
-            <h2>All Sessions</h2>
-            <div class="filters">
-                <label>
-                    <input type="checkbox" id="active-only"> Active only
-                </label>
-                <button class="btn btn-secondary" onclick="refreshSessions()">🔄 Refresh</button>
+            <!-- Header -->
+            <div class="section-header">
+                <h2>Instructor Management</h2>
+                <div class="button-group">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="refreshInstructors()"
+                        aria-label="Refresh instructor list">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="filters-container" style="background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <!-- Search -->
+                    <div class="form-group" style="margin: 0;">
+                        <label for="instructor-search">Search</label>
+                        <input
+                            type="text"
+                            id="instructor-search"
+                            placeholder="Username, email, or name..."
+                            aria-label="Search instructors by username, email, or name"
+                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
+                            onkeyup="debouncedSearchInstructors()">
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="form-group" style="margin: 0;">
+                        <label for="instructor-status-filter">Status</label>
+                        <select
+                            id="instructor-status-filter"
+                            aria-label="Filter by instructor status"
+                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
+                            onchange="filterInstructors()">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active (Registered)</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="placeholder">Placeholder (No Login)</option>
+                        </select>
+                    </div>
+
+                    <!-- Login Filter -->
+                    <div class="form-group" style="margin: 0;">
+                        <label for="instructor-login-filter">Login Activity</label>
+                        <select
+                            id="instructor-login-filter"
+                            aria-label="Filter by login activity"
+                            style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;"
+                            onchange="filterInstructors()">
+                            <option value="">All</option>
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="never">Never logged in</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Clear Filters -->
+                <div style="margin-top: 15px;">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="clearInstructorFilters()"
+                        style="padding: 8px 16px; font-size: 0.9rem;">
+                        Clear Filters
+                    </button>
+                    <span id="instructor-count" style="margin-left: 15px; color: var(--text-secondary);">
+                        Loading...
+                    </span>
+                </div>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div
+                class="bulk-actions"
+                style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <strong>Bulk Actions:</strong>
+                <button
+                    class="btn btn-success"
+                    onclick="bulkActivateInstructors()"
+                    aria-label="Activate selected instructors"
+                    style="min-width: 44px; min-height: 44px;">
+                    ✅ Activate Selected
+                </button>
+                <button
+                    class="btn btn-secondary"
+                    onclick="bulkDeactivateInstructors()"
+                    aria-label="Deactivate selected instructors"
+                    style="min-width: 44px; min-height: 44px;">
+                    🚫 Deactivate Selected
+                </button>
+                <button
+                    class="btn btn-danger"
+                    onclick="bulkDeleteInstructors()"
+                    aria-label="Delete selected instructors"
+                    style="min-width: 44px; min-height: 44px;">
+                    🗑️ Delete Selected
+                </button>
+            </div>
+
+            <!-- Instructors Table -->
+            <div class="sessions-table">
+                <table role="table" aria-label="Instructors list">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <input
+                                    type="checkbox"
+                                    id="select-all-instructors"
+                                    onchange="toggleSelectAllInstructors()"
+                                    aria-label="Select all instructors"
+                                    style="width: 20px; height: 20px; cursor: pointer;">
+                            </th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Classes</th>
+                            <th scope="col">Sessions</th>
+                            <th scope="col">Last Login</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="instructors-tbody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <div class="spinner" style="margin: 0 auto 10px;"></div>
+                                Loading instructors...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Bulk Actions -->
-        <div class="bulk-actions" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center;">
-            <strong>Bulk Actions:</strong>
-            <button class="btn btn-secondary" onclick="bulkEndSessions()">🛑 End Selected</button>
-            <button class="btn btn-secondary" onclick="bulkRestartSessions()">🔄 Restart Selected</button>
-            <button class="btn btn-danger" onclick="bulkDeleteSessions()">🗑️ Delete Selected</button>
+        <!-- Tab Panel: API Keys -->
+        <div
+            role="tabpanel"
+            id="panel-api-keys"
+            class="tab-panel"
+            aria-labelledby="tab-api-keys"
+            aria-hidden="true">
+
+            <div class="section-header">
+                <h2>Instructor API Keys</h2>
+                <button class="btn btn-primary" onclick="showCreateApiKeyModal()">
+                    ➕ Create New API Key
+                </button>
+            </div>
+
+            <div class="sessions-table" style="margin-bottom: 40px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Key</th>
+                            <th>Created</th>
+                            <th>Last Used</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="api-keys-tbody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="sessions-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="select-all" onchange="toggleSelectAll()"></th>
-                        <th>Title</th>
-                        <th>Created</th>
-                        <th>Status</th>
-                        <th>Questions</th>
-                        <th>Codes</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="sessions-tbody">
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px;">Loading...</td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Tab Panel: Sessions -->
+        <div
+            role="tabpanel"
+            id="panel-sessions"
+            class="tab-panel"
+            aria-labelledby="tab-sessions"
+            aria-hidden="true">
+
+            <div class="section-header">
+                <h2>All Sessions</h2>
+                <div class="filters">
+                    <label>
+                        <input type="checkbox" id="active-only"> Active only
+                    </label>
+                    <button class="btn btn-secondary" onclick="refreshSessions()">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div class="bulk-actions" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; display: flex; gap: 10px; align-items: center;">
+                <strong>Bulk Actions:</strong>
+                <button class="btn btn-secondary" onclick="bulkEndSessions()">🛑 End Selected</button>
+                <button class="btn btn-secondary" onclick="bulkRestartSessions()">🔄 Restart Selected</button>
+                <button class="btn btn-danger" onclick="bulkDeleteSessions()">🗑️ Delete Selected</button>
+            </div>
+
+            <div class="sessions-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all" onchange="toggleSelectAll()"></th>
+                            <th>Title</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th>Questions</th>
+                            <th>Codes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessions-tbody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -273,10 +577,10 @@
             <form id="create-api-key-form" onsubmit="handleCreateApiKey(event)">
                 <div class="form-group">
                     <label for="api-key-name">Key Name</label>
-                    <input 
-                        type="text" 
-                        id="api-key-name" 
-                        name="name" 
+                    <input
+                        type="text"
+                        id="api-key-name"
+                        name="name"
                         placeholder="e.g., Math Department, Prof. Smith"
                         required
                         autofocus
@@ -299,18 +603,18 @@
         <div class="modal-content" style="max-width: 600px;">
             <h2 style="color: #27ae60;">✓ API Key Created!</h2>
             <p style="color: #7f8c8d; margin-bottom: 1rem;">Your new API key has been created. Copy it now - you won't be able to see it again!</p>
-            
+
             <div style="background: #f8f9fa; border: 2px solid #27ae60; border-radius: 8px; padding: 1rem; margin: 1.5rem 0;">
                 <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #2c3e50;">API Key:</label>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input 
-                        type="text" 
-                        id="new-api-key-value" 
-                        readonly 
+                    <input
+                        type="text"
+                        id="new-api-key-value"
+                        readonly
                         style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 0.9rem; background: white;"
                     >
-                    <button 
-                        class="btn btn-primary" 
+                    <button
+                        class="btn btn-primary"
                         onclick="copyNewApiKey()"
                         id="copy-new-key-btn"
                         style="min-width: 120px;">
@@ -332,7 +636,237 @@
         </div>
     </div>
 
-    <script src="/static/js/shared.js"></script>
-    <script src="/static/js/admin.js"></script>
+    <!-- Quick View Instructor Modal -->
+    <div id="instructor-detail-modal" class="modal" role="dialog" aria-labelledby="instructor-detail-title" aria-modal="true">
+        <div class="modal-content" style="max-width: 800px; text-align: left;">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                <div>
+                    <h2 id="instructor-detail-title" style="margin: 0 0 5px 0;">
+                        <span id="modal-instructor-name">Loading...</span>
+                    </h2>
+                    <div style="color: #666; font-size: 0.9rem;">
+                        <span id="modal-instructor-username"></span>
+                    </div>
+                    <div style="color: #666; font-size: 0.9rem;">
+                        <span id="modal-instructor-email"></span>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <span id="modal-instructor-badge"></span>
+                    </div>
+                </div>
+                <button
+                    class="btn btn-secondary"
+                    onclick="hideInstructorDetailModal()"
+                    aria-label="Close modal"
+                    style="padding: 8px 16px;">
+                    ✕ Close
+                </button>
+            </div>
+
+            <!-- Statistics Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <div class="stat-card">
+                    <div class="stat-label">Classes</div>
+                    <div class="stat-value" id="modal-classes-count">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Sessions</div>
+                    <div class="stat-value" id="modal-sessions-count">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Sessions</div>
+                    <div class="stat-value" id="modal-active-sessions">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Questions</div>
+                    <div class="stat-value" id="modal-questions-count">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Upvotes</div>
+                    <div class="stat-value" id="modal-upvotes-count">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Students</div>
+                    <div class="stat-value" id="modal-students-count">-</div>
+                </div>
+            </div>
+
+            <!-- Account Info -->
+            <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 1rem;">Account Information</h3>
+                <div style="display: grid; gap: 8px; font-size: 0.9rem;">
+                    <div>
+                        <strong>Created:</strong> <span id="modal-created-at">-</span>
+                    </div>
+                    <div>
+                        <strong>Last Login:</strong> <span id="modal-last-login">-</span>
+                    </div>
+                    <div>
+                        <strong>API Keys:</strong> <span id="modal-api-keys-count">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Sessions -->
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 1rem;">Recent Sessions</h3>
+                <div id="modal-recent-sessions" style="max-height: 200px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        Loading sessions...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div style="border-top: 2px solid var(--border-color); padding-top: 20px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 1rem;">Quick Actions</h3>
+                <div class="button-group" style="flex-wrap: wrap;">
+                    <button
+                        id="modal-activate-btn"
+                        class="btn btn-success"
+                        onclick="activateFromModal()"
+                        style="display: none;">
+                        ✅ Activate Account
+                    </button>
+                    <button
+                        id="modal-deactivate-btn"
+                        class="btn btn-secondary"
+                        onclick="deactivateFromModal()"
+                        style="display: none; background: #ffc107; color: #000;">
+                        🚫 Deactivate Account
+                    </button>
+                    <button
+                        class="btn btn-info"
+                        onclick="resetPasswordFromModal()">
+                        🔑 Reset Password
+                    </button>
+                    <button
+                        class="btn btn-primary"
+                        onclick="viewFullDetails()"
+                        style="margin-left: auto;">
+                        📊 View Full Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Success Modal -->
+    <div id="password-reset-modal" class="modal" role="dialog" aria-labelledby="password-reset-title" aria-modal="true">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 id="password-reset-title" style="margin-bottom: 20px;">🔑 Password Reset Successful</h2>
+
+            <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+                <p style="margin: 0; color: #155724;">
+                    A temporary password has been generated for <strong id="reset-instructor-username"></strong>.
+                </p>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Temporary Password:</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input
+                        type="text"
+                        id="temp-password-display"
+                        readonly
+                        style="flex: 1; padding: 12px; font-family: 'Courier New', monospace; font-size: 1.1rem; background: #f8f9fa; border: 2px solid #28a745; border-radius: 4px; user-select: all;"
+                        onclick="this.select()">
+                    <button
+                        class="btn btn-success"
+                        onclick="copyTempPassword()"
+                        id="copy-temp-password-btn"
+                        style="min-width: 120px;">
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+                <strong style="color: #856404;">⚠️ Important:</strong>
+                <p style="color: #856404; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                    Share this password securely with the instructor. They should change it after logging in.
+                </p>
+            </div>
+
+            <button class="btn btn-success" onclick="hidePasswordResetModal()" style="width: 100%;">
+                Done - I've Saved the Password
+            </button>
+        </div>
+    </div>
+
+    <script src="/static/js/shared.js?v=3"></script>
+    <script src="/static/js/admin.js?v=3"></script>
+    <script>
+        // Tab navigation logic
+        function switchTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.setAttribute('aria-hidden', 'true');
+            });
+
+            // Deselect all tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.setAttribute('aria-selected', 'false');
+                button.setAttribute('tabindex', '-1');
+            });
+
+            // Show selected panel
+            const panel = document.getElementById(`panel-${tabName}`);
+            panel.setAttribute('aria-hidden', 'false');
+
+            // Select active tab
+            const tab = document.getElementById(`tab-${tabName}`);
+            tab.setAttribute('aria-selected', 'true');
+            tab.setAttribute('tabindex', '0');
+
+            // Load data for the selected tab
+            if (tabName === 'overview') {
+                loadStats();
+            } else if (tabName === 'instructors') {
+                loadInstructors();
+            } else if (tabName === 'api-keys') {
+                loadApiKeys();
+            } else if (tabName === 'sessions') {
+                loadSessions();
+            }
+        }
+
+        // Keyboard navigation for tabs
+        document.addEventListener('keydown', function(e) {
+            const tabs = Array.from(document.querySelectorAll('.tab-button'));
+            const currentTab = document.activeElement;
+
+            if (!tabs.includes(currentTab)) return;
+
+            const currentIndex = tabs.indexOf(currentTab);
+            let nextIndex;
+
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                nextIndex = (currentIndex + 1) % tabs.length;
+                tabs[nextIndex].click();
+                tabs[nextIndex].focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                tabs[nextIndex].click();
+                tabs[nextIndex].focus();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                tabs[0].click();
+                tabs[0].focus();
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                tabs[tabs.length - 1].click();
+                tabs[tabs.length - 1].focus();
+            }
+        });
+
+        // Initialize: Load overview on page load
+        window.addEventListener('load', function() {
+            switchTab('overview');
+        });
+    </script>
 </body>
 </html>

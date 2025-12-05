@@ -295,3 +295,140 @@ class ClassReport(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ============================================================================
+# Admin Instructor Management Schemas
+# ============================================================================
+
+class AdminInstructorListResponse(BaseModel):
+    """Instructor list item for admin view."""
+    id: int
+    username: str
+    email: Optional[str]
+    display_name: Optional[str]
+    created_at: datetime
+    last_login: Optional[datetime]
+    is_active: bool
+    badge: str  # "active", "inactive", "placeholder"
+    classes_count: int
+    sessions_count: int
+    active_sessions_count: int
+
+    class Config:
+        from_attributes = True
+
+
+class InstructorStatsDetail(BaseModel):
+    """Detailed statistics for an instructor."""
+    classes_count: int
+    archived_classes_count: int
+    sessions_count: int
+    active_sessions_count: int
+    questions_count: int
+    upvotes_count: int
+    unique_students_count: int
+
+
+class InstructorClassInfo(BaseModel):
+    """Class information for instructor detail view."""
+    id: int
+    name: str
+    description: Optional[str]
+    is_archived: bool
+    created_at: datetime
+    meeting_count: int
+
+
+class InstructorSessionInfo(BaseModel):
+    """Session information for instructor detail view."""
+    id: int
+    title: str
+    meeting_code: str
+    instructor_code: str
+    created_at: datetime
+    is_active: bool
+    question_count: int
+
+
+class AdminInstructorDetailResponse(BaseModel):
+    """Comprehensive instructor details for admin."""
+    id: int
+    username: str
+    email: Optional[str]
+    display_name: Optional[str]
+    created_at: datetime
+    last_login: Optional[datetime]
+    is_active: bool
+    stats: InstructorStatsDetail
+    api_keys: List[APIKeyResponse]
+    classes: List[InstructorClassInfo]
+    recent_sessions: List[InstructorSessionInfo]
+
+    class Config:
+        from_attributes = True
+
+
+class InstructorResetPasswordResponse(BaseModel):
+    """Response from password reset (includes temporary password)."""
+    message: str
+    instructor_id: int
+    username: str
+    temporary_password: str
+    must_change_on_login: bool
+    reset_token: Optional[str]  # For future email integration
+
+
+class BulkPasswordResetResult(BaseModel):
+    """Single instructor password reset result."""
+    instructor_id: int
+    username: str
+    display_name: Optional[str]
+    temporary_password: str
+
+
+class BulkPasswordResetResponse(BaseModel):
+    """Response from bulk password reset."""
+    message: str
+    successful_count: int
+    failed_count: int
+    reset_results: List[BulkPasswordResetResult]
+
+
+class InstructorExportStats(BaseModel):
+    """Statistics for instructor export."""
+    classes_count: int
+    sessions_count: int
+    questions_count: int
+    upvotes_count: int
+    unique_students_count: int
+
+
+class InstructorExportData(BaseModel):
+    """Instructor data for export."""
+    id: int
+    username: str
+    email: Optional[str]
+    display_name: Optional[str]
+    created_at: datetime
+    last_login: Optional[datetime]
+    is_active: bool
+    badge: str
+    stats: Optional[InstructorExportStats]
+
+    class Config:
+        from_attributes = True
+
+
+class BulkInstructorActionRequest(BaseModel):
+    """Request to perform bulk action on instructors."""
+    instructor_ids: List[int] = Field(..., min_items=1, max_items=100)
+
+
+class BulkActionResponse(BaseModel):
+    """Response from bulk action."""
+    message: str
+    successful_count: int
+    failed_count: int
+
+

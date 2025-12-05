@@ -1284,6 +1284,36 @@ main {
     border: 1px solid #f5c6cb;
 }
 
+/* ============================================================================
+   Admin Dashboard Badges
+   ============================================================================ */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-active {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.badge-ended {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.badge-placeholder {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
 .moderation-actions {
     display: flex;
     gap: 10px;
@@ -1320,4 +1350,93 @@ main {
     background: #bdc3c7;
     color: #7f8c8d;
     cursor: not-allowed;
+}
+
+/* ============================================================================
+   Admin Dashboard Stats Cards
+   ============================================================================ */
+.stat-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+/* ============================================================================
+   Modal Improvements for Instructor Details
+   ============================================================================ */
+
+/* Ensure modals scroll on small screens */
+.modal {
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal-content {
+    margin: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Close modal when clicking outside */
+.modal.active {
+    cursor: pointer;
+}
+
+.modal.active .modal-content {
+    cursor: default;
+}
+
+/* Mobile responsiveness for modals */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        max-width: 95% !important;
+        padding: 20px;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+    }
 }

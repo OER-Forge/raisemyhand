@@ -69,6 +69,7 @@ from routes_instructor import router as instructor_router
 from routes_classes import router as classes_router
 from routes_questions import router as questions_router
 from routes_answers import router as answers_router
+from routes_admin import router as admin_router
 from logging_config import setup_logging, get_logger, log_request, log_database_operation, log_websocket_event, log_security_event
 
 # Configure centralized logging
@@ -86,6 +87,7 @@ app.include_router(instructor_router)
 app.include_router(classes_router)
 app.include_router(questions_router)
 app.include_router(answers_router)
+app.include_router(admin_router)
 
 # Security Configuration
 security = HTTPBearer(auto_error=False)
@@ -800,6 +802,12 @@ async def admin_login_view(request: Request):
 async def admin_login_view_alt(request: Request):
     """Admin login page (alternative route)."""
     return templates.TemplateResponse("admin-login.html", {"request": request})
+
+
+@app.get("/admin/instructor-details", response_class=HTMLResponse)
+async def admin_instructor_details_page(request: Request):
+    """Admin instructor details page"""
+    return templates.TemplateResponse("instructor-details.html", {"request": request})
 
 
 @app.get("/admin", response_class=HTMLResponse)

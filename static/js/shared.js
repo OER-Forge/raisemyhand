@@ -7,6 +7,11 @@
 console.log('[SHARED.JS LOADED] Script file is executing');
 window.sharedJsLoaded = true;
 
+// Test function definition immediately
+console.log('[SHARED.JS] Defining test function...');
+window.testFunction = function() { return 'test works'; };
+console.log('[SHARED.JS] Test function defined:', typeof window.testFunction);
+
 // ============================================================================
 // JWT Token Management (for Instructor Web UI)
 // ============================================================================
@@ -38,16 +43,18 @@ function clearJwtToken() {
 }
 
 /**
- * Check if user has valid authentication (either JWT token or API key)
+ * Check if user has valid authentication (either JWT token, admin token, or API key)
  * @returns {boolean} True if authenticated
  */
 function isAuthenticated() {
     const token = getJwtToken();
+    const adminToken = localStorage.getItem('admin_token');
     const apiKey = getApiKey();
     console.log('[SHARED] isAuthenticated check:');
+    console.log('  - Admin token:', adminToken ? 'EXISTS' : 'NULL');
     console.log('  - JWT token:', token ? 'EXISTS' : 'NULL');
     console.log('  - API key:', apiKey ? 'EXISTS' : 'NULL');
-    const result = token !== null || apiKey !== null;
+    const result = adminToken !== null || token !== null || apiKey !== null;
     console.log('  - Result:', result);
     return result;
 }
@@ -178,26 +185,100 @@ async function authenticatedFetch(url, options = {}) {
 }
 
 /**
+ * Get authentication headers for fetch requests
+ * Returns an object with Authorization header if token exists
+ * @returns {Object} Headers object with Authorization if available
+ */
+console.log('[SHARED.JS] About to define getAuthHeaders...');
+try {
+    function getAuthHeaders() {
+        console.log('[SHARED] getAuthHeaders() called');
+        const headers = {};
+        
+        try {
+            const jwtToken = getJwtToken();
+            const adminToken = localStorage.getItem('admin_token');
+            const apiKey = getApiKey();
+            
+            console.log('[SHARED] Available tokens:', {
+                adminToken: adminToken ? 'EXISTS' : 'NULL',
+                jwtToken: jwtToken ? 'EXISTS' : 'NULL', 
+                apiKey: apiKey ? 'EXISTS' : 'NULL'
+            });
+            
+            if (adminToken) {
+                headers['Authorization'] = `Bearer ${adminToken}`;
+                console.log('[SHARED] Using admin token');
+            } else if (jwtToken) {
+                headers['Authorization'] = `Bearer ${jwtToken}`;
+                console.log('[SHARED] Using JWT token');
+            } else if (apiKey) {
+                headers['Authorization'] = `Bearer ${apiKey}`;
+                console.log('[SHARED] Using API key');
+            } else {
+                console.warn('[SHARED] No authentication token found');
+            }
+        } catch (error) {
+            console.error('[SHARED] Error getting tokens:', error);
+        }
+        
+        return headers;
+    }
+    
+    console.log('[SHARED.JS] getAuthHeaders defined successfully:', typeof getAuthHeaders);
+    window.getAuthHeaders = getAuthHeaders; // Also add to window for debugging
+    console.log('[SHARED.JS] window.getAuthHeaders:', typeof window.getAuthHeaders);
+} catch (error) {
+    console.error('[SHARED.JS] Error defining getAuthHeaders:', error);
+}
+
+/**
  * Handle authentication errors
  */
-function handleAuthError() {
-    const hasJwtToken = getJwtToken() !== null;
-    const hasApiKey = getApiKey() !== null;
-    
-    if (hasJwtToken) {
-        // JWT token expired or invalid - redirect to login
-        clearJwtToken();
-        alert('Your session has expired. Please log in again.');
-        window.location.href = '/instructor-login';
-    } else if (hasApiKey) {
-        // API key invalid - prompt for new one
-        alert('Invalid or expired API key. Please enter a valid API key.');
-        clearApiKey();
-        promptForApiKey();
-    } else {
-        // No authentication - prompt for API key (fallback)
-        promptForApiKey();
+function handleAuthError(response = null) {
+    // If response is provided and it's a 401, handle it immediately
+    if (response && response.status === 401) {
+        const hasAdminToken = localStorage.getItem('admin_token') !== null;
+        if (hasAdminToken) {
+            localStorage.removeItem('admin_token');
+            alert('Your admin session has expired. Please log in again.');
+            window.location.href = '/admin-login';
+        } else {
+            clearJwtToken();
+            alert('Your session has expired. Please log in again.');
+            window.location.href = '/instructor-login';
+        }
+        return true;
     }
+    
+    // If no response provided, check stored tokens
+    if (!response) {
+        const hasJwtToken = getJwtToken() !== null;
+        const hasAdminToken = localStorage.getItem('admin_token') !== null;
+        const hasApiKey = getApiKey() !== null;
+        
+        if (hasAdminToken) {
+            // Admin token expired or invalid - redirect to admin login
+            localStorage.removeItem('admin_token');
+            alert('Your admin session has expired. Please log in again.');
+            window.location.href = '/admin-login';
+        } else if (hasJwtToken) {
+            // JWT token expired or invalid - redirect to instructor login
+            clearJwtToken();
+            alert('Your session has expired. Please log in again.');
+            window.location.href = '/instructor-login';
+        } else if (hasApiKey) {
+            // API key invalid - prompt for new one
+            alert('Invalid or expired API key. Please enter a valid API key.');
+            clearApiKey();
+            promptForApiKey();
+        } else {
+            // No authentication - prompt for API key (fallback)
+            promptForApiKey();
+        }
+    }
+    
+    return false;
 }
 
 /**
