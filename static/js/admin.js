@@ -1,5 +1,11 @@
 // Tab Switching with Persistence
 function switchTab(tabName) {
+    // Close any open modals
+    const createUserModal = document.getElementById('create-user-modal');
+    if (createUserModal) {
+        closeCreateUserModal();
+    }
+    
     // Save active tab to localStorage
     localStorage.setItem('adminActiveTab', tabName);
 

@@ -1333,6 +1333,7 @@
         <div
             role="tabpanel"
             id="panel-users"
+            class="tab-panel"
             aria-labelledby="tab-users"
             aria-hidden="true">
             <h2>User Management</h2>
@@ -1413,6 +1414,97 @@
             
             <!-- Live region for screen readers -->
             <div id="instructor-updates-live" aria-live="polite" aria-atomic="true" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
+            
+            <!-- Create User Modal (inside Users tab) -->
+            <div class="modal" id="create-user-modal" role="dialog" aria-labelledby="create-user-modal-title" aria-modal="false">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 id="create-user-modal-title" style="margin: 0;">Create New Instructor</h2>
+                        <button 
+                            type="button"
+                            class="modal-close-btn"
+                            onclick="closeCreateUserModal()"
+                            aria-label="Close dialog"
+                            style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <form id="create-user-form" onsubmit="handleCreateUser(event)">
+                        <div class="form-group">
+                            <label for="new-username">Username <span style="color: #dc3545;" aria-label="required">*</span></label>
+                            <input
+                                type="text"
+                                id="new-username"
+                                placeholder="e.g., john_doe"
+                                required
+                                minlength="3"
+                                maxlength="50"
+                                pattern="[a-zA-Z0-9_\-]+"
+                                aria-describedby="username-hint">
+                            <p class="form-hint" id="username-hint">3-50 characters, letters/numbers/dash/underscore only</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-password">Password <span style="color: #dc3545;" aria-label="required">*</span></label>
+                            <input
+                                type="password"
+                                id="new-password"
+                                placeholder="Minimum 8 characters"
+                                required
+                                minlength="8"
+                                aria-describedby="password-hint">
+                            <p class="form-hint" id="password-hint">Minimum 8 characters. User can change after first login.</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-email">Email <span style="color: #999; font-size: 12px;">(optional)</span></label>
+                            <input
+                                type="email"
+                                id="new-email"
+                                placeholder="instructor@institution.edu">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-display-name">Display Name <span style="color: #999; font-size: 12px;">(optional)</span></label>
+                            <input
+                                type="text"
+                                id="new-display-name"
+                                placeholder="Name shown to students">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-role">Initial Role</label>
+                            <select 
+                                id="new-role"
+                                aria-describedby="role-hint"
+                                style="padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; width: 100%; min-height: 44px;">
+                                <option value="INSTRUCTOR">Instructor (Standard)</option>
+                                <option value="ADMIN">Admin (System Manager)</option>
+                            </select>
+                            <p class="form-hint" id="role-hint">ADMIN role: can manage other users. (Only SUPER_ADMIN can create ADMIN accounts)</p>
+                        </div>
+                        
+                        <div id="create-user-message" style="margin: 1rem 0; padding: 12px; border-radius: 4px; display: none;"></div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button 
+                                type="submit" 
+                                class="btn btn-primary" 
+                                style="flex: 1; min-height: 44px;">
+                                ✅ Create Instructor
+                            </button>
+                            <button 
+                                type="button" 
+                                class="btn btn-secondary" 
+                                onclick="closeCreateUserModal()"
+                                style="flex: 1; min-height: 44px;">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1480,97 +1572,6 @@
             <button class="btn btn-success" onclick="hideApiKeySuccessModal()" style="width: 100%; margin-top: 1rem;">
                 Done - I've Saved the Key
             </button>
-        </div>
-    </div>
-
-    <!-- Create User Modal -->
-    <div class="modal" id="create-user-modal" role="dialog" aria-labelledby="create-user-modal-title" aria-modal="false">
-        <div class="modal-content" style="max-width: 500px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 id="create-user-modal-title" style="margin: 0;">Create New Instructor</h2>
-                <button 
-                    type="button"
-                    class="modal-close-btn"
-                    onclick="closeCreateUserModal()"
-                    aria-label="Close dialog"
-                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                    ✕
-                </button>
-            </div>
-            
-            <form id="create-user-form" onsubmit="handleCreateUser(event)">
-                <div class="form-group">
-                    <label for="new-username">Username <span style="color: #dc3545;" aria-label="required">*</span></label>
-                    <input
-                        type="text"
-                        id="new-username"
-                        placeholder="e.g., john_doe"
-                        required
-                        minlength="3"
-                        maxlength="50"
-                        pattern="[a-zA-Z0-9_\-]+"
-                        aria-describedby="username-hint">
-                    <p class="form-hint" id="username-hint">3-50 characters, letters/numbers/dash/underscore only</p>
-                </div>
-                
-                <div class="form-group">
-                    <label for="new-password">Password <span style="color: #dc3545;" aria-label="required">*</span></label>
-                    <input
-                        type="password"
-                        id="new-password"
-                        placeholder="Minimum 8 characters"
-                        required
-                        minlength="8"
-                        aria-describedby="password-hint">
-                    <p class="form-hint" id="password-hint">Minimum 8 characters. User can change after first login.</p>
-                </div>
-                
-                <div class="form-group">
-                    <label for="new-email">Email <span style="color: #999; font-size: 12px;">(optional)</span></label>
-                    <input
-                        type="email"
-                        id="new-email"
-                        placeholder="instructor@institution.edu">
-                </div>
-                
-                <div class="form-group">
-                    <label for="new-display-name">Display Name <span style="color: #999; font-size: 12px;">(optional)</span></label>
-                    <input
-                        type="text"
-                        id="new-display-name"
-                        placeholder="Name shown to students">
-                </div>
-                
-                <div class="form-group">
-                    <label for="new-role">Initial Role</label>
-                    <select 
-                        id="new-role"
-                        aria-describedby="role-hint"
-                        style="padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; width: 100%; min-height: 44px;">
-                        <option value="INSTRUCTOR">Instructor (Standard)</option>
-                        <option value="ADMIN">Admin (System Manager)</option>
-                    </select>
-                    <p class="form-hint" id="role-hint">ADMIN role: can manage other users. (Only SUPER_ADMIN can create ADMIN accounts)</p>
-                </div>
-                
-                <div id="create-user-message" style="margin: 1rem 0; padding: 12px; border-radius: 4px; display: none;"></div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button 
-                        type="submit" 
-                        class="btn btn-primary" 
-                        style="flex: 1; min-height: 44px;">
-                        ✅ Create Instructor
-                    </button>
-                    <button 
-                        type="button" 
-                        class="btn btn-secondary" 
-                        onclick="closeCreateUserModal()"
-                        style="flex: 1; min-height: 44px;">
-                        Cancel
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
