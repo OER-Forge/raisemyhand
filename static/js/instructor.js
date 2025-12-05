@@ -630,10 +630,6 @@ async function submitAnswer(event) {
 async function publishAnswer() {
     if (!currentAnswerQuestionId) return;
 
-    if (!confirm('Publish this answer to students? Once published, students will be able to see it.')) {
-        return;
-    }
-
     try {
         const response = await authenticatedFetch(`/api/questions/${currentAnswerQuestionId}/answer/publish`, {
             method: 'POST'
