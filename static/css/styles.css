@@ -1440,3 +1440,51 @@ main {
         font-size: 0.75rem;
     }
 }
+
+/* Password Toggle Styles */
+.password-field {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+    transition: color 0.2s;
+    z-index: 2;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    color: var(--primary-color);
+}
+
+.password-toggle:focus {
+    outline: none;
+    color: var(--primary-color);
+}
+
+.password-field input[type="password"],
+.password-field input[type="text"] {
+    padding-right: 45px !important;
+}
+
+/* Icons using Unicode characters */
+.password-toggle .eye-open::before {
+    content: "👁";
+}
+
+.password-toggle .eye-closed::before {
+    content: "🙈";
+}

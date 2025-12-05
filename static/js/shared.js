@@ -650,3 +650,58 @@ function logout() {
     sessionStorage.removeItem('instructor_api_key');
     window.location.href = '/instructor-login';
 }
+
+/**
+ * Initialize password toggle functionality for password fields
+ * Call this function after the DOM is loaded to add toggle buttons to password fields
+ */
+function initPasswordToggles() {
+    const passwordFields = document.querySelectorAll('input[type="password"]');
+    
+    passwordFields.forEach(field => {
+        // Skip if already has a toggle
+        if (field.parentElement.classList.contains('password-field')) {
+            return;
+        }
+        
+        // Wrap the input in a container
+        const wrapper = document.createElement('div');
+        wrapper.className = 'password-field';
+        field.parentNode.insertBefore(wrapper, field);
+        wrapper.appendChild(field);
+        
+        // Create toggle button
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'password-toggle';
+        toggleBtn.setAttribute('aria-label', 'Toggle password visibility');
+        
+        const icon = document.createElement('span');
+        icon.className = 'eye-open';
+        toggleBtn.appendChild(icon);
+        
+        wrapper.appendChild(toggleBtn);
+        
+        // Add click handler
+        toggleBtn.addEventListener('click', function() {
+            const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
+            field.setAttribute('type', type);
+            
+            // Update icon
+            if (type === 'password') {
+                icon.className = 'eye-open';
+                toggleBtn.setAttribute('aria-label', 'Show password');
+            } else {
+                icon.className = 'eye-closed';
+                toggleBtn.setAttribute('aria-label', 'Hide password');
+            }
+        });
+    });
+}
+
+// Auto-initialize password toggles when DOM is loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPasswordToggles);
+} else {
+    initPasswordToggles();
+}
