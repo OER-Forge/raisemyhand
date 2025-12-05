@@ -897,8 +897,6 @@ async function bulkDeleteInstructors() {
 let currentInstructorId = null;
 
 async function viewInstructorDetail(instructorId) {
-    console.log('viewInstructorDetail called with ID:', instructorId, 'Type:', typeof instructorId);
-    
     if (!instructorId || instructorId === 'null' || isNaN(instructorId)) {
         console.error('Invalid instructor ID:', instructorId);
         showNotification('Error: Invalid instructor ID', 'error');
@@ -908,7 +906,13 @@ async function viewInstructorDetail(instructorId) {
     currentInstructorId = instructorId;
 
     // Show modal
-    document.getElementById('instructor-detail-modal').classList.add('active');
+    const modal = document.getElementById('instructor-detail-modal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        return;
+    }
+    
+    modal.setAttribute('aria-modal', 'true');
 
     try {
         const response = await fetch(`/api/admin/instructors/${instructorId}`, {
@@ -1011,7 +1015,7 @@ function populateInstructorModal(instructor) {
 function hideInstructorDetailModal() {
     const modal = document.getElementById('instructor-detail-modal');
     if (modal) {
-        modal.classList.remove('active');
+        modal.setAttribute('aria-modal', 'false');
     }
     // Don't reset currentInstructorId here - we might need it for viewFullDetails()
     // It will be reset when opening a new instructor or explicitly
@@ -1102,7 +1106,7 @@ async function resetPasswordFromModal() {
         // Show password reset modal
         document.getElementById('reset-instructor-username').textContent = username;
         document.getElementById('temp-password-display').value = result.temporary_password;
-        document.getElementById('password-reset-modal').classList.add('active');
+        document.getElementById('password-reset-modal').setAttribute('aria-modal', 'true');
 
         // Auto-copy to clipboard
         await copyToClipboard(result.temporary_password);
@@ -1114,7 +1118,7 @@ async function resetPasswordFromModal() {
 }
 
 function hidePasswordResetModal() {
-    document.getElementById('password-reset-modal').classList.remove('active');
+    document.getElementById('password-reset-modal').setAttribute('aria-modal', 'false');
     document.getElementById('temp-password-display').value = '';
 }
 

@@ -1,5 +1,6 @@
 # Role-Based Access Control (RBAC) Implementation Plan
 ## RaiseMyHand Admin → Instructor Hierarchy System
+
 > on branch: admin-fixes
 
 ### Executive Summary

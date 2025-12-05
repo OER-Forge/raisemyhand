@@ -58,6 +58,8 @@ async function loadSession() {
             throw new Error(`Meeting not found: ${response.status}`);
         }
         meetingData = await response.json();
+        console.log('[INSTRUCTOR] Meeting data loaded from API:', meetingData);
+        console.log('[INSTRUCTOR] is_active value:', meetingData.is_active);
 
         // Update UI
         document.getElementById('session-title').textContent = meetingData.title;

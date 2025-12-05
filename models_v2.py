@@ -12,7 +12,7 @@ Base = declarative_base()
 
 
 class Instructor(Base):
-    """Instructor with persistent identity."""
+    """Instructor with persistent identity and RBAC support."""
     __tablename__ = "instructors"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -23,9 +23,19 @@ class Instructor(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     last_login = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True, index=True)
+    
+    # RBAC Fields
+    role = Column(String, default="INSTRUCTOR", nullable=False)  # INSTRUCTOR, ADMIN, SUPER_ADMIN, INACTIVE
+    role_granted_by = Column(Integer, ForeignKey("instructors.id", ondelete="SET NULL"), nullable=True)
+    role_granted_at = Column(DateTime, nullable=True)
+    
+    # Deactivation tracking
+    deactivated_by = Column(Integer, ForeignKey("instructors.id", ondelete="SET NULL"), nullable=True)
+    deactivated_at = Column(DateTime, nullable=True)
+    deactivation_reason = Column(String, nullable=True)
 
     # Relationships
-    api_keys = relationship("APIKey", back_populates="instructor", cascade="all, delete-orphan")
+    api_keys = relationship("APIKey", back_populates="instructor", cascade="all, delete-orphan", foreign_keys="[APIKey.instructor_id]")
     classes = relationship("Class", back_populates="instructor", cascade="all, delete-orphan")
     answers = relationship("Answer", back_populates="instructor", cascade="all, delete-orphan")
 
@@ -41,9 +51,14 @@ class APIKey(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     last_used = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True, index=True)
+    
+    # Revocation tracking
+    revoked_by = Column(Integer, ForeignKey("instructors.id", ondelete="SET NULL"), nullable=True)
+    revoked_at = Column(DateTime, nullable=True)
+    revocation_reason = Column(String, nullable=True)
 
     # Relationships
-    instructor = relationship("Instructor", back_populates="api_keys")
+    instructor = relationship("Instructor", back_populates="api_keys", foreign_keys=[instructor_id])
     class_meetings = relationship("ClassMeeting", back_populates="api_key")
 
     @staticmethod

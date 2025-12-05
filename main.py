@@ -70,6 +70,7 @@ from routes_classes import router as classes_router
 from routes_questions import router as questions_router
 from routes_answers import router as answers_router
 from routes_admin import router as admin_router
+from routes_admin_users import router as admin_users_router
 from routes_config import router as config_router
 from logging_config import setup_logging, get_logger, log_request, log_database_operation, log_websocket_event, log_security_event
 
@@ -89,6 +90,7 @@ app.include_router(classes_router)
 app.include_router(questions_router)
 app.include_router(answers_router)
 app.include_router(admin_router)
+app.include_router(admin_users_router)
 app.include_router(config_router)
 
 # Security Configuration
