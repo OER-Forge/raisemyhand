@@ -116,24 +116,34 @@ function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/${meetingData.meeting_code}`;
 
+    console.log('[INSTRUCTOR] Connecting to WebSocket:', wsUrl);
     ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+        console.log('[INSTRUCTOR] WebSocket connected');
+    };
 
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
+        console.log('[INSTRUCTOR] WebSocket message received:', message.type, message);
         handleWebSocketMessage(message);
     };
 
     ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('[INSTRUCTOR] WebSocket error:', error);
     };
 
     ws.onclose = () => {
+        console.log('[INSTRUCTOR] WebSocket closed, reconnecting in 3 seconds...');
         setTimeout(connectWebSocket, 3000);
     };
 }
 
 function handleWebSocketMessage(message) {
+    console.log('[INSTRUCTOR] Handling message type:', message.type);
+    
     if (message.type === 'new_question') {
+        console.log('[INSTRUCTOR] Adding new question:', message.question);
         // Add new question to meeting data
         meetingData.questions.push(message.question);
         renderQuestions();

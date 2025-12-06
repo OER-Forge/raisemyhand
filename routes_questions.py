@@ -1,7 +1,7 @@
 """
 Question management routes for v2 API
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status, Header, BackgroundTasks
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import func
 from datetime import datetime
@@ -23,9 +23,10 @@ profanity.load_censor_words()
 
 
 @router.post("/api/meetings/{meeting_code}/questions", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
-def create_question(
+async def create_question(
     meeting_code: str,
     question: QuestionCreate,
+    background_tasks: BackgroundTasks,
     student_id: str = None,  # Should come from cookie/session
     db: DBSession = Depends(get_db)
 ):
@@ -81,7 +82,6 @@ def create_question(
             log_database_operation(logger, "CREATE", "questions", db_question.id, success=True)
             
             # Broadcast new question to all connected clients for this meeting
-            # Note: Broadcast is fire-and-forget; errors don't affect the API response
             try:
                 from main import manager
                 broadcast_message = {
@@ -102,12 +102,9 @@ def create_question(
                         "created_at": db_question.created_at.isoformat()
                     }
                 }
-                # Try to create task, but don't fail if event loop isn't available
-                try:
-                    asyncio.create_task(manager.broadcast(broadcast_message, meeting_code))
-                except RuntimeError:
-                    # No event loop in this context, broadcast will still work via WebSocket connections
-                    logger.debug("Could not create async task for broadcast, WebSocket clients will still receive via polling")
+                # Use await since we made the function async
+                await manager.broadcast(broadcast_message, meeting_code)
+                logger.debug(f"Broadcasted new question {db_question.id} to meeting {meeting_code}")
             except Exception as e:
                 logger.warning(f"Broadcast error (non-critical): {e}")
             

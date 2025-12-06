@@ -122,7 +122,12 @@ async function loadSession() {
             upvotedQuestions = new Set(JSON.parse(stored));
         }
     } catch (error) {
-        alert('Failed to load meeting');
+        console.error('[STUDENT] Failed to load meeting:', error);
+        // Only show alert if it's a critical error
+        if (error.message === 'Meeting not found') {
+            alert('Meeting not found. Redirecting to home page...');
+            window.location.href = '/';
+        }
     }
 }
 
@@ -130,25 +135,34 @@ function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/${meetingCode}`;
 
+    console.log('[STUDENT] Connecting to WebSocket:', wsUrl);
     ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+        console.log('[STUDENT] WebSocket connected');
+    };
 
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
+        console.log('[STUDENT] WebSocket message received:', message.type, message);
         handleWebSocketMessage(message);
     };
 
     ws.onerror = (error) => {
-        // WebSocket error - will attempt reconnection on close
+        console.error('[STUDENT] WebSocket error:', error);
     };
 
     ws.onclose = () => {
-        // Reconnect after 3 seconds
+        console.log('[STUDENT] WebSocket closed, reconnecting in 3 seconds...');
         setTimeout(connectWebSocket, 3000);
     };
 }
 
 function handleWebSocketMessage(message) {
+    console.log('[STUDENT] Handling message type:', message.type);
+    
     if (message.type === 'new_question') {
+        console.log('[STUDENT] Adding new question:', message.question);
         // Add new question to meeting data
         meetingData.questions.push(message.question);
         renderQuestions();
@@ -370,7 +384,7 @@ function renderQuestions() {
     questionsList.innerHTML = questionsHtml;
     
     // Trigger MathJax to render any equations in the content
-    if (window.MathJax) {
+    if (window.MathJax && window.MathJax.typesetPromise) {
         MathJax.typesetPromise().catch(err => console.log('MathJax rendering error:', err));
     }
 }
