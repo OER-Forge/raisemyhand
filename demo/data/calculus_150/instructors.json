@@ -1,0 +1,16 @@
+{
+  "instructors": [
+    {
+      "username": "isaac_newton",
+      "email": "isaac.newton@university.edu",
+      "display_name": "Prof. Isaac Newton",
+      "password": "demo123",
+      "role": "INSTRUCTOR",
+      "is_active": true,
+      "created_at": "2024-12-14T00:00:00",
+      "api_key": "rmh_P9kdTnYaBbuxxFNOeFt4OSGvGLDssWRsw6BtUwyuPBo",
+      "api_key_name": "Isaac's Demo API Key",
+      "specialization": "Calculus"
+    }
+  ]
+}

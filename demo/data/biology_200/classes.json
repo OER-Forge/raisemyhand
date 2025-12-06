@@ -1,0 +1,12 @@
+{
+  "classes": [
+    {
+      "class_id": "biology_200_main",
+      "instructor_username": "rachel_carson",
+      "name": "Biology 200: Cell Biology and Genetics",
+      "description": "Fall 2025 section of Biology 200: Cell Biology and Genetics. This course explores fundamental concepts in Biology.",
+      "created_at": "2024-12-24T00:00:00",
+      "is_archived": false
+    }
+  ]
+}

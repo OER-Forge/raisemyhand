@@ -8,7 +8,7 @@
       "role": "INSTRUCTOR",
       "is_active": true,
       "created_at": "2024-12-14T00:00:00",
-      "api_key": "rmh_ZrGbHo4NqIkBUhyiNpec36p7LqYQDIOIFD0wmQQJEvw",
+      "api_key": "rmh_ClJpiZyHqTWVB-cmxwRV1Ftzb61y9zH2BylzNnAxHRE",
       "api_key_name": "Sarah's Demo API Key",
       "specialization": "Classical Mechanics"
     },
@@ -20,7 +20,7 @@
       "role": "INSTRUCTOR",
       "is_active": true,
       "created_at": "2024-12-14T00:00:00",
-      "api_key": "rmh_wXWsHWRnL_zNyMPS8y4PBjl8K1v_v58OLH2rgTMi88c",
+      "api_key": "rmh_UsSFv3ztFSXYRcPwoL3wjdEtenYkCVyKHSfOVU80dhU",
       "api_key_name": "James's Demo API Key",
       "specialization": "Electromagnetism"
     }

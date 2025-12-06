@@ -1,0 +1,12 @@
+{
+  "classes": [
+    {
+      "class_id": "calculus_150_main",
+      "instructor_username": "isaac_newton",
+      "name": "Calculus 150: Differential Calculus",
+      "description": "Fall 2025 section of Calculus 150: Differential Calculus. This course explores fundamental concepts in Mathematics.",
+      "created_at": "2024-12-24T00:00:00",
+      "is_archived": false
+    }
+  ]
+}

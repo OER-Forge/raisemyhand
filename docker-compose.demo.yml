@@ -16,11 +16,16 @@ services:
       # Override database to use demo database
       - DATABASE_URL=sqlite:///./data/demo_raisemyhand.db
     
-    # Modified startup command: load demo context before starting server
+    # Modified startup command: generate if needed, load, then start server
     command: >
       sh -c "
         echo '🎯 Starting RaiseMyHand in DEMO mode' &&
-        echo '📦 Loading demo context: ${DEMO_CONTEXT:-physics_101}' &&
+        echo '📦 Context: ${DEMO_CONTEXT:-physics_101}' &&
+        if [ ! -d demo/data/${DEMO_CONTEXT:-physics_101} ]; then
+          echo '📝 Generating context data...' &&
+          python demo/generate_context.py --context ${DEMO_CONTEXT:-physics_101}
+        fi &&
+        echo '📥 Loading demo context...' &&
         python demo/load_demo_context.py ${DEMO_CONTEXT:-physics_101} &&
         echo '🚀 Starting application server...' &&
         uvicorn main:app --host 0.0.0.0 --port 8000 --reload

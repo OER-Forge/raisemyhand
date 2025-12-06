@@ -1,0 +1,16 @@
+{
+  "instructors": [
+    {
+      "username": "ada_lovelace",
+      "email": "ada.lovelace@university.edu",
+      "display_name": "Prof. Ada Lovelace",
+      "password": "demo123",
+      "role": "INSTRUCTOR",
+      "is_active": true,
+      "created_at": "2024-12-14T00:00:00",
+      "api_key": "rmh_-Ym9K-O5lp9V_PyidXO2lBPydgyF_efWr5mxJQIefzI",
+      "api_key_name": "Ada's Demo API Key",
+      "specialization": "Programming Languages"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "instructors": [
+    {
+      "username": "marie_curie",
+      "email": "marie.curie@university.edu",
+      "display_name": "Dr. Marie Curie",
+      "password": "demo123",
+      "role": "INSTRUCTOR",
+      "is_active": true,
+      "created_at": "2024-12-14T00:00:00",
+      "api_key": "rmh_UHGxrbi_gM1LgaP04a-4Zg_-uAHuCRnIwGP7xs_1EZw",
+      "api_key_name": "Marie's Demo API Key",
+      "specialization": "Inorganic Chemistry"
+    }
+  ]
+}

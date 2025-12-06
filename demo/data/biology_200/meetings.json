@@ -1,0 +1,74 @@
+{
+  "meetings": [
+    {
+      "meeting_id": "biology_200_day1",
+      "class_id": "biology_200_main",
+      "instructor_username": "rachel_carson",
+      "meeting_code": "mBPQDy1U0TWb7iI5ZmRfJoZFd2dlHYoS",
+      "instructor_code": "i1UN7QRUP9AKJkXbGHfBxBaORTUa1uK2",
+      "title": "Day 1: Cell Structure and Function",
+      "description": "Organelles, membranes, and cellular processes",
+      "password": null,
+      "created_at": "2025-01-13T09:00:00",
+      "started_at": "2025-01-13T10:00:00",
+      "is_active": true,
+      "ended_at": null
+    },
+    {
+      "meeting_id": "biology_200_day4",
+      "class_id": "biology_200_main",
+      "instructor_username": "rachel_carson",
+      "meeting_code": "U9g8hbuktdUObmtlVUXJukHM5gzs92RM",
+      "instructor_code": "2NtdnwtWSPlveEkNQu5wakNe4Bpcbeva",
+      "title": "Day 4: DNA Replication and Repair",
+      "description": "Molecular mechanisms of DNA replication",
+      "password": null,
+      "created_at": "2025-01-16T09:00:00",
+      "started_at": "2025-01-16T10:00:00",
+      "is_active": true,
+      "ended_at": null
+    },
+    {
+      "meeting_id": "biology_200_day7",
+      "class_id": "biology_200_main",
+      "instructor_username": "rachel_carson",
+      "meeting_code": "AcKANKVLFZR1BQbADkj3XIkUnxSEhAEA",
+      "instructor_code": "FfsNzHE3OQxf6t6g2yLwSeNuWjx4rcVu",
+      "title": "Day 7: Gene Expression and Regulation",
+      "description": "Transcription, translation, and gene regulation",
+      "password": null,
+      "created_at": "2025-01-19T09:00:00",
+      "started_at": "2025-01-19T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-19T11:30:00"
+    },
+    {
+      "meeting_id": "biology_200_day10",
+      "class_id": "biology_200_main",
+      "instructor_username": "rachel_carson",
+      "meeting_code": "W6BtFX7vMnVF94CQxIfxLxEy83VIqOFk",
+      "instructor_code": "fczQXkcfkd8prUn2x4mOz1AJtVUtKjFC",
+      "title": "Day 10: Mendelian Genetics",
+      "description": "Inheritance patterns and genetic crosses",
+      "password": null,
+      "created_at": "2025-01-22T09:00:00",
+      "started_at": "2025-01-22T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-22T11:30:00"
+    },
+    {
+      "meeting_id": "biology_200_day13",
+      "class_id": "biology_200_main",
+      "instructor_username": "rachel_carson",
+      "meeting_code": "EJoYnYkWuhcMhLUkKFAATaKQlb7iadfi",
+      "instructor_code": "rKgK1dZfJu5AmUdlBbGPtJs28rxv7yB8",
+      "title": "Day 13: Cell Division: Mitosis and Meiosis",
+      "description": "Cell cycle, chromosome segregation",
+      "password": null,
+      "created_at": "2025-01-25T09:00:00",
+      "started_at": "2025-01-25T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-25T11:30:00"
+    }
+  ]
+}

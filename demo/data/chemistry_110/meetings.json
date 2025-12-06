@@ -1,0 +1,74 @@
+{
+  "meetings": [
+    {
+      "meeting_id": "chemistry_110_day1",
+      "class_id": "chemistry_110_main",
+      "instructor_username": "marie_curie",
+      "meeting_code": "rxufi5Uq1PD1pn5T1dTADRsfQzTSpnAu",
+      "instructor_code": "LqHV6N8dF7TPqDxSaEE122eo1w9oUsk3",
+      "title": "Day 1: Atomic Structure and Periodicity",
+      "description": "Quantum mechanics, electron configuration, periodic trends",
+      "password": null,
+      "created_at": "2025-01-13T09:00:00",
+      "started_at": "2025-01-13T10:00:00",
+      "is_active": true,
+      "ended_at": null
+    },
+    {
+      "meeting_id": "chemistry_110_day5",
+      "class_id": "chemistry_110_main",
+      "instructor_username": "marie_curie",
+      "meeting_code": "9AjgpyGIJ0Bl68qc866eYZ3P20mNeyxT",
+      "instructor_code": "ZlaSwGQoUqxyEUX3RjgZaabulzcng1kG",
+      "title": "Day 5: Chemical Bonding",
+      "description": "Ionic, covalent, and metallic bonds",
+      "password": null,
+      "created_at": "2025-01-17T09:00:00",
+      "started_at": "2025-01-17T10:00:00",
+      "is_active": true,
+      "ended_at": null
+    },
+    {
+      "meeting_id": "chemistry_110_day8",
+      "class_id": "chemistry_110_main",
+      "instructor_username": "marie_curie",
+      "meeting_code": "Ip4lBCN2GamRIXwd9wqkCECPT4NUKJ92",
+      "instructor_code": "eyfN2PDfnfUcYSPBj7GFAd9oi4pk8nTK",
+      "title": "Day 8: Molecular Geometry and VSEPR",
+      "description": "Lewis structures, molecular shapes, polarity",
+      "password": null,
+      "created_at": "2025-01-20T09:00:00",
+      "started_at": "2025-01-20T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-20T11:30:00"
+    },
+    {
+      "meeting_id": "chemistry_110_day11",
+      "class_id": "chemistry_110_main",
+      "instructor_username": "marie_curie",
+      "meeting_code": "q9cw120aI6ZRj7QNRLzyBGa2kel6xtO7",
+      "instructor_code": "ayqqcTBa5r1faVS08OHBDEGt31xt7ppk",
+      "title": "Day 11: Stoichiometry and Chemical Reactions",
+      "description": "Balancing equations, mole calculations",
+      "password": null,
+      "created_at": "2025-01-23T09:00:00",
+      "started_at": "2025-01-23T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-23T11:30:00"
+    },
+    {
+      "meeting_id": "chemistry_110_day14",
+      "class_id": "chemistry_110_main",
+      "instructor_username": "marie_curie",
+      "meeting_code": "73ojRJ2DDfLUqHOA5HCzmKVHDuBroJFA",
+      "instructor_code": "cdKv47LCLo02vvKRDQJi4sMW0Ey3H5ug",
+      "title": "Day 14: Thermochemistry",
+      "description": "Energy changes, enthalpy, calorimetry",
+      "password": null,
+      "created_at": "2025-01-26T09:00:00",
+      "started_at": "2025-01-26T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-26T11:30:00"
+    }
+  ]
+}

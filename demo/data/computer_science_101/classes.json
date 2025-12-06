@@ -1,0 +1,12 @@
+{
+  "classes": [
+    {
+      "class_id": "computer_science_101_main",
+      "instructor_username": "ada_lovelace",
+      "name": "Computer Science 101: Introduction to Programming",
+      "description": "Fall 2025 section of Computer Science 101: Introduction to Programming. This course explores fundamental concepts in Computer Science.",
+      "created_at": "2024-12-24T00:00:00",
+      "is_archived": false
+    }
+  ]
+}
