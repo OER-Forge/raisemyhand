@@ -1,0 +1,12 @@
+{
+  "classes": [
+    {
+      "class_id": "physics_101_main",
+      "instructor_username": "sarah_einstein",
+      "name": "Physics 101: Classical Mechanics",
+      "description": "Fall 2025 section of Physics 101: Classical Mechanics. This course explores fundamental concepts in Physics.",
+      "created_at": "2024-12-24T00:00:00",
+      "is_archived": false
+    }
+  ]
+}

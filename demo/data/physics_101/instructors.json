@@ -1,0 +1,28 @@
+{
+  "instructors": [
+    {
+      "username": "sarah_einstein",
+      "email": "sarah.einstein@university.edu",
+      "display_name": "Dr. Sarah Einstein",
+      "password": "demo123",
+      "role": "INSTRUCTOR",
+      "is_active": true,
+      "created_at": "2024-12-14T00:00:00",
+      "api_key": "rmh_ZrGbHo4NqIkBUhyiNpec36p7LqYQDIOIFD0wmQQJEvw",
+      "api_key_name": "Sarah's Demo API Key",
+      "specialization": "Classical Mechanics"
+    },
+    {
+      "username": "james_maxwell",
+      "email": "james.maxwell@university.edu",
+      "display_name": "Prof. James Maxwell",
+      "password": "demo123",
+      "role": "INSTRUCTOR",
+      "is_active": true,
+      "created_at": "2024-12-14T00:00:00",
+      "api_key": "rmh_wXWsHWRnL_zNyMPS8y4PBjl8K1v_v58OLH2rgTMi88c",
+      "api_key_name": "James's Demo API Key",
+      "specialization": "Electromagnetism"
+    }
+  ]
+}

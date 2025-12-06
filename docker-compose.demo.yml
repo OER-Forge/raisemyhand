@@ -1,0 +1,33 @@
+# Docker Compose override for demo mode
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.demo.yml up
+#
+# Or with environment variable:
+#   DEMO_CONTEXT=biology_200 docker-compose -f docker-compose.yml -f docker-compose.demo.yml up
+
+services:
+  app:
+    environment:
+      # Demo context to load (default: physics_101)
+      - DEMO_CONTEXT=${DEMO_CONTEXT:-physics_101}
+      
+      # Enable demo mode
+      - DEMO_MODE=true
+      
+      # Override database to use demo database
+      - DATABASE_URL=sqlite:///./data/demo_raisemyhand.db
+    
+    # Modified startup command: load demo context before starting server
+    command: >
+      sh -c "
+        echo '🎯 Starting RaiseMyHand in DEMO mode' &&
+        echo '📦 Loading demo context: ${DEMO_CONTEXT:-physics_101}' &&
+        python demo/load_demo_context.py ${DEMO_CONTEXT:-physics_101} &&
+        echo '🚀 Starting application server...' &&
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    
+    # Optionally mount demo data as read-only for safety
+    volumes:
+      - ./demo/data:/app/demo/data:ro
+      - ./data:/app/data  # Writable for database
+      - .:/app  # Full mount for hot reload

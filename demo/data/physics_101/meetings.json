@@ -1,0 +1,74 @@
+{
+  "meetings": [
+    {
+      "meeting_id": "physics_101_day1",
+      "class_id": "physics_101_main",
+      "instructor_username": "sarah_einstein",
+      "meeting_code": "FL26MHDqbLyaY9f4y9EeZJ1DGtSmGDZv",
+      "instructor_code": "DzfcN1w8LhuoLbjbbkSrcBOAeJ6sN6og",
+      "title": "Day 1: Introduction to Kinematics",
+      "description": "Position, velocity, acceleration in 1D and 2D",
+      "password": null,
+      "created_at": "2025-01-13T09:00:00",
+      "started_at": "2025-01-13T10:00:00",
+      "is_active": true,
+      "ended_at": null
+    },
+    {
+      "meeting_id": "physics_101_day3",
+      "class_id": "physics_101_main",
+      "instructor_username": "sarah_einstein",
+      "meeting_code": "J48oE4xjAeygx7ojkIjbwCGseNyFl5AD",
+      "instructor_code": "zi3Ni8zZdNStcvf0DRzzvKLd4YlSc2mt",
+      "title": "Day 3: Newton's Laws of Motion",
+      "description": "Three laws and their applications",
+      "password": null,
+      "created_at": "2025-01-15T09:00:00",
+      "started_at": "2025-01-15T10:00:00",
+      "is_active": true,
+      "ended_at": null
+    },
+    {
+      "meeting_id": "physics_101_day5",
+      "class_id": "physics_101_main",
+      "instructor_username": "sarah_einstein",
+      "meeting_code": "Pd5GEB8aCjSQFCI7mzqMeTgC66o2wg3r",
+      "instructor_code": "Qc2Joy2pMwMC3o701qdSSKPZtyKFy0TP",
+      "title": "Day 5: Work, Energy, and Power",
+      "description": "Conservation of energy, kinetic and potential energy",
+      "password": null,
+      "created_at": "2025-01-17T09:00:00",
+      "started_at": "2025-01-17T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-17T11:30:00"
+    },
+    {
+      "meeting_id": "physics_101_day8",
+      "class_id": "physics_101_main",
+      "instructor_username": "sarah_einstein",
+      "meeting_code": "yljd254NCeCP6TlHhKfF8QQIWygw58tT",
+      "instructor_code": "44CIfnkLbIiXj7EwahgHnrf4msjVjsY1",
+      "title": "Day 8: Linear Momentum and Collisions",
+      "description": "Impulse, elastic and inelastic collisions",
+      "password": null,
+      "created_at": "2025-01-20T09:00:00",
+      "started_at": "2025-01-20T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-20T11:30:00"
+    },
+    {
+      "meeting_id": "physics_101_day10",
+      "class_id": "physics_101_main",
+      "instructor_username": "sarah_einstein",
+      "meeting_code": "hPTjS0TxafQmQB51JTC5QNaaOqVcx1Va",
+      "instructor_code": "kzQbSm1GhpTNb6WGzQOxeZSIDbOwSknm",
+      "title": "Day 10: Rotational Motion",
+      "description": "Angular velocity, torque, moment of inertia",
+      "password": null,
+      "created_at": "2025-01-22T09:00:00",
+      "started_at": "2025-01-22T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-22T11:30:00"
+    }
+  ]
+}
