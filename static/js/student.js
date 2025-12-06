@@ -251,6 +251,11 @@ function renderQuestions() {
             </article>
         `;
     }).join('');
+    
+    // Trigger MathJax to render any equations in the content
+    if (window.MathJax) {
+        MathJax.typesetPromise().catch(err => console.log('MathJax rendering error:', err));
+    }
 }
 
 async function toggleVote(questionId) {

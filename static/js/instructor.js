@@ -255,7 +255,9 @@ function renderQuestions() {
                             ${isAnswered ? '✓ Answered in Class' : 'Mark Answered in Class'}
                         </button>
                         <button class="btn btn-primary"
-                                onclick="openAnswerDialog(${q.id}, '${escapeHtml(q.text).replace(/'/g, "\\'")}', ${q.has_written_answer})"
+                                onclick="openAnswerDialog(${q.id})"
+                                data-question-text="${escapeHtml(q.text)}"
+                                data-has-answer="${q.has_written_answer}"
                                 aria-label="Write answer for this question">
                             ${q.has_written_answer ? '✏️ Edit Answer' : '📝 Write Answer'}
                         </button>
@@ -546,8 +548,13 @@ function logout() {
 let currentAnswerQuestionId = null;
 let currentAnswerData = null;
 
-async function openAnswerDialog(questionId, questionText, hasAnswer) {
+async function openAnswerDialog(questionId) {
     currentAnswerQuestionId = questionId;
+    
+    // Get question text and has_answer from data attributes
+    const button = event.currentTarget;
+    const questionText = button.getAttribute('data-question-text') || '';
+    const hasAnswer = button.getAttribute('data-has-answer') === 'true';
 
     // Set modal title and question text
     document.getElementById('answer-modal-title').textContent = hasAnswer ? 'Edit Answer' : 'Write Answer';
