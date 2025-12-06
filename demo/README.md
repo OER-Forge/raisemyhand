@@ -1,24 +1,105 @@
 # RaiseMyHand Demo Mode
 
-This directory contains scripts and data for generating and loading realistic demo contexts for RaiseMyHand in various STEM course settings.
+**Quick Start Guide for Testing & Demos**
 
-## Overview
+This directory contains pre-generated demo data for 5 STEM courses with realistic questions, votes, and instructor accounts ready to use.
 
-The demo system uses JSON-based fixtures to populate the database with realistic instructors, classes, meetings, questions, and votes. This allows you to quickly spin up a demo environment with pre-populated data.
+---
 
-## Logging In
-You can log in as any of the demo instructors using the following credentials:
+## 🚀 Quick Start (Just Use Docker!)
 
-| Instructor Name       | Email                              | Password  |
-|---------------------- |------------------------------------|-----------|
-| Dr. Sarah Einstein    | sarah.einstein@university.edu      | demo123   |
+### **Option 1: All 5 Courses (Recommended for Testing)**
 
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.demo-all.yml up
+```
 
-Other demo instructors are similarly configured in their respective contexts. Check the `instructors.json` files in `demo/data/{context}/` for additional instructor credentials.
+**What you get:**
+- ✅ Fresh database with all 5 STEM courses
+- ✅ 6 instructor accounts (see credentials below)
+- ✅ 5 classes, 25 meetings, 275 questions
+- ✅ Realistic vote patterns
+- ✅ Fully interactive (add questions, vote, etc.)
 
-You can also login as an admin user:
-* username: admin
-* password: demoadmin
+**Access:** http://localhost:8000
+
+---
+
+### **Option 2: Single Course**
+
+```bash
+DEMO_CONTEXT=physics_101 docker-compose -f docker-compose.yml -f docker-compose.demo.yml up
+```
+
+**Available contexts:**
+- `physics_101` - Classical Mechanics
+- `biology_200` - Cell Biology & Genetics
+- `calculus_150` - Differential Calculus
+- `chemistry_110` - General Chemistry I
+- `computer_science_101` - Intro to Programming
+
+---
+
+## 🔑 Demo Accounts & Passwords
+
+### **All Instructor Accounts**
+
+| Instructor | Username | Password | Course |
+|-----------|----------|----------|--------|
+| Dr. Sarah Einstein | `sarah_einstein` | `demo123` | Physics 101 |
+| Prof. James Maxwell | `james_maxwell` | `demo123` | Physics 101 |
+| Dr. Rachel Carson | `rachel_carson` | `demo123` | Biology 200 |
+| Prof. Isaac Newton | `isaac_newton` | `demo123` | Calculus 150 |
+| Dr. Marie Curie | `marie_curie` | `demo123` | Chemistry 110 |
+| Prof. Ada Lovelace | `ada_lovelace` | `demo123` | Computer Science 101 |
+
+**Login:** http://localhost:8000/login
+
+### **Administrator**
+
+| Username | Password |
+|----------|----------|
+| `admin`  | `demo123!` |
+
+---
+
+### **API Keys (For Programmatic Access)**
+
+After starting the demo, API keys are printed in the Docker logs. Look for:
+
+```
+🔑 API Keys:
+  Dr. Sarah Einstein: rmh_abc123...
+  Prof. James Maxwell: rmh_xyz789...
+```
+
+**Usage:**
+```bash
+curl "http://localhost:8000/api/meetings" \
+  -H "Authorization: Bearer rmh_abc123..."
+```
+
+---
+
+### **Direct Meeting Access (No Login Required)**
+
+Meeting URLs are printed in Docker logs:
+
+```
+🎓 Meeting Access:
+  Day 1: Introduction to Kinematics
+    Student URL: http://localhost:8000/student?code=ABC123...
+    Instructor URL: http://localhost:8000/instructor?code=XYZ789...
+```
+
+**Students:** Just click the Student URL and start asking questions!  
+**Instructors:** Use the Instructor URL to moderate questions.
+
+---
+
+## 📊 What's Included
+
+The demo system uses JSON-based fixtures to populate the database with realistic instructors, classes, meetings, questions, and votes.
 
 ## Available Contexts
 
@@ -65,65 +146,75 @@ demo/
 └── [legacy scripts...]
 ```
 
-## Usage
+## 🧪 Testing the Demo
 
-### 1. Generate JSON Fixtures for a Context
+### **As a Student:**
+
+1. Start the demo (see Quick Start above)
+2. Copy a Student URL from Docker logs
+3. Open in browser
+4. Ask a question
+5. Upvote other questions
+6. See real-time updates
+
+### **As an Instructor:**
+
+1. **Option A - Direct Access:** Use Instructor URL from logs
+2. **Option B - Login:** 
+   - Go to http://localhost:8000/login
+   - Username: `sarah_einstein`
+   - Password: `demo123`
+3. View all questions
+4. Mark questions as answered
+5. See vote counts
+
+### **Test the API:**
 
 ```bash
-# Generate fixtures for Physics 101
+# Get all classes
+curl http://localhost:8000/api/classes
+
+# Get meeting details (use an actual meeting code from logs)
+curl "http://localhost:8000/api/meetings/ABC123..." \
+  -H "Authorization: Bearer rmh_YOUR_API_KEY"
+
+# Submit a question
+curl -X POST "http://localhost:8000/api/meetings/ABC123.../questions" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "How does this demo work?"}'
+```
+
+---
+
+## 🗄️ Database Details
+
+**Location:** `data/demo_raisemyhand.db`
+
+The demo database is **writable** - all changes persist:
+- ✅ Add new questions
+- ✅ Vote on questions
+- ✅ Mark questions as answered
+- ✅ Test moderation features
+
+**To reset:** Stop Docker and run the demo command again - it wipes and recreates the database.
+
+---
+
+## 🛠️ Advanced Usage
+
+### **For Developers: Generate New Contexts**
+
+Only needed if creating custom course data:
+
+```bash
+# Generate new context data
 python demo/generate_context.py --context physics_101
 
-# Generate fixtures for Biology 200
-python demo/generate_context.py --context biology_200
-
-# Generate all contexts
-for context in physics_101 biology_200 calculus_150 chemistry_110 computer_science_101; do
-    python demo/generate_context.py --context $context
-done
-```
-
-This creates JSON files in `demo/data/{context}/` with realistic:
-- Instructor profiles (names, emails, credentials)
-- Course descriptions
-- Meeting sessions with topics
-- Student questions relevant to each topic
-- Realistic vote patterns (popular questions get 8-20 votes, medium 3-7, low 0-2)
-
-### 2. Load a Context into the Database
-
-```bash
-# Load Physics 101 context
+# Load into database
 python demo/load_demo_context.py physics_101
-
-# Load via environment variable
-DEMO_CONTEXT=biology_200 python demo/load_demo_context.py
 ```
 
-This populates your database with:
-- Instructors and their API keys
-- Classes and meetings
-- Questions with votes from simulated students
-
-### 3. Use with Docker Compose
-
-The easiest way to run demo mode with Docker:
-
-```bash
-# Set environment variable and start
-DEMO_CONTEXT=physics_101 docker-compose up
-```
-
-Or modify `docker-compose.yml` to include:
-
-```yaml
-services:
-  app:
-    environment:
-      - DEMO_CONTEXT=physics_101
-    command: >
-      sh -c "python demo/load_demo_context.py && 
-             uvicorn main:app --host 0.0.0.0 --port 8000"
-```
+This is **already done** for all 5 included contexts. Data is in `demo/data/*/`.
 
 ## JSON Data Structure
 
@@ -368,16 +459,60 @@ If the database schema changes:
 2. Regenerate contexts: `python demo/generate_context.py --context physics_101`
 3. Reload: `python demo/load_demo_context.py physics_101`
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
-**Q: "Context directory not found"**
-A: Run `python demo/generate_context.py --context <name>` first to create the JSON files.
+### **Port 8000 already in use**
+```bash
+# Stop existing container
+docker-compose down
 
-**Q: "Instructor already exists"**
-A: The loader skips existing entries. This is normal when reloading. To start fresh, reset the database.
+# Or kill process on port 8000
+lsof -ti:8000 | xargs kill -9
+```
 
-**Q: "No API keys found"**
-A: Make sure you loaded instructors with API keys. Check `demo/data/{context}/instructors.json`.
+### **Can't see questions in student view**
+- Wait 5-10 seconds for database to load
+- Check Docker logs for errors
+- Refresh the browser page
+
+### **Login not working**
+- Username: `sarah_einstein` (no spaces, lowercase)
+- Password: `demo123` (exactly as shown)
+- Make sure demo is fully started (check Docker logs)
+
+### **Want to start fresh**
+```bash
+# Stop and remove everything
+docker-compose down
+
+# Start clean
+docker-compose -f docker-compose.yml -f docker-compose.demo-all.yml up
+```
+
+### **Questions don't have votes**
+This is expected - votes are randomly generated. Some questions intentionally have 0-2 votes (30% of questions).
+
+---
+
+## 📝 Demo Data Files
+
+All demo data is pre-generated in `demo/data/`:
+
+```
+demo/data/
+├── physics_101/
+│   ├── instructors.json      # 2 instructors
+│   ├── classes.json          # 1 class
+│   ├── meetings.json         # 5 meetings
+│   ├── questions.json        # 54 questions with votes
+│   └── config.json           # System settings
+├── biology_200/              # Similar structure
+├── calculus_150/
+├── chemistry_110/
+└── computer_science_101/
+```
+
+You can edit these JSON files to customize demo data, then restart Docker.
 
 ## Contributing
 
