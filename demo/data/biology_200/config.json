@@ -1,0 +1,16 @@
+{
+  "config": [
+    {
+      "key": "profanity_filter_enabled",
+      "value": "true",
+      "value_type": "boolean",
+      "description": "Enable profanity filtering for questions"
+    },
+    {
+      "key": "instructor_registration_enabled",
+      "value": "true",
+      "value_type": "boolean",
+      "description": "Allow new instructor registration"
+    }
+  ]
+}

@@ -1,0 +1,1777 @@
+{
+  "questions": [
+    {
+      "question_id": "q1",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 1,
+      "student_id": "student_020",
+      "text": "What are quantum numbers and what do they represent?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:21:00",
+      "votes": []
+    },
+    {
+      "question_id": "q2",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 2,
+      "student_id": "student_108",
+      "text": "What's electron affinity?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-13T10:14:00",
+      "votes": [
+        {
+          "student_id": "student_056",
+          "created_at": "2025-01-13T10:23:00"
+        },
+        {
+          "student_id": "student_042",
+          "created_at": "2025-01-13T10:50:00"
+        },
+        {
+          "student_id": "student_060",
+          "created_at": "2025-01-13T10:50:00"
+        },
+        {
+          "student_id": "student_049",
+          "created_at": "2025-01-13T10:27:00"
+        },
+        {
+          "student_id": "student_064",
+          "created_at": "2025-01-13T10:40:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q3",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 3,
+      "student_id": "student_058",
+      "text": "How do we write electron configurations?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T11:17:00",
+      "votes": [
+        {
+          "student_id": "student_041",
+          "created_at": "2025-01-13T11:33:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q4",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 4,
+      "student_id": "student_011",
+      "text": "How does the aufbau principle work?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T11:10:00",
+      "votes": []
+    },
+    {
+      "question_id": "q5",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 5,
+      "student_id": "student_067",
+      "text": "How do electron configurations relate to chemical properties?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-13T11:13:00",
+      "votes": [
+        {
+          "student_id": "student_017",
+          "created_at": "2025-01-13T11:15:00"
+        },
+        {
+          "student_id": "student_035",
+          "created_at": "2025-01-13T11:25:00"
+        },
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-13T11:42:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q6",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 6,
+      "student_id": "student_072",
+      "text": "What's the difference between valence and core electrons?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T11:00:00",
+      "votes": [
+        {
+          "student_id": "student_102",
+          "created_at": "2025-01-13T11:08:00"
+        },
+        {
+          "student_id": "student_115",
+          "created_at": "2025-01-13T11:34:00"
+        },
+        {
+          "student_id": "student_001",
+          "created_at": "2025-01-13T11:28:00"
+        },
+        {
+          "student_id": "student_104",
+          "created_at": "2025-01-13T11:36:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q7",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 7,
+      "student_id": "student_006",
+      "text": "What's ionization energy and how does it vary?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:39:00",
+      "votes": [
+        {
+          "student_id": "student_112",
+          "created_at": "2025-01-13T10:51:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q8",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 8,
+      "student_id": "student_043",
+      "text": "What's the difference between orbitals and electron shells?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:22:00",
+      "votes": [
+        {
+          "student_id": "student_103",
+          "created_at": "2025-01-13T10:54:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q9",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 9,
+      "student_id": "student_082",
+      "text": "How do we predict periodic trends like electronegativity?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T11:14:00",
+      "votes": [
+        {
+          "student_id": "student_029",
+          "created_at": "2025-01-13T11:52:00"
+        },
+        {
+          "student_id": "student_104",
+          "created_at": "2025-01-13T11:42:00"
+        },
+        {
+          "student_id": "student_007",
+          "created_at": "2025-01-13T11:18:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q10",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 10,
+      "student_id": "student_103",
+      "text": "What's Hund's rule and why is it important?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-13T10:44:00",
+      "votes": [
+        {
+          "student_id": "student_070",
+          "created_at": "2025-01-13T10:47:00"
+        },
+        {
+          "student_id": "student_002",
+          "created_at": "2025-01-13T11:15:00"
+        },
+        {
+          "student_id": "student_011",
+          "created_at": "2025-01-13T11:24:00"
+        },
+        {
+          "student_id": "student_047",
+          "created_at": "2025-01-13T11:09:00"
+        },
+        {
+          "student_id": "student_016",
+          "created_at": "2025-01-13T10:46:00"
+        },
+        {
+          "student_id": "student_044",
+          "created_at": "2025-01-13T11:22:00"
+        },
+        {
+          "student_id": "student_007",
+          "created_at": "2025-01-13T10:57:00"
+        },
+        {
+          "student_id": "student_045",
+          "created_at": "2025-01-13T11:08:00"
+        },
+        {
+          "student_id": "student_120",
+          "created_at": "2025-01-13T11:01:00"
+        },
+        {
+          "student_id": "student_109",
+          "created_at": "2025-01-13T10:49:00"
+        },
+        {
+          "student_id": "student_052",
+          "created_at": "2025-01-13T11:13:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q11",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 11,
+      "student_id": "student_105",
+      "text": "How does atomic radius change across the periodic table?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:05:00",
+      "votes": [
+        {
+          "student_id": "student_083",
+          "created_at": "2025-01-13T10:29:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q12",
+      "meeting_id": "chemistry_110_day1",
+      "question_number": 12,
+      "student_id": "student_030",
+      "text": "How do we explain the wave-particle duality of electrons?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-13T11:22:00",
+      "votes": [
+        {
+          "student_id": "student_063",
+          "created_at": "2025-01-13T11:31:00"
+        },
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-13T11:34:00"
+        },
+        {
+          "student_id": "student_100",
+          "created_at": "2025-01-13T11:51:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-13T11:30:00"
+        },
+        {
+          "student_id": "student_042",
+          "created_at": "2025-01-13T11:29:00"
+        },
+        {
+          "student_id": "student_084",
+          "created_at": "2025-01-13T11:33:00"
+        },
+        {
+          "student_id": "student_041",
+          "created_at": "2025-01-13T11:27:00"
+        },
+        {
+          "student_id": "student_046",
+          "created_at": "2025-01-13T11:54:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q13",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 1,
+      "student_id": "student_053",
+      "text": "What's the difference between ionic and covalent bonds?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-17T10:53:00",
+      "votes": [
+        {
+          "student_id": "student_117",
+          "created_at": "2025-01-17T11:04:00"
+        },
+        {
+          "student_id": "student_028",
+          "created_at": "2025-01-17T11:04:00"
+        },
+        {
+          "student_id": "student_042",
+          "created_at": "2025-01-17T11:01:00"
+        },
+        {
+          "student_id": "student_115",
+          "created_at": "2025-01-17T11:16:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q14",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 2,
+      "student_id": "student_021",
+      "text": "What's electronegativity and how does it affect bonding?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-17T10:05:00",
+      "votes": [
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-17T10:13:00"
+        },
+        {
+          "student_id": "student_013",
+          "created_at": "2025-01-17T10:33:00"
+        },
+        {
+          "student_id": "student_034",
+          "created_at": "2025-01-17T10:23:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q15",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 3,
+      "student_id": "student_019",
+      "text": "How do metallic bonds differ from other bond types?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-17T10:58:00",
+      "votes": [
+        {
+          "student_id": "student_097",
+          "created_at": "2025-01-17T11:05:00"
+        },
+        {
+          "student_id": "student_060",
+          "created_at": "2025-01-17T11:29:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-17T11:33:00"
+        },
+        {
+          "student_id": "student_096",
+          "created_at": "2025-01-17T11:00:00"
+        },
+        {
+          "student_id": "student_027",
+          "created_at": "2025-01-17T11:05:00"
+        },
+        {
+          "student_id": "student_100",
+          "created_at": "2025-01-17T11:24:00"
+        },
+        {
+          "student_id": "student_093",
+          "created_at": "2025-01-17T11:37:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q16",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 4,
+      "student_id": "student_009",
+      "text": "What's bond order and how do we calculate it?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-17T10:18:00",
+      "votes": [
+        {
+          "student_id": "student_094",
+          "created_at": "2025-01-17T10:28:00"
+        },
+        {
+          "student_id": "student_065",
+          "created_at": "2025-01-17T10:58:00"
+        },
+        {
+          "student_id": "student_026",
+          "created_at": "2025-01-17T10:38:00"
+        },
+        {
+          "student_id": "student_038",
+          "created_at": "2025-01-17T10:33:00"
+        },
+        {
+          "student_id": "student_056",
+          "created_at": "2025-01-17T10:46:00"
+        },
+        {
+          "student_id": "student_054",
+          "created_at": "2025-01-17T10:49:00"
+        },
+        {
+          "student_id": "student_020",
+          "created_at": "2025-01-17T10:34:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q17",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 5,
+      "student_id": "student_042",
+      "text": "How does lattice energy relate to ionic compounds?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-17T10:18:00",
+      "votes": [
+        {
+          "student_id": "student_028",
+          "created_at": "2025-01-17T10:55:00"
+        },
+        {
+          "student_id": "student_053",
+          "created_at": "2025-01-17T10:51:00"
+        },
+        {
+          "student_id": "student_069",
+          "created_at": "2025-01-17T10:38:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q18",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 6,
+      "student_id": "student_057",
+      "text": "How do we predict if a bond is ionic or covalent?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-17T11:06:00",
+      "votes": [
+        {
+          "student_id": "student_045",
+          "created_at": "2025-01-17T11:21:00"
+        },
+        {
+          "student_id": "student_104",
+          "created_at": "2025-01-17T11:45:00"
+        },
+        {
+          "student_id": "student_090",
+          "created_at": "2025-01-17T11:19:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q19",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 7,
+      "student_id": "student_115",
+      "text": "What are polar covalent bonds?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-17T11:23:00",
+      "votes": [
+        {
+          "student_id": "student_045",
+          "created_at": "2025-01-17T11:35:00"
+        },
+        {
+          "student_id": "student_098",
+          "created_at": "2025-01-17T11:40:00"
+        },
+        {
+          "student_id": "student_040",
+          "created_at": "2025-01-17T11:36:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q20",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 8,
+      "student_id": "student_069",
+      "text": "What's the octet rule and when does it apply?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-17T10:59:00",
+      "votes": [
+        {
+          "student_id": "student_098",
+          "created_at": "2025-01-17T11:00:00"
+        },
+        {
+          "student_id": "student_061",
+          "created_at": "2025-01-17T11:38:00"
+        },
+        {
+          "student_id": "student_120",
+          "created_at": "2025-01-17T11:20:00"
+        },
+        {
+          "student_id": "student_102",
+          "created_at": "2025-01-17T11:07:00"
+        },
+        {
+          "student_id": "student_043",
+          "created_at": "2025-01-17T11:36:00"
+        },
+        {
+          "student_id": "student_049",
+          "created_at": "2025-01-17T11:24:00"
+        },
+        {
+          "student_id": "student_060",
+          "created_at": "2025-01-17T11:15:00"
+        },
+        {
+          "student_id": "student_058",
+          "created_at": "2025-01-17T11:26:00"
+        },
+        {
+          "student_id": "student_009",
+          "created_at": "2025-01-17T11:10:00"
+        },
+        {
+          "student_id": "student_074",
+          "created_at": "2025-01-17T11:22:00"
+        },
+        {
+          "student_id": "student_042",
+          "created_at": "2025-01-17T11:22:00"
+        },
+        {
+          "student_id": "student_001",
+          "created_at": "2025-01-17T11:10:00"
+        },
+        {
+          "student_id": "student_044",
+          "created_at": "2025-01-17T11:37:00"
+        },
+        {
+          "student_id": "student_110",
+          "created_at": "2025-01-17T11:09:00"
+        },
+        {
+          "student_id": "student_106",
+          "created_at": "2025-01-17T11:38:00"
+        },
+        {
+          "student_id": "student_107",
+          "created_at": "2025-01-17T11:04:00"
+        },
+        {
+          "student_id": "student_008",
+          "created_at": "2025-01-17T11:15:00"
+        },
+        {
+          "student_id": "student_007",
+          "created_at": "2025-01-17T11:02:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q21",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 9,
+      "student_id": "student_010",
+      "text": "How do coordinate covalent bonds form?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-17T10:56:00",
+      "votes": []
+    },
+    {
+      "question_id": "q22",
+      "meeting_id": "chemistry_110_day5",
+      "question_number": 10,
+      "student_id": "student_113",
+      "text": "What are resonance structures?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-17T11:06:00",
+      "votes": []
+    },
+    {
+      "question_id": "q23",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 1,
+      "student_id": "student_054",
+      "text": "How do we identify hybridization of atoms?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-20T10:18:00",
+      "votes": [
+        {
+          "student_id": "student_118",
+          "created_at": "2025-01-20T10:25:00"
+        },
+        {
+          "student_id": "student_021",
+          "created_at": "2025-01-20T10:28:00"
+        },
+        {
+          "student_id": "student_087",
+          "created_at": "2025-01-20T10:51:00"
+        },
+        {
+          "student_id": "student_036",
+          "created_at": "2025-01-20T10:46:00"
+        },
+        {
+          "student_id": "student_110",
+          "created_at": "2025-01-20T10:46:00"
+        },
+        {
+          "student_id": "student_108",
+          "created_at": "2025-01-20T10:37:00"
+        },
+        {
+          "student_id": "student_023",
+          "created_at": "2025-01-20T10:36:00"
+        },
+        {
+          "student_id": "student_007",
+          "created_at": "2025-01-20T10:35:00"
+        },
+        {
+          "student_id": "student_046",
+          "created_at": "2025-01-20T10:36:00"
+        },
+        {
+          "student_id": "student_107",
+          "created_at": "2025-01-20T10:51:00"
+        },
+        {
+          "student_id": "student_106",
+          "created_at": "2025-01-20T10:20:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q24",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 2,
+      "student_id": "student_050",
+      "text": "What's the bond angle in different molecular shapes?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-20T10:32:00",
+      "votes": [
+        {
+          "student_id": "student_115",
+          "created_at": "2025-01-20T11:02:00"
+        },
+        {
+          "student_id": "student_087",
+          "created_at": "2025-01-20T11:02:00"
+        },
+        {
+          "student_id": "student_025",
+          "created_at": "2025-01-20T10:34:00"
+        },
+        {
+          "student_id": "student_064",
+          "created_at": "2025-01-20T11:05:00"
+        },
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-20T11:10:00"
+        },
+        {
+          "student_id": "student_004",
+          "created_at": "2025-01-20T10:56:00"
+        },
+        {
+          "student_id": "student_051",
+          "created_at": "2025-01-20T11:02:00"
+        },
+        {
+          "student_id": "student_010",
+          "created_at": "2025-01-20T11:06:00"
+        },
+        {
+          "student_id": "student_059",
+          "created_at": "2025-01-20T10:53:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-20T10:38:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-20T11:12:00"
+        },
+        {
+          "student_id": "student_103",
+          "created_at": "2025-01-20T10:53:00"
+        },
+        {
+          "student_id": "student_009",
+          "created_at": "2025-01-20T10:48:00"
+        },
+        {
+          "student_id": "student_086",
+          "created_at": "2025-01-20T10:47:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q25",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 3,
+      "student_id": "student_081",
+      "text": "How do we draw Lewis structures?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-20T10:30:00",
+      "votes": [
+        {
+          "student_id": "student_088",
+          "created_at": "2025-01-20T10:33:00"
+        },
+        {
+          "student_id": "student_106",
+          "created_at": "2025-01-20T10:52:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q26",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 4,
+      "student_id": "student_012",
+      "text": "How do we handle molecules with multiple central atoms?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-20T11:02:00",
+      "votes": [
+        {
+          "student_id": "student_069",
+          "created_at": "2025-01-20T11:39:00"
+        },
+        {
+          "student_id": "student_092",
+          "created_at": "2025-01-20T11:28:00"
+        },
+        {
+          "student_id": "student_036",
+          "created_at": "2025-01-20T11:05:00"
+        },
+        {
+          "student_id": "student_014",
+          "created_at": "2025-01-20T11:27:00"
+        },
+        {
+          "student_id": "student_033",
+          "created_at": "2025-01-20T11:31:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q27",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 5,
+      "student_id": "student_066",
+      "text": "How do we use VSEPR theory to predict shapes?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-20T10:52:00",
+      "votes": [
+        {
+          "student_id": "student_019",
+          "created_at": "2025-01-20T11:06:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-20T11:29:00"
+        },
+        {
+          "student_id": "student_011",
+          "created_at": "2025-01-20T11:25:00"
+        },
+        {
+          "student_id": "student_081",
+          "created_at": "2025-01-20T11:14:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-20T11:00:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q28",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 6,
+      "student_id": "student_084",
+      "text": "How many electron groups correspond to each geometry?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-20T11:24:00",
+      "votes": []
+    },
+    {
+      "question_id": "q29",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 7,
+      "student_id": "student_056",
+      "text": "What's the relationship between structure and polarity?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-20T10:43:00",
+      "votes": [
+        {
+          "student_id": "student_101",
+          "created_at": "2025-01-20T10:51:00"
+        },
+        {
+          "student_id": "student_099",
+          "created_at": "2025-01-20T10:47:00"
+        },
+        {
+          "student_id": "student_024",
+          "created_at": "2025-01-20T10:45:00"
+        },
+        {
+          "student_id": "student_021",
+          "created_at": "2025-01-20T10:56:00"
+        },
+        {
+          "student_id": "student_010",
+          "created_at": "2025-01-20T11:09:00"
+        },
+        {
+          "student_id": "student_114",
+          "created_at": "2025-01-20T10:56:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q30",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 8,
+      "student_id": "student_047",
+      "text": "What's the difference between electron geometry and molecular geometry?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-20T10:35:00",
+      "votes": [
+        {
+          "student_id": "student_002",
+          "created_at": "2025-01-20T10:40:00"
+        },
+        {
+          "student_id": "student_012",
+          "created_at": "2025-01-20T10:37:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-20T10:59:00"
+        },
+        {
+          "student_id": "student_038",
+          "created_at": "2025-01-20T11:03:00"
+        },
+        {
+          "student_id": "student_084",
+          "created_at": "2025-01-20T10:41:00"
+        },
+        {
+          "student_id": "student_029",
+          "created_at": "2025-01-20T10:39:00"
+        },
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-20T11:13:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q31",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 9,
+      "student_id": "student_035",
+      "text": "What determines if a molecule is polar?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-20T11:24:00",
+      "votes": [
+        {
+          "student_id": "student_103",
+          "created_at": "2025-01-20T11:56:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-20T11:39:00"
+        },
+        {
+          "student_id": "student_099",
+          "created_at": "2025-01-20T11:41:00"
+        },
+        {
+          "student_id": "student_078",
+          "created_at": "2025-01-20T11:39:00"
+        },
+        {
+          "student_id": "student_035",
+          "created_at": "2025-01-20T11:50:00"
+        },
+        {
+          "student_id": "student_100",
+          "created_at": "2025-01-20T11:56:00"
+        },
+        {
+          "student_id": "student_114",
+          "created_at": "2025-01-20T11:55:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q32",
+      "meeting_id": "chemistry_110_day8",
+      "question_number": 10,
+      "student_id": "student_045",
+      "text": "What's the difference between trigonal planar and tetrahedral?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-20T10:58:00",
+      "votes": [
+        {
+          "student_id": "student_016",
+          "created_at": "2025-01-20T11:26:00"
+        },
+        {
+          "student_id": "student_081",
+          "created_at": "2025-01-20T11:24:00"
+        },
+        {
+          "student_id": "student_031",
+          "created_at": "2025-01-20T11:14:00"
+        },
+        {
+          "student_id": "student_070",
+          "created_at": "2025-01-20T11:31:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-20T11:36:00"
+        },
+        {
+          "student_id": "student_008",
+          "created_at": "2025-01-20T11:32:00"
+        },
+        {
+          "student_id": "student_085",
+          "created_at": "2025-01-20T11:24:00"
+        },
+        {
+          "student_id": "student_052",
+          "created_at": "2025-01-20T11:24:00"
+        },
+        {
+          "student_id": "student_040",
+          "created_at": "2025-01-20T11:10:00"
+        },
+        {
+          "student_id": "student_021",
+          "created_at": "2025-01-20T11:18:00"
+        },
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-20T11:20:00"
+        },
+        {
+          "student_id": "student_043",
+          "created_at": "2025-01-20T11:00:00"
+        },
+        {
+          "student_id": "student_062",
+          "created_at": "2025-01-20T11:32:00"
+        },
+        {
+          "student_id": "student_110",
+          "created_at": "2025-01-20T11:20:00"
+        },
+        {
+          "student_id": "student_101",
+          "created_at": "2025-01-20T11:33:00"
+        },
+        {
+          "student_id": "student_086",
+          "created_at": "2025-01-20T11:19:00"
+        },
+        {
+          "student_id": "student_050",
+          "created_at": "2025-01-20T11:22:00"
+        },
+        {
+          "student_id": "student_074",
+          "created_at": "2025-01-20T11:25:00"
+        },
+        {
+          "student_id": "student_091",
+          "created_at": "2025-01-20T11:00:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-20T11:19:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q33",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 1,
+      "student_id": "student_028",
+      "text": "What are stoichiometric coefficients?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T11:04:00",
+      "votes": [
+        {
+          "student_id": "student_118",
+          "created_at": "2025-01-23T11:10:00"
+        },
+        {
+          "student_id": "student_021",
+          "created_at": "2025-01-23T11:07:00"
+        },
+        {
+          "student_id": "student_083",
+          "created_at": "2025-01-23T11:42:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q34",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 2,
+      "student_id": "student_029",
+      "text": "How do we calculate molar mass?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T10:33:00",
+      "votes": [
+        {
+          "student_id": "student_001",
+          "created_at": "2025-01-23T10:51:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q35",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 3,
+      "student_id": "student_071",
+      "text": "What's the mole concept and why is it useful?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T10:13:00",
+      "votes": [
+        {
+          "student_id": "student_071",
+          "created_at": "2025-01-23T10:36:00"
+        },
+        {
+          "student_id": "student_015",
+          "created_at": "2025-01-23T10:21:00"
+        },
+        {
+          "student_id": "student_030",
+          "created_at": "2025-01-23T10:15:00"
+        },
+        {
+          "student_id": "student_001",
+          "created_at": "2025-01-23T10:43:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q36",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 4,
+      "student_id": "student_059",
+      "text": "What's percent composition by mass?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T11:02:00",
+      "votes": [
+        {
+          "student_id": "student_116",
+          "created_at": "2025-01-23T11:16:00"
+        },
+        {
+          "student_id": "student_080",
+          "created_at": "2025-01-23T11:24:00"
+        },
+        {
+          "student_id": "student_027",
+          "created_at": "2025-01-23T11:09:00"
+        },
+        {
+          "student_id": "student_099",
+          "created_at": "2025-01-23T11:18:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-23T11:14:00"
+        },
+        {
+          "student_id": "student_026",
+          "created_at": "2025-01-23T11:32:00"
+        },
+        {
+          "student_id": "student_040",
+          "created_at": "2025-01-23T11:29:00"
+        },
+        {
+          "student_id": "student_062",
+          "created_at": "2025-01-23T11:16:00"
+        },
+        {
+          "student_id": "student_082",
+          "created_at": "2025-01-23T11:37:00"
+        },
+        {
+          "student_id": "student_115",
+          "created_at": "2025-01-23T11:07:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-23T11:14:00"
+        },
+        {
+          "student_id": "student_084",
+          "created_at": "2025-01-23T11:12:00"
+        },
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-23T11:16:00"
+        },
+        {
+          "student_id": "student_013",
+          "created_at": "2025-01-23T11:17:00"
+        },
+        {
+          "student_id": "student_032",
+          "created_at": "2025-01-23T11:39:00"
+        },
+        {
+          "student_id": "student_010",
+          "created_at": "2025-01-23T11:29:00"
+        },
+        {
+          "student_id": "student_119",
+          "created_at": "2025-01-23T11:15:00"
+        },
+        {
+          "student_id": "student_106",
+          "created_at": "2025-01-23T11:10:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-23T11:26:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q37",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 5,
+      "student_id": "student_027",
+      "text": "What's Avogadro's number and what does it represent?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T10:22:00",
+      "votes": []
+    },
+    {
+      "question_id": "q38",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 6,
+      "student_id": "student_006",
+      "text": "How do we solve problems with excess reagent?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T11:20:00",
+      "votes": [
+        {
+          "student_id": "student_117",
+          "created_at": "2025-01-23T11:22:00"
+        },
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-23T11:56:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q39",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 7,
+      "student_id": "student_074",
+      "text": "What's the limiting reagent in a reaction?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T10:13:00",
+      "votes": []
+    },
+    {
+      "question_id": "q40",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 8,
+      "student_id": "student_050",
+      "text": "How do we determine percent yield?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T10:42:00",
+      "votes": [
+        {
+          "student_id": "student_088",
+          "created_at": "2025-01-23T10:45:00"
+        },
+        {
+          "student_id": "student_051",
+          "created_at": "2025-01-23T10:53:00"
+        },
+        {
+          "student_id": "student_099",
+          "created_at": "2025-01-23T10:45:00"
+        },
+        {
+          "student_id": "student_093",
+          "created_at": "2025-01-23T11:00:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q41",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 9,
+      "student_id": "student_058",
+      "text": "What's the difference between empirical and molecular formulas?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T10:37:00",
+      "votes": [
+        {
+          "student_id": "student_063",
+          "created_at": "2025-01-23T11:17:00"
+        },
+        {
+          "student_id": "student_072",
+          "created_at": "2025-01-23T10:48:00"
+        },
+        {
+          "student_id": "student_112",
+          "created_at": "2025-01-23T11:14:00"
+        },
+        {
+          "student_id": "student_008",
+          "created_at": "2025-01-23T10:58:00"
+        },
+        {
+          "student_id": "student_118",
+          "created_at": "2025-01-23T10:56:00"
+        },
+        {
+          "student_id": "student_086",
+          "created_at": "2025-01-23T11:06:00"
+        },
+        {
+          "student_id": "student_064",
+          "created_at": "2025-01-23T11:12:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q42",
+      "meeting_id": "chemistry_110_day11",
+      "question_number": 10,
+      "student_id": "student_042",
+      "text": "How do we balance chemical equations?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-23T10:34:00",
+      "votes": [
+        {
+          "student_id": "student_049",
+          "created_at": "2025-01-23T11:14:00"
+        },
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-23T11:06:00"
+        },
+        {
+          "student_id": "student_094",
+          "created_at": "2025-01-23T11:00:00"
+        },
+        {
+          "student_id": "student_001",
+          "created_at": "2025-01-23T11:13:00"
+        },
+        {
+          "student_id": "student_116",
+          "created_at": "2025-01-23T10:50:00"
+        },
+        {
+          "student_id": "student_025",
+          "created_at": "2025-01-23T10:41:00"
+        },
+        {
+          "student_id": "student_053",
+          "created_at": "2025-01-23T11:14:00"
+        },
+        {
+          "student_id": "student_041",
+          "created_at": "2025-01-23T11:06:00"
+        },
+        {
+          "student_id": "student_014",
+          "created_at": "2025-01-23T11:02:00"
+        },
+        {
+          "student_id": "student_099",
+          "created_at": "2025-01-23T10:58:00"
+        },
+        {
+          "student_id": "student_044",
+          "created_at": "2025-01-23T10:47:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-23T11:01:00"
+        },
+        {
+          "student_id": "student_120",
+          "created_at": "2025-01-23T10:51:00"
+        },
+        {
+          "student_id": "student_103",
+          "created_at": "2025-01-23T10:43:00"
+        },
+        {
+          "student_id": "student_054",
+          "created_at": "2025-01-23T11:08:00"
+        },
+        {
+          "student_id": "student_078",
+          "created_at": "2025-01-23T11:10:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-23T10:59:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q43",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 1,
+      "student_id": "student_065",
+      "text": "How do bond energies relate to reaction enthalpy?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-26T11:12:00",
+      "votes": [
+        {
+          "student_id": "student_036",
+          "created_at": "2025-01-26T11:49:00"
+        },
+        {
+          "student_id": "student_115",
+          "created_at": "2025-01-26T11:37:00"
+        },
+        {
+          "student_id": "student_021",
+          "created_at": "2025-01-26T11:43:00"
+        },
+        {
+          "student_id": "student_038",
+          "created_at": "2025-01-26T11:19:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-26T11:50:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-26T11:27:00"
+        },
+        {
+          "student_id": "student_028",
+          "created_at": "2025-01-26T11:16:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q44",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 2,
+      "student_id": "student_104",
+      "text": "What's the first law of thermodynamics?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-26T11:19:00",
+      "votes": [
+        {
+          "student_id": "student_082",
+          "created_at": "2025-01-26T11:28:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q45",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 3,
+      "student_id": "student_094",
+      "text": "What's the difference between \u0394H and \u0394E?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-26T10:44:00",
+      "votes": [
+        {
+          "student_id": "student_023",
+          "created_at": "2025-01-26T11:23:00"
+        },
+        {
+          "student_id": "student_010",
+          "created_at": "2025-01-26T10:56:00"
+        },
+        {
+          "student_id": "student_013",
+          "created_at": "2025-01-26T11:01:00"
+        },
+        {
+          "student_id": "student_071",
+          "created_at": "2025-01-26T11:21:00"
+        },
+        {
+          "student_id": "student_037",
+          "created_at": "2025-01-26T10:59:00"
+        },
+        {
+          "student_id": "student_041",
+          "created_at": "2025-01-26T11:17:00"
+        },
+        {
+          "student_id": "student_066",
+          "created_at": "2025-01-26T10:58:00"
+        },
+        {
+          "student_id": "student_052",
+          "created_at": "2025-01-26T10:48:00"
+        },
+        {
+          "student_id": "student_093",
+          "created_at": "2025-01-26T11:18:00"
+        },
+        {
+          "student_id": "student_019",
+          "created_at": "2025-01-26T11:00:00"
+        },
+        {
+          "student_id": "student_111",
+          "created_at": "2025-01-26T10:57:00"
+        },
+        {
+          "student_id": "student_094",
+          "created_at": "2025-01-26T11:13:00"
+        },
+        {
+          "student_id": "student_081",
+          "created_at": "2025-01-26T11:00:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-26T10:51:00"
+        },
+        {
+          "student_id": "student_017",
+          "created_at": "2025-01-26T10:52:00"
+        },
+        {
+          "student_id": "student_028",
+          "created_at": "2025-01-26T10:59:00"
+        },
+        {
+          "student_id": "student_022",
+          "created_at": "2025-01-26T10:47:00"
+        },
+        {
+          "student_id": "student_045",
+          "created_at": "2025-01-26T10:46:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q46",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 4,
+      "student_id": "student_095",
+      "text": "How does calorimetry measure heat transfer?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-26T11:21:00",
+      "votes": [
+        {
+          "student_id": "student_073",
+          "created_at": "2025-01-26T11:51:00"
+        },
+        {
+          "student_id": "student_114",
+          "created_at": "2025-01-26T11:46:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-26T11:24:00"
+        },
+        {
+          "student_id": "student_108",
+          "created_at": "2025-01-26T11:33:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q47",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 5,
+      "student_id": "student_055",
+      "text": "How do we use standard enthalpies of formation?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-26T10:24:00",
+      "votes": [
+        {
+          "student_id": "student_026",
+          "created_at": "2025-01-26T10:38:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q48",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 6,
+      "student_id": "student_014",
+      "text": "How do we interpret thermochemical equations?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-26T11:11:00",
+      "votes": [
+        {
+          "student_id": "student_002",
+          "created_at": "2025-01-26T11:40:00"
+        },
+        {
+          "student_id": "student_054",
+          "created_at": "2025-01-26T11:22:00"
+        },
+        {
+          "student_id": "student_021",
+          "created_at": "2025-01-26T11:16:00"
+        },
+        {
+          "student_id": "student_086",
+          "created_at": "2025-01-26T11:47:00"
+        },
+        {
+          "student_id": "student_061",
+          "created_at": "2025-01-26T11:25:00"
+        },
+        {
+          "student_id": "student_017",
+          "created_at": "2025-01-26T11:38:00"
+        },
+        {
+          "student_id": "student_059",
+          "created_at": "2025-01-26T11:13:00"
+        },
+        {
+          "student_id": "student_068",
+          "created_at": "2025-01-26T11:13:00"
+        },
+        {
+          "student_id": "student_020",
+          "created_at": "2025-01-26T11:15:00"
+        },
+        {
+          "student_id": "student_012",
+          "created_at": "2025-01-26T11:44:00"
+        },
+        {
+          "student_id": "student_027",
+          "created_at": "2025-01-26T11:37:00"
+        },
+        {
+          "student_id": "student_110",
+          "created_at": "2025-01-26T11:45:00"
+        },
+        {
+          "student_id": "student_094",
+          "created_at": "2025-01-26T11:38:00"
+        },
+        {
+          "student_id": "student_096",
+          "created_at": "2025-01-26T11:14:00"
+        },
+        {
+          "student_id": "student_113",
+          "created_at": "2025-01-26T11:33:00"
+        },
+        {
+          "student_id": "student_072",
+          "created_at": "2025-01-26T11:28:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-26T11:19:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q49",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 7,
+      "student_id": "student_053",
+      "text": "What's specific heat capacity?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-26T10:39:00",
+      "votes": [
+        {
+          "student_id": "student_008",
+          "created_at": "2025-01-26T11:10:00"
+        },
+        {
+          "student_id": "student_006",
+          "created_at": "2025-01-26T11:16:00"
+        },
+        {
+          "student_id": "student_098",
+          "created_at": "2025-01-26T11:02:00"
+        },
+        {
+          "student_id": "student_078",
+          "created_at": "2025-01-26T11:08:00"
+        },
+        {
+          "student_id": "student_065",
+          "created_at": "2025-01-26T10:51:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q50",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 8,
+      "student_id": "student_004",
+      "text": "What's the difference between exothermic and endothermic?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-26T10:20:00",
+      "votes": [
+        {
+          "student_id": "student_082",
+          "created_at": "2025-01-26T10:26:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q51",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 9,
+      "student_id": "student_007",
+      "text": "What's Hess's law and how do we use it?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-26T10:39:00",
+      "votes": [
+        {
+          "student_id": "student_101",
+          "created_at": "2025-01-26T10:44:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-26T10:55:00"
+        },
+        {
+          "student_id": "student_022",
+          "created_at": "2025-01-26T10:44:00"
+        },
+        {
+          "student_id": "student_111",
+          "created_at": "2025-01-26T10:52:00"
+        },
+        {
+          "student_id": "student_071",
+          "created_at": "2025-01-26T10:45:00"
+        },
+        {
+          "student_id": "student_035",
+          "created_at": "2025-01-26T11:02:00"
+        },
+        {
+          "student_id": "student_112",
+          "created_at": "2025-01-26T11:12:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q52",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 10,
+      "student_id": "student_013",
+      "text": "What's the difference between heat and temperature?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-26T10:28:00",
+      "votes": [
+        {
+          "student_id": "student_054",
+          "created_at": "2025-01-26T10:55:00"
+        },
+        {
+          "student_id": "student_046",
+          "created_at": "2025-01-26T10:41:00"
+        },
+        {
+          "student_id": "student_002",
+          "created_at": "2025-01-26T10:32:00"
+        },
+        {
+          "student_id": "student_105",
+          "created_at": "2025-01-26T11:07:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q53",
+      "meeting_id": "chemistry_110_day14",
+      "question_number": 11,
+      "student_id": "student_101",
+      "text": "How do we calculate enthalpy changes?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-26T10:58:00",
+      "votes": [
+        {
+          "student_id": "student_020",
+          "created_at": "2025-01-26T11:21:00"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1980 @@
+{
+  "questions": [
+    {
+      "question_id": "q1",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 1,
+      "student_id": "student_084",
+      "text": "How do we handle indeterminate forms like 0/0?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T11:20:00",
+      "votes": [
+        {
+          "student_id": "student_067",
+          "created_at": "2025-01-13T11:29:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-13T11:54:00"
+        },
+        {
+          "student_id": "student_074",
+          "created_at": "2025-01-13T11:47:00"
+        },
+        {
+          "student_id": "student_061",
+          "created_at": "2025-01-13T11:23:00"
+        },
+        {
+          "student_id": "student_106",
+          "created_at": "2025-01-13T11:22:00"
+        },
+        {
+          "student_id": "student_103",
+          "created_at": "2025-01-13T12:00:00"
+        },
+        {
+          "student_id": "student_051",
+          "created_at": "2025-01-13T11:58:00"
+        },
+        {
+          "student_id": "student_075",
+          "created_at": "2025-01-13T11:39:00"
+        },
+        {
+          "student_id": "student_045",
+          "created_at": "2025-01-13T11:40:00"
+        },
+        {
+          "student_id": "student_116",
+          "created_at": "2025-01-13T11:59:00"
+        },
+        {
+          "student_id": "student_073",
+          "created_at": "2025-01-13T11:54:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-13T11:40:00"
+        },
+        {
+          "student_id": "student_092",
+          "created_at": "2025-01-13T11:30:00"
+        },
+        {
+          "student_id": "student_013",
+          "created_at": "2025-01-13T11:31:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q2",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 2,
+      "student_id": "student_016",
+      "text": "When do limits not exist?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:35:00",
+      "votes": [
+        {
+          "student_id": "student_027",
+          "created_at": "2025-01-13T11:01:00"
+        },
+        {
+          "student_id": "student_053",
+          "created_at": "2025-01-13T10:42:00"
+        },
+        {
+          "student_id": "student_092",
+          "created_at": "2025-01-13T10:40:00"
+        },
+        {
+          "student_id": "student_059",
+          "created_at": "2025-01-13T11:08:00"
+        },
+        {
+          "student_id": "student_071",
+          "created_at": "2025-01-13T10:43:00"
+        },
+        {
+          "student_id": "student_051",
+          "created_at": "2025-01-13T11:06:00"
+        },
+        {
+          "student_id": "student_054",
+          "created_at": "2025-01-13T10:41:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q3",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 3,
+      "student_id": "student_037",
+      "text": "What's the formal epsilon-delta definition of a limit?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-13T10:43:00",
+      "votes": [
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-13T11:22:00"
+        },
+        {
+          "student_id": "student_083",
+          "created_at": "2025-01-13T11:23:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-13T11:12:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q4",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 4,
+      "student_id": "student_071",
+      "text": "What's the intermediate value theorem?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:19:00",
+      "votes": [
+        {
+          "student_id": "student_048",
+          "created_at": "2025-01-13T10:36:00"
+        },
+        {
+          "student_id": "student_043",
+          "created_at": "2025-01-13T10:55:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q5",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 5,
+      "student_id": "student_113",
+      "text": "How do rational functions behave at vertical asymptotes?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:59:00",
+      "votes": [
+        {
+          "student_id": "student_026",
+          "created_at": "2025-01-13T11:05:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q6",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 6,
+      "student_id": "student_055",
+      "text": "How do we identify discontinuities?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:08:00",
+      "votes": [
+        {
+          "student_id": "student_066",
+          "created_at": "2025-01-13T10:12:00"
+        },
+        {
+          "student_id": "student_019",
+          "created_at": "2025-01-13T10:46:00"
+        },
+        {
+          "student_id": "student_093",
+          "created_at": "2025-01-13T10:38:00"
+        },
+        {
+          "student_id": "student_027",
+          "created_at": "2025-01-13T10:35:00"
+        },
+        {
+          "student_id": "student_014",
+          "created_at": "2025-01-13T10:27:00"
+        },
+        {
+          "student_id": "student_055",
+          "created_at": "2025-01-13T10:40:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q7",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 7,
+      "student_id": "student_003",
+      "text": "How do limits at infinity work?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T11:12:00",
+      "votes": []
+    },
+    {
+      "question_id": "q8",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 8,
+      "student_id": "student_029",
+      "text": "How do we use the squeeze theorem?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-13T11:22:00",
+      "votes": [
+        {
+          "student_id": "student_095",
+          "created_at": "2025-01-13T11:45:00"
+        },
+        {
+          "student_id": "student_119",
+          "created_at": "2025-01-13T11:27:00"
+        },
+        {
+          "student_id": "student_105",
+          "created_at": "2025-01-13T11:51:00"
+        },
+        {
+          "student_id": "student_101",
+          "created_at": "2025-01-13T11:55:00"
+        },
+        {
+          "student_id": "student_067",
+          "created_at": "2025-01-13T12:02:00"
+        },
+        {
+          "student_id": "student_086",
+          "created_at": "2025-01-13T11:45:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-13T11:29:00"
+        },
+        {
+          "student_id": "student_055",
+          "created_at": "2025-01-13T11:53:00"
+        },
+        {
+          "student_id": "student_090",
+          "created_at": "2025-01-13T11:35:00"
+        },
+        {
+          "student_id": "student_083",
+          "created_at": "2025-01-13T11:53:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-13T11:24:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q9",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 9,
+      "student_id": "student_037",
+      "text": "What does it mean for a function to be continuous?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-13T10:31:00",
+      "votes": [
+        {
+          "student_id": "student_082",
+          "created_at": "2025-01-13T10:35:00"
+        },
+        {
+          "student_id": "student_033",
+          "created_at": "2025-01-13T10:52:00"
+        },
+        {
+          "student_id": "student_037",
+          "created_at": "2025-01-13T10:50:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q10",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 10,
+      "student_id": "student_092",
+      "text": "What's the difference between one-sided and two-sided limits?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:12:00",
+      "votes": [
+        {
+          "student_id": "student_094",
+          "created_at": "2025-01-13T10:39:00"
+        },
+        {
+          "student_id": "student_116",
+          "created_at": "2025-01-13T10:25:00"
+        },
+        {
+          "student_id": "student_107",
+          "created_at": "2025-01-13T10:49:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q11",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 11,
+      "student_id": "student_018",
+      "text": "When can we use direct substitution for limits?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T11:10:00",
+      "votes": []
+    },
+    {
+      "question_id": "q12",
+      "meeting_id": "calculus_150_day1",
+      "question_number": 12,
+      "student_id": "student_036",
+      "text": "How do we evaluate limits algebraically?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-13T10:18:00",
+      "votes": [
+        {
+          "student_id": "student_074",
+          "created_at": "2025-01-13T10:49:00"
+        },
+        {
+          "student_id": "student_103",
+          "created_at": "2025-01-13T10:58:00"
+        },
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-13T10:55:00"
+        },
+        {
+          "student_id": "student_035",
+          "created_at": "2025-01-13T10:44:00"
+        },
+        {
+          "student_id": "student_104",
+          "created_at": "2025-01-13T10:23:00"
+        },
+        {
+          "student_id": "student_037",
+          "created_at": "2025-01-13T10:27:00"
+        },
+        {
+          "student_id": "student_097",
+          "created_at": "2025-01-13T10:57:00"
+        },
+        {
+          "student_id": "student_041",
+          "created_at": "2025-01-13T10:58:00"
+        },
+        {
+          "student_id": "student_040",
+          "created_at": "2025-01-13T10:50:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q13",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 1,
+      "student_id": "student_072",
+      "text": "What does the second derivative tell us?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-16T11:19:00",
+      "votes": [
+        {
+          "student_id": "student_017",
+          "created_at": "2025-01-16T11:33:00"
+        },
+        {
+          "student_id": "student_105",
+          "created_at": "2025-01-16T11:20:00"
+        },
+        {
+          "student_id": "student_032",
+          "created_at": "2025-01-16T11:39:00"
+        },
+        {
+          "student_id": "student_028",
+          "created_at": "2025-01-16T11:54:00"
+        },
+        {
+          "student_id": "student_078",
+          "created_at": "2025-01-16T11:57:00"
+        },
+        {
+          "student_id": "student_015",
+          "created_at": "2025-01-16T11:39:00"
+        },
+        {
+          "student_id": "student_056",
+          "created_at": "2025-01-16T11:53:00"
+        },
+        {
+          "student_id": "student_116",
+          "created_at": "2025-01-16T11:22:00"
+        },
+        {
+          "student_id": "student_119",
+          "created_at": "2025-01-16T11:23:00"
+        },
+        {
+          "student_id": "student_075",
+          "created_at": "2025-01-16T11:48:00"
+        },
+        {
+          "student_id": "student_046",
+          "created_at": "2025-01-16T11:46:00"
+        },
+        {
+          "student_id": "student_050",
+          "created_at": "2025-01-16T11:33:00"
+        },
+        {
+          "student_id": "student_052",
+          "created_at": "2025-01-16T11:28:00"
+        },
+        {
+          "student_id": "student_103",
+          "created_at": "2025-01-16T11:46:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q14",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 2,
+      "student_id": "student_031",
+      "text": "When is a function not differentiable?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-16T10:46:00",
+      "votes": [
+        {
+          "student_id": "student_096",
+          "created_at": "2025-01-16T11:10:00"
+        },
+        {
+          "student_id": "student_070",
+          "created_at": "2025-01-16T10:51:00"
+        },
+        {
+          "student_id": "student_028",
+          "created_at": "2025-01-16T11:19:00"
+        },
+        {
+          "student_id": "student_023",
+          "created_at": "2025-01-16T11:19:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q15",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 3,
+      "student_id": "student_086",
+      "text": "How do we find the equation of a tangent line?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-16T11:00:00",
+      "votes": []
+    },
+    {
+      "question_id": "q16",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 4,
+      "student_id": "student_013",
+      "text": "What's the difference between f'(x) and dy/dx notation?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-16T11:11:00",
+      "votes": [
+        {
+          "student_id": "student_027",
+          "created_at": "2025-01-16T11:27:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-16T11:45:00"
+        },
+        {
+          "student_id": "student_021",
+          "created_at": "2025-01-16T11:51:00"
+        },
+        {
+          "student_id": "student_073",
+          "created_at": "2025-01-16T11:24:00"
+        },
+        {
+          "student_id": "student_099",
+          "created_at": "2025-01-16T11:41:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-16T11:36:00"
+        },
+        {
+          "student_id": "student_012",
+          "created_at": "2025-01-16T11:45:00"
+        },
+        {
+          "student_id": "student_087",
+          "created_at": "2025-01-16T11:49:00"
+        },
+        {
+          "student_id": "student_056",
+          "created_at": "2025-01-16T11:42:00"
+        },
+        {
+          "student_id": "student_106",
+          "created_at": "2025-01-16T11:15:00"
+        },
+        {
+          "student_id": "student_002",
+          "created_at": "2025-01-16T11:45:00"
+        },
+        {
+          "student_id": "student_110",
+          "created_at": "2025-01-16T11:41:00"
+        },
+        {
+          "student_id": "student_001",
+          "created_at": "2025-01-16T11:41:00"
+        },
+        {
+          "student_id": "student_007",
+          "created_at": "2025-01-16T11:31:00"
+        },
+        {
+          "student_id": "student_101",
+          "created_at": "2025-01-16T11:17:00"
+        },
+        {
+          "student_id": "student_090",
+          "created_at": "2025-01-16T11:45:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q17",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 5,
+      "student_id": "student_007",
+      "text": "How do we interpret negative derivatives?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-16T10:05:00",
+      "votes": [
+        {
+          "student_id": "student_111",
+          "created_at": "2025-01-16T10:30:00"
+        },
+        {
+          "student_id": "student_025",
+          "created_at": "2025-01-16T10:45:00"
+        },
+        {
+          "student_id": "student_010",
+          "created_at": "2025-01-16T10:19:00"
+        },
+        {
+          "student_id": "student_116",
+          "created_at": "2025-01-16T10:22:00"
+        },
+        {
+          "student_id": "student_087",
+          "created_at": "2025-01-16T10:23:00"
+        },
+        {
+          "student_id": "student_096",
+          "created_at": "2025-01-16T10:29:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q18",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 6,
+      "student_id": "student_104",
+      "text": "How do derivatives apply to real-world problems?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-16T10:53:00",
+      "votes": [
+        {
+          "student_id": "student_090",
+          "created_at": "2025-01-16T11:07:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q19",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 7,
+      "student_id": "student_107",
+      "text": "What's the derivative of a constant function?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-16T10:30:00",
+      "votes": [
+        {
+          "student_id": "student_092",
+          "created_at": "2025-01-16T11:03:00"
+        },
+        {
+          "student_id": "student_033",
+          "created_at": "2025-01-16T11:01:00"
+        },
+        {
+          "student_id": "student_071",
+          "created_at": "2025-01-16T10:43:00"
+        },
+        {
+          "student_id": "student_087",
+          "created_at": "2025-01-16T10:32:00"
+        },
+        {
+          "student_id": "student_094",
+          "created_at": "2025-01-16T10:46:00"
+        },
+        {
+          "student_id": "student_035",
+          "created_at": "2025-01-16T10:36:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q20",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 8,
+      "student_id": "student_029",
+      "text": "How do we use the limit definition to find derivatives?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-16T11:15:00",
+      "votes": []
+    },
+    {
+      "question_id": "q21",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 9,
+      "student_id": "student_062",
+      "text": "What's the difference between average and instantaneous rate?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-16T10:56:00",
+      "votes": [
+        {
+          "student_id": "student_011",
+          "created_at": "2025-01-16T11:28:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-16T11:17:00"
+        },
+        {
+          "student_id": "student_067",
+          "created_at": "2025-01-16T11:22:00"
+        },
+        {
+          "student_id": "student_098",
+          "created_at": "2025-01-16T11:20:00"
+        },
+        {
+          "student_id": "student_065",
+          "created_at": "2025-01-16T11:09:00"
+        },
+        {
+          "student_id": "student_015",
+          "created_at": "2025-01-16T10:57:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q22",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 10,
+      "student_id": "student_071",
+      "text": "What's the relationship between continuity and differentiability?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-16T10:05:00",
+      "votes": [
+        {
+          "student_id": "student_056",
+          "created_at": "2025-01-16T10:42:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q23",
+      "meeting_id": "calculus_150_day4",
+      "question_number": 11,
+      "student_id": "student_003",
+      "text": "What's the geometric interpretation of the derivative?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-16T10:17:00",
+      "votes": [
+        {
+          "student_id": "student_040",
+          "created_at": "2025-01-16T10:56:00"
+        },
+        {
+          "student_id": "student_057",
+          "created_at": "2025-01-16T10:36:00"
+        },
+        {
+          "student_id": "student_019",
+          "created_at": "2025-01-16T10:43:00"
+        },
+        {
+          "student_id": "student_048",
+          "created_at": "2025-01-16T10:52:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-16T10:46:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q24",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 1,
+      "student_id": "student_018",
+      "text": "What's the power rule for derivatives?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-19T11:09:00",
+      "votes": [
+        {
+          "student_id": "student_038",
+          "created_at": "2025-01-19T11:27:00"
+        },
+        {
+          "student_id": "student_086",
+          "created_at": "2025-01-19T11:24:00"
+        },
+        {
+          "student_id": "student_067",
+          "created_at": "2025-01-19T11:36:00"
+        },
+        {
+          "student_id": "student_015",
+          "created_at": "2025-01-19T11:27:00"
+        },
+        {
+          "student_id": "student_068",
+          "created_at": "2025-01-19T11:23:00"
+        },
+        {
+          "student_id": "student_023",
+          "created_at": "2025-01-19T11:38:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q25",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 2,
+      "student_id": "student_060",
+      "text": "How does the product rule work and why?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-19T10:50:00",
+      "votes": [
+        {
+          "student_id": "student_085",
+          "created_at": "2025-01-19T11:01:00"
+        },
+        {
+          "student_id": "student_013",
+          "created_at": "2025-01-19T11:24:00"
+        },
+        {
+          "student_id": "student_093",
+          "created_at": "2025-01-19T11:30:00"
+        },
+        {
+          "student_id": "student_060",
+          "created_at": "2025-01-19T11:15:00"
+        },
+        {
+          "student_id": "student_047",
+          "created_at": "2025-01-19T11:02:00"
+        },
+        {
+          "student_id": "student_099",
+          "created_at": "2025-01-19T11:16:00"
+        },
+        {
+          "student_id": "student_082",
+          "created_at": "2025-01-19T11:27:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-19T10:51:00"
+        },
+        {
+          "student_id": "student_117",
+          "created_at": "2025-01-19T11:20:00"
+        },
+        {
+          "student_id": "student_045",
+          "created_at": "2025-01-19T11:02:00"
+        },
+        {
+          "student_id": "student_052",
+          "created_at": "2025-01-19T10:51:00"
+        },
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-19T11:24:00"
+        },
+        {
+          "student_id": "student_096",
+          "created_at": "2025-01-19T11:10:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q26",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 3,
+      "student_id": "student_095",
+      "text": "What's the chain rule and how do we apply it?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-19T10:44:00",
+      "votes": [
+        {
+          "student_id": "student_004",
+          "created_at": "2025-01-19T10:56:00"
+        },
+        {
+          "student_id": "student_043",
+          "created_at": "2025-01-19T11:00:00"
+        },
+        {
+          "student_id": "student_064",
+          "created_at": "2025-01-19T11:04:00"
+        },
+        {
+          "student_id": "student_111",
+          "created_at": "2025-01-19T11:05:00"
+        },
+        {
+          "student_id": "student_027",
+          "created_at": "2025-01-19T10:47:00"
+        },
+        {
+          "student_id": "student_075",
+          "created_at": "2025-01-19T10:53:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q27",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 4,
+      "student_id": "student_057",
+      "text": "How do we differentiate inverse functions?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-19T10:32:00",
+      "votes": [
+        {
+          "student_id": "student_062",
+          "created_at": "2025-01-19T10:38:00"
+        },
+        {
+          "student_id": "student_050",
+          "created_at": "2025-01-19T10:43:00"
+        },
+        {
+          "student_id": "student_097",
+          "created_at": "2025-01-19T10:57:00"
+        },
+        {
+          "student_id": "student_113",
+          "created_at": "2025-01-19T11:02:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q28",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 5,
+      "student_id": "student_031",
+      "text": "How do we differentiate exponential and logarithmic functions?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-19T10:37:00",
+      "votes": []
+    },
+    {
+      "question_id": "q29",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 6,
+      "student_id": "student_043",
+      "text": "How do we verify our derivative calculations?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-19T10:33:00",
+      "votes": [
+        {
+          "student_id": "student_040",
+          "created_at": "2025-01-19T10:50:00"
+        },
+        {
+          "student_id": "student_090",
+          "created_at": "2025-01-19T11:12:00"
+        },
+        {
+          "student_id": "student_001",
+          "created_at": "2025-01-19T10:50:00"
+        },
+        {
+          "student_id": "student_025",
+          "created_at": "2025-01-19T10:35:00"
+        },
+        {
+          "student_id": "student_074",
+          "created_at": "2025-01-19T10:54:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q30",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 7,
+      "student_id": "student_071",
+      "text": "What's implicit vs explicit differentiation?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-19T10:43:00",
+      "votes": [
+        {
+          "student_id": "student_069",
+          "created_at": "2025-01-19T11:14:00"
+        },
+        {
+          "student_id": "student_108",
+          "created_at": "2025-01-19T10:58:00"
+        },
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-19T11:21:00"
+        },
+        {
+          "student_id": "student_083",
+          "created_at": "2025-01-19T11:09:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q31",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 8,
+      "student_id": "student_086",
+      "text": "What are the derivatives of trigonometric functions?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-19T10:53:00",
+      "votes": [
+        {
+          "student_id": "student_081",
+          "created_at": "2025-01-19T11:21:00"
+        },
+        {
+          "student_id": "student_024",
+          "created_at": "2025-01-19T11:07:00"
+        },
+        {
+          "student_id": "student_100",
+          "created_at": "2025-01-19T11:33:00"
+        },
+        {
+          "student_id": "student_092",
+          "created_at": "2025-01-19T11:11:00"
+        },
+        {
+          "student_id": "student_032",
+          "created_at": "2025-01-19T11:27:00"
+        },
+        {
+          "student_id": "student_064",
+          "created_at": "2025-01-19T11:01:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-19T11:12:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q32",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 9,
+      "student_id": "student_080",
+      "text": "When do we need to use multiple rules together?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-19T11:23:00",
+      "votes": [
+        {
+          "student_id": "student_048",
+          "created_at": "2025-01-19T11:38:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q33",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 10,
+      "student_id": "student_038",
+      "text": "When do we use the quotient rule?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-19T10:30:00",
+      "votes": [
+        {
+          "student_id": "student_085",
+          "created_at": "2025-01-19T11:06:00"
+        },
+        {
+          "student_id": "student_070",
+          "created_at": "2025-01-19T10:59:00"
+        },
+        {
+          "student_id": "student_119",
+          "created_at": "2025-01-19T10:55:00"
+        },
+        {
+          "student_id": "student_083",
+          "created_at": "2025-01-19T10:36:00"
+        },
+        {
+          "student_id": "student_097",
+          "created_at": "2025-01-19T11:00:00"
+        },
+        {
+          "student_id": "student_114",
+          "created_at": "2025-01-19T10:40:00"
+        },
+        {
+          "student_id": "student_071",
+          "created_at": "2025-01-19T11:08:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-19T11:03:00"
+        },
+        {
+          "student_id": "student_082",
+          "created_at": "2025-01-19T11:09:00"
+        },
+        {
+          "student_id": "student_054",
+          "created_at": "2025-01-19T10:43:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q34",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 11,
+      "student_id": "student_024",
+      "text": "How do we handle nested function compositions?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-19T10:44:00",
+      "votes": [
+        {
+          "student_id": "student_001",
+          "created_at": "2025-01-19T10:51:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q35",
+      "meeting_id": "calculus_150_day7",
+      "question_number": 12,
+      "student_id": "student_033",
+      "text": "How do we differentiate composite functions?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-19T10:35:00",
+      "votes": []
+    },
+    {
+      "question_id": "q36",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 1,
+      "student_id": "student_087",
+      "text": "What are critical points and how do we find them?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-22T10:49:00",
+      "votes": [
+        {
+          "student_id": "student_106",
+          "created_at": "2025-01-22T11:16:00"
+        },
+        {
+          "student_id": "student_117",
+          "created_at": "2025-01-22T11:15:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-22T11:24:00"
+        },
+        {
+          "student_id": "student_011",
+          "created_at": "2025-01-22T11:04:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q37",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 2,
+      "student_id": "student_033",
+      "text": "How do we solve applied optimization problems?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-22T10:36:00",
+      "votes": [
+        {
+          "student_id": "student_090",
+          "created_at": "2025-01-22T10:58:00"
+        },
+        {
+          "student_id": "student_082",
+          "created_at": "2025-01-22T10:51:00"
+        },
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-22T10:43:00"
+        },
+        {
+          "student_id": "student_059",
+          "created_at": "2025-01-22T11:01:00"
+        },
+        {
+          "student_id": "student_055",
+          "created_at": "2025-01-22T10:54:00"
+        },
+        {
+          "student_id": "student_010",
+          "created_at": "2025-01-22T11:00:00"
+        },
+        {
+          "student_id": "student_112",
+          "created_at": "2025-01-22T11:16:00"
+        },
+        {
+          "student_id": "student_100",
+          "created_at": "2025-01-22T10:42:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-22T11:02:00"
+        },
+        {
+          "student_id": "student_045",
+          "created_at": "2025-01-22T11:05:00"
+        },
+        {
+          "student_id": "student_054",
+          "created_at": "2025-01-22T11:00:00"
+        },
+        {
+          "student_id": "student_088",
+          "created_at": "2025-01-22T11:10:00"
+        },
+        {
+          "student_id": "student_110",
+          "created_at": "2025-01-22T11:10:00"
+        },
+        {
+          "student_id": "student_093",
+          "created_at": "2025-01-22T10:45:00"
+        },
+        {
+          "student_id": "student_008",
+          "created_at": "2025-01-22T11:10:00"
+        },
+        {
+          "student_id": "student_102",
+          "created_at": "2025-01-22T10:57:00"
+        },
+        {
+          "student_id": "student_084",
+          "created_at": "2025-01-22T10:41:00"
+        },
+        {
+          "student_id": "student_113",
+          "created_at": "2025-01-22T10:53:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q38",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 3,
+      "student_id": "student_074",
+      "text": "How do we determine intervals of increase/decrease?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-22T10:21:00",
+      "votes": [
+        {
+          "student_id": "student_105",
+          "created_at": "2025-01-22T10:39:00"
+        },
+        {
+          "student_id": "student_040",
+          "created_at": "2025-01-22T10:51:00"
+        },
+        {
+          "student_id": "student_055",
+          "created_at": "2025-01-22T10:25:00"
+        },
+        {
+          "student_id": "student_067",
+          "created_at": "2025-01-22T10:49:00"
+        },
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-22T10:25:00"
+        },
+        {
+          "student_id": "student_102",
+          "created_at": "2025-01-22T10:40:00"
+        },
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-22T10:27:00"
+        },
+        {
+          "student_id": "student_068",
+          "created_at": "2025-01-22T10:28:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-22T10:53:00"
+        },
+        {
+          "student_id": "student_045",
+          "created_at": "2025-01-22T10:55:00"
+        },
+        {
+          "student_id": "student_010",
+          "created_at": "2025-01-22T10:28:00"
+        },
+        {
+          "student_id": "student_063",
+          "created_at": "2025-01-22T10:29:00"
+        },
+        {
+          "student_id": "student_090",
+          "created_at": "2025-01-22T10:46:00"
+        },
+        {
+          "student_id": "student_038",
+          "created_at": "2025-01-22T10:50:00"
+        },
+        {
+          "student_id": "student_070",
+          "created_at": "2025-01-22T11:00:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q39",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 4,
+      "student_id": "student_034",
+      "text": "How do we sketch curves using derivative information?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-22T11:23:00",
+      "votes": [
+        {
+          "student_id": "student_006",
+          "created_at": "2025-01-22T11:59:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-22T11:47:00"
+        },
+        {
+          "student_id": "student_113",
+          "created_at": "2025-01-22T11:52:00"
+        },
+        {
+          "student_id": "student_067",
+          "created_at": "2025-01-22T11:34:00"
+        },
+        {
+          "student_id": "student_082",
+          "created_at": "2025-01-22T11:36:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q40",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 5,
+      "student_id": "student_047",
+      "text": "What's the second derivative test for extrema?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-22T11:02:00",
+      "votes": [
+        {
+          "student_id": "student_055",
+          "created_at": "2025-01-22T11:16:00"
+        },
+        {
+          "student_id": "student_106",
+          "created_at": "2025-01-22T11:36:00"
+        },
+        {
+          "student_id": "student_034",
+          "created_at": "2025-01-22T11:33:00"
+        },
+        {
+          "student_id": "student_030",
+          "created_at": "2025-01-22T11:33:00"
+        },
+        {
+          "student_id": "student_031",
+          "created_at": "2025-01-22T11:27:00"
+        },
+        {
+          "student_id": "student_064",
+          "created_at": "2025-01-22T11:33:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q41",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 6,
+      "student_id": "student_032",
+      "text": "What's concavity and how do we find inflection points?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-22T10:15:00",
+      "votes": [
+        {
+          "student_id": "student_026",
+          "created_at": "2025-01-22T10:23:00"
+        },
+        {
+          "student_id": "student_066",
+          "created_at": "2025-01-22T10:51:00"
+        },
+        {
+          "student_id": "student_098",
+          "created_at": "2025-01-22T10:31:00"
+        },
+        {
+          "student_id": "student_088",
+          "created_at": "2025-01-22T10:33:00"
+        },
+        {
+          "student_id": "student_057",
+          "created_at": "2025-01-22T10:43:00"
+        },
+        {
+          "student_id": "student_035",
+          "created_at": "2025-01-22T10:33:00"
+        },
+        {
+          "student_id": "student_120",
+          "created_at": "2025-01-22T10:38:00"
+        },
+        {
+          "student_id": "student_053",
+          "created_at": "2025-01-22T10:29:00"
+        },
+        {
+          "student_id": "student_033",
+          "created_at": "2025-01-22T10:17:00"
+        },
+        {
+          "student_id": "student_060",
+          "created_at": "2025-01-22T10:24:00"
+        },
+        {
+          "student_id": "student_040",
+          "created_at": "2025-01-22T10:37:00"
+        },
+        {
+          "student_id": "student_087",
+          "created_at": "2025-01-22T10:43:00"
+        },
+        {
+          "student_id": "student_029",
+          "created_at": "2025-01-22T10:21:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-22T10:24:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q42",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 7,
+      "student_id": "student_093",
+      "text": "How do we identify absolute vs relative extrema?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-22T11:04:00",
+      "votes": [
+        {
+          "student_id": "student_083",
+          "created_at": "2025-01-22T11:25:00"
+        },
+        {
+          "student_id": "student_097",
+          "created_at": "2025-01-22T11:14:00"
+        },
+        {
+          "student_id": "student_007",
+          "created_at": "2025-01-22T11:17:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-22T11:38:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q43",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 8,
+      "student_id": "student_041",
+      "text": "How do asymptotes relate to curve sketching?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-22T10:43:00",
+      "votes": [
+        {
+          "student_id": "student_079",
+          "created_at": "2025-01-22T11:05:00"
+        },
+        {
+          "student_id": "student_035",
+          "created_at": "2025-01-22T10:49:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-22T10:59:00"
+        },
+        {
+          "student_id": "student_059",
+          "created_at": "2025-01-22T11:08:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-22T10:46:00"
+        },
+        {
+          "student_id": "student_081",
+          "created_at": "2025-01-22T11:03:00"
+        },
+        {
+          "student_id": "student_046",
+          "created_at": "2025-01-22T11:01:00"
+        },
+        {
+          "student_id": "student_043",
+          "created_at": "2025-01-22T11:17:00"
+        },
+        {
+          "student_id": "student_028",
+          "created_at": "2025-01-22T11:10:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q44",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 9,
+      "student_id": "student_091",
+      "text": "How do we solve optimization problems?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-22T10:49:00",
+      "votes": [
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-22T10:56:00"
+        },
+        {
+          "student_id": "student_120",
+          "created_at": "2025-01-22T11:22:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q45",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 10,
+      "student_id": "student_021",
+      "text": "How do we find maximum and minimum values?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-22T11:05:00",
+      "votes": [
+        {
+          "student_id": "student_096",
+          "created_at": "2025-01-22T11:19:00"
+        },
+        {
+          "student_id": "student_071",
+          "created_at": "2025-01-22T11:43:00"
+        },
+        {
+          "student_id": "student_007",
+          "created_at": "2025-01-22T11:45:00"
+        },
+        {
+          "student_id": "student_078",
+          "created_at": "2025-01-22T11:15:00"
+        },
+        {
+          "student_id": "student_117",
+          "created_at": "2025-01-22T11:37:00"
+        },
+        {
+          "student_id": "student_065",
+          "created_at": "2025-01-22T11:21:00"
+        },
+        {
+          "student_id": "student_028",
+          "created_at": "2025-01-22T11:44:00"
+        },
+        {
+          "student_id": "student_053",
+          "created_at": "2025-01-22T11:29:00"
+        },
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-22T11:41:00"
+        },
+        {
+          "student_id": "student_049",
+          "created_at": "2025-01-22T11:34:00"
+        },
+        {
+          "student_id": "student_058",
+          "created_at": "2025-01-22T11:40:00"
+        },
+        {
+          "student_id": "student_112",
+          "created_at": "2025-01-22T11:18:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q46",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 11,
+      "student_id": "student_033",
+      "text": "What's the first derivative test?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-22T11:18:00",
+      "votes": [
+        {
+          "student_id": "student_110",
+          "created_at": "2025-01-22T11:40:00"
+        },
+        {
+          "student_id": "student_076",
+          "created_at": "2025-01-22T11:42:00"
+        },
+        {
+          "student_id": "student_038",
+          "created_at": "2025-01-22T11:27:00"
+        },
+        {
+          "student_id": "student_069",
+          "created_at": "2025-01-22T11:32:00"
+        },
+        {
+          "student_id": "student_055",
+          "created_at": "2025-01-22T11:58:00"
+        },
+        {
+          "student_id": "student_107",
+          "created_at": "2025-01-22T11:53:00"
+        },
+        {
+          "student_id": "student_090",
+          "created_at": "2025-01-22T11:40:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-22T11:24:00"
+        },
+        {
+          "student_id": "student_002",
+          "created_at": "2025-01-22T11:51:00"
+        },
+        {
+          "student_id": "student_044",
+          "created_at": "2025-01-22T11:33:00"
+        },
+        {
+          "student_id": "student_008",
+          "created_at": "2025-01-22T11:39:00"
+        },
+        {
+          "student_id": "student_066",
+          "created_at": "2025-01-22T11:39:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-22T11:48:00"
+        },
+        {
+          "student_id": "student_092",
+          "created_at": "2025-01-22T11:38:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q47",
+      "meeting_id": "calculus_150_day10",
+      "question_number": 12,
+      "student_id": "student_062",
+      "text": "What's the mean value theorem?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-22T10:25:00",
+      "votes": []
+    },
+    {
+      "question_id": "q48",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 1,
+      "student_id": "student_025",
+      "text": "How do we verify implicit differentiation solutions?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T10:34:00",
+      "votes": []
+    },
+    {
+      "question_id": "q49",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 2,
+      "student_id": "student_068",
+      "text": "What's the difference between explicit and implicit functions?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T10:17:00",
+      "votes": [
+        {
+          "student_id": "student_084",
+          "created_at": "2025-01-25T10:21:00"
+        },
+        {
+          "student_id": "student_062",
+          "created_at": "2025-01-25T10:28:00"
+        },
+        {
+          "student_id": "student_002",
+          "created_at": "2025-01-25T10:46:00"
+        },
+        {
+          "student_id": "student_088",
+          "created_at": "2025-01-25T10:48:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q50",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 3,
+      "student_id": "student_019",
+      "text": "How do we solve for dy/dx in implicit equations?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T10:17:00",
+      "votes": [
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-25T10:27:00"
+        },
+        {
+          "student_id": "student_103",
+          "created_at": "2025-01-25T10:49:00"
+        },
+        {
+          "student_id": "student_091",
+          "created_at": "2025-01-25T10:34:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q51",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 4,
+      "student_id": "student_048",
+      "text": "How do related rates apply to real-world scenarios?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-25T11:05:00",
+      "votes": [
+        {
+          "student_id": "student_089",
+          "created_at": "2025-01-25T11:21:00"
+        },
+        {
+          "student_id": "student_015",
+          "created_at": "2025-01-25T11:36:00"
+        },
+        {
+          "student_id": "student_031",
+          "created_at": "2025-01-25T11:10:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q52",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 5,
+      "student_id": "student_056",
+      "text": "When do we use implicit differentiation?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T11:10:00",
+      "votes": [
+        {
+          "student_id": "student_019",
+          "created_at": "2025-01-25T11:20:00"
+        },
+        {
+          "student_id": "student_020",
+          "created_at": "2025-01-25T11:39:00"
+        },
+        {
+          "student_id": "student_056",
+          "created_at": "2025-01-25T11:23:00"
+        },
+        {
+          "student_id": "student_059",
+          "created_at": "2025-01-25T11:45:00"
+        },
+        {
+          "student_id": "student_072",
+          "created_at": "2025-01-25T11:23:00"
+        },
+        {
+          "student_id": "student_036",
+          "created_at": "2025-01-25T11:18:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q53",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 6,
+      "student_id": "student_064",
+      "text": "What are related rates problems?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T10:27:00",
+      "votes": [
+        {
+          "student_id": "student_008",
+          "created_at": "2025-01-25T10:32:00"
+        },
+        {
+          "student_id": "student_056",
+          "created_at": "2025-01-25T10:38:00"
+        },
+        {
+          "student_id": "student_057",
+          "created_at": "2025-01-25T10:43:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q54",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 7,
+      "student_id": "student_073",
+      "text": "How do we differentiate implicit equations?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T10:47:00",
+      "votes": [
+        {
+          "student_id": "student_038",
+          "created_at": "2025-01-25T10:48:00"
+        },
+        {
+          "student_id": "student_018",
+          "created_at": "2025-01-25T11:19:00"
+        },
+        {
+          "student_id": "student_003",
+          "created_at": "2025-01-25T11:24:00"
+        },
+        {
+          "student_id": "student_070",
+          "created_at": "2025-01-25T11:17:00"
+        },
+        {
+          "student_id": "student_104",
+          "created_at": "2025-01-25T11:09:00"
+        },
+        {
+          "student_id": "student_042",
+          "created_at": "2025-01-25T11:17:00"
+        },
+        {
+          "student_id": "student_099",
+          "created_at": "2025-01-25T11:10:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q55",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 8,
+      "student_id": "student_101",
+      "text": "How do we set up related rates equations?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T10:09:00",
+      "votes": [
+        {
+          "student_id": "student_023",
+          "created_at": "2025-01-25T10:37:00"
+        },
+        {
+          "student_id": "student_077",
+          "created_at": "2025-01-25T10:36:00"
+        },
+        {
+          "student_id": "student_066",
+          "created_at": "2025-01-25T10:18:00"
+        },
+        {
+          "student_id": "student_005",
+          "created_at": "2025-01-25T10:40:00"
+        },
+        {
+          "student_id": "student_039",
+          "created_at": "2025-01-25T10:42:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q56",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 9,
+      "student_id": "student_106",
+      "text": "How do we find the slope of implicitly defined curves?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T11:13:00",
+      "votes": [
+        {
+          "student_id": "student_068",
+          "created_at": "2025-01-25T11:43:00"
+        },
+        {
+          "student_id": "student_044",
+          "created_at": "2025-01-25T11:47:00"
+        },
+        {
+          "student_id": "student_108",
+          "created_at": "2025-01-25T11:25:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q57",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 10,
+      "student_id": "student_051",
+      "text": "How do we find dy/dx when y is not isolated?",
+      "status": "posted",
+      "is_answered_in_class": false,
+      "created_at": "2025-01-25T10:25:00",
+      "votes": [
+        {
+          "student_id": "student_098",
+          "created_at": "2025-01-25T11:01:00"
+        },
+        {
+          "student_id": "student_019",
+          "created_at": "2025-01-25T10:55:00"
+        },
+        {
+          "student_id": "student_035",
+          "created_at": "2025-01-25T11:01:00"
+        },
+        {
+          "student_id": "student_089",
+          "created_at": "2025-01-25T11:00:00"
+        },
+        {
+          "student_id": "student_013",
+          "created_at": "2025-01-25T10:55:00"
+        }
+      ]
+    },
+    {
+      "question_id": "q58",
+      "meeting_id": "calculus_150_day13",
+      "question_number": 11,
+      "student_id": "student_077",
+      "text": "What's the strategy for word problems in related rates?",
+      "status": "posted",
+      "is_answered_in_class": true,
+      "created_at": "2025-01-25T10:20:00",
+      "votes": [
+        {
+          "student_id": "student_011",
+          "created_at": "2025-01-25T10:24:00"
+        },
+        {
+          "student_id": "student_026",
+          "created_at": "2025-01-25T10:33:00"
+        },
+        {
+          "student_id": "student_071",
+          "created_at": "2025-01-25T10:36:00"
+        },
+        {
+          "student_id": "student_061",
+          "created_at": "2025-01-25T10:21:00"
+        },
+        {
+          "student_id": "student_085",
+          "created_at": "2025-01-25T10:35:00"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "instructors": [
+    {
+      "username": "rachel_carson",
+      "email": "rachel.carson@university.edu",
+      "display_name": "Dr. Rachel Carson",
+      "password": "demo123",
+      "role": "INSTRUCTOR",
+      "is_active": true,
+      "created_at": "2024-12-14T00:00:00",
+      "api_key": "rmh_GwV9MzzdDN86ZStQ84De5q109A4PFgG6DtnO4zIzTac",
+      "api_key_name": "Rachel's Demo API Key",
+      "specialization": "Cell Biology"
+    }
+  ]
+}

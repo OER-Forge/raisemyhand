@@ -1,0 +1,74 @@
+{
+  "meetings": [
+    {
+      "meeting_id": "computer_science_101_day1",
+      "class_id": "computer_science_101_main",
+      "instructor_username": "ada_lovelace",
+      "meeting_code": "oKPPS9emzMuhzJas4xFZvt1YWWfKjRsy",
+      "instructor_code": "5Rdzmq9929VpIZj5Qx6ShLMAdfw5vBTW",
+      "title": "Day 1: Variables, Data Types, and Operators",
+      "description": "Basic programming concepts and syntax",
+      "password": null,
+      "created_at": "2025-01-13T09:00:00",
+      "started_at": "2025-01-13T10:00:00",
+      "is_active": true,
+      "ended_at": null
+    },
+    {
+      "meeting_id": "computer_science_101_day4",
+      "class_id": "computer_science_101_main",
+      "instructor_username": "ada_lovelace",
+      "meeting_code": "2nps2vwViGKTK8Abo9Tix83KpcB6GKMl",
+      "instructor_code": "Z5zxkEVhHHCoYDTDZ1C4Fl1K2xIiSxmK",
+      "title": "Day 4: Control Flow: Conditionals and Loops",
+      "description": "If statements, for loops, while loops",
+      "password": null,
+      "created_at": "2025-01-16T09:00:00",
+      "started_at": "2025-01-16T10:00:00",
+      "is_active": true,
+      "ended_at": null
+    },
+    {
+      "meeting_id": "computer_science_101_day7",
+      "class_id": "computer_science_101_main",
+      "instructor_username": "ada_lovelace",
+      "meeting_code": "Ssu4zTogT0KiMCsVJXR5Ni5bW8BZ1gAE",
+      "instructor_code": "4SpxgWNuKb5tNE8zynol98uWGSDOIDML",
+      "title": "Day 7: Functions and Modularity",
+      "description": "Function definition, parameters, return values",
+      "password": null,
+      "created_at": "2025-01-19T09:00:00",
+      "started_at": "2025-01-19T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-19T11:30:00"
+    },
+    {
+      "meeting_id": "computer_science_101_day10",
+      "class_id": "computer_science_101_main",
+      "instructor_username": "ada_lovelace",
+      "meeting_code": "PwYy3YB693AVneO9Is8viF8lH3nyDkrn",
+      "instructor_code": "7mw5hLM4FPSif4etwSDhZVgJVD4Q7EAo",
+      "title": "Day 10: Lists and Data Structures",
+      "description": "Arrays, lists, dictionaries, tuples",
+      "password": null,
+      "created_at": "2025-01-22T09:00:00",
+      "started_at": "2025-01-22T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-22T11:30:00"
+    },
+    {
+      "meeting_id": "computer_science_101_day13",
+      "class_id": "computer_science_101_main",
+      "instructor_username": "ada_lovelace",
+      "meeting_code": "l1kjnwWREaP1Y1U4Smm7CSdjngAVx5Tz",
+      "instructor_code": "Nren3ZQsRSf7MSBwupduPogllnXhN0Hy",
+      "title": "Day 13: File I/O and Exception Handling",
+      "description": "Reading/writing files, error handling",
+      "password": null,
+      "created_at": "2025-01-25T09:00:00",
+      "started_at": "2025-01-25T10:00:00",
+      "is_active": false,
+      "ended_at": "2025-01-25T11:30:00"
+    }
+  ]
+}
