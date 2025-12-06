@@ -89,6 +89,7 @@ def create_question(
                     "question": {
                         "id": db_question.id,
                         "meeting_id": db_question.meeting_id,
+                        "student_id": db_question.student_id,
                         "question_number": db_question.question_number,
                         "text": db_question.text,
                         "sanitized_text": db_question.sanitized_text,
@@ -96,6 +97,8 @@ def create_question(
                         "flagged_reason": db_question.flagged_reason,
                         "upvotes": db_question.upvotes,
                         "is_answered_in_class": db_question.is_answered_in_class,
+                        "has_written_answer": db_question.has_written_answer,
+                        "answer": None,
                         "created_at": db_question.created_at.isoformat()
                     }
                 }
@@ -122,6 +125,75 @@ def create_question(
                 raise HTTPException(status_code=500, detail="Failed to create question")
 
     return db_question
+
+
+@router.put("/api/questions/{question_id}/edit")
+def edit_question(
+    question_id: int,
+    question_update: QuestionCreate,
+    student_id: str,
+    db: DBSession = Depends(get_db)
+):
+    """Edit a question. Only allowed within 10 minutes by the original submitter."""
+    question = db.query(Question).filter(Question.id == question_id).first()
+    
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    
+    # Verify ownership
+    if question.student_id != student_id:
+        raise HTTPException(status_code=403, detail="You can only edit your own questions")
+    
+    # Check time limit (10 minutes)
+    from datetime import datetime, timedelta
+    time_since_creation = datetime.utcnow() - question.created_at
+    if time_since_creation > timedelta(minutes=10):
+        raise HTTPException(status_code=403, detail="Questions can only be edited within 10 minutes of submission")
+    
+    # Check for profanity in updated text
+    import re
+    text_without_markdown = re.sub(r'[*_`~\[\]()#]', ' ', question_update.text)
+    contains_profanity = profanity.contains_profanity(text_without_markdown.lower())
+    question_status = "flagged" if contains_profanity else "approved"
+    flagged_reason = "profanity" if contains_profanity else None
+    sanitized = profanity.censor(question_update.text) if contains_profanity else question_update.text
+    
+    try:
+        # Update question text
+        question.text = question_update.text
+        question.sanitized_text = sanitized
+        question.status = question_status
+        question.flagged_reason = flagged_reason
+        
+        db.commit()
+        db.refresh(question)
+        log_database_operation(logger, "UPDATE", "questions", question.id, success=True)
+        
+        # Broadcast update to all connected clients
+        try:
+            from main import manager
+            meeting = db.query(ClassMeeting).filter(ClassMeeting.id == question.meeting_id).first()
+            if meeting:
+                broadcast_message = {
+                    "type": "question_updated",
+                    "question_id": question.id,
+                    "text": question.text,
+                    "sanitized_text": question.sanitized_text,
+                    "status": question.status,
+                    "flagged_reason": question.flagged_reason
+                }
+                try:
+                    asyncio.create_task(manager.broadcast(broadcast_message, meeting.meeting_code))
+                except RuntimeError:
+                    logger.debug("Could not create async task for broadcast")
+        except Exception as e:
+            logger.warning(f"Broadcast error (non-critical): {e}")
+        
+        return question
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating question: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update question")
 
 
 @router.post("/api/questions/{question_id}/vote")

@@ -149,12 +149,42 @@
         </div>
     </div>
 
+    <!-- Edit Question Modal -->
+    <div class="modal" id="edit-question-modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2>Edit Your Question</h2>
+            <p style="background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-style: italic; color: #7f8c8d;">
+                You can edit your question within 10 minutes of submission.
+            </p>
+            <form id="edit-question-form" onsubmit="submitEditQuestion(event)">
+                <input type="hidden" id="edit-question-id">
+                <div class="form-group">
+                    <label for="edit-question-text">Question Text</label>
+                    <textarea
+                        id="edit-question-text"
+                        name="text"
+                        rows="6"
+                        placeholder="Enter your question..."
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; resize: vertical;"
+                        required
+                    ></textarea>
+                    <small style="color: #7f8c8d; display: block; margin-top: 8px;">
+                        You can use markdown for formatting. Changes will be visible to everyone immediately.
+                    </small>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditQuestionDialog()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Markdown libraries for rendering questions and answers -->
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     
     <!-- MathJax for rendering mathematical equations -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script>
         window.MathJax = {
             tex: {
@@ -170,7 +200,7 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <!-- Profanity filter for client-side warnings (browser-compatible) -->
-    <script src="https://cdn.jsdelivr.net/npm/leo-profanity@1.7.0/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leo-profanity@1.8.0/src/index.min.js"></script>
 
     <script src="/static/js/shared.js"></script>
     <script src="/static/js/student.js"></script>

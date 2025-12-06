@@ -166,6 +166,16 @@ function handleWebSocketMessage(message) {
             question.is_answered_in_class = message.is_answered_in_class || message.is_answered;
             renderQuestions();
         }
+    } else if (message.type === 'question_updated') {
+        // Update question text
+        const question = meetingData.questions.find(q => q.id === message.question_id);
+        if (question) {
+            question.text = message.text;
+            question.sanitized_text = message.sanitized_text;
+            question.status = message.status;
+            question.flagged_reason = message.flagged_reason;
+            renderQuestions();
+        }
     }
 }
 
@@ -237,6 +247,11 @@ function renderQuestions() {
         const questionNumber = q.question_number || '?';
         const voteLabel = hasUpvoted ? 'Remove upvote' : 'Upvote question';
 
+        // Check if this is the student's own question and if they can still edit it
+        const isMyQuestion = q.student_id === studentId;
+        const timeSinceCreation = new Date() - new Date(q.created_at);
+        const canEdit = isMyQuestion && timeSinceCreation < (10 * 60 * 1000); // 10 minutes in milliseconds
+
         // Check if question has a published written answer
         const hasWrittenAnswer = q.answer && q.answer.is_approved;
         const answerText = hasWrittenAnswer ? q.answer.answer_text : '';
@@ -248,9 +263,9 @@ function renderQuestions() {
         const answerHtml = hasWrittenAnswer ? renderMarkdownFull(answerText) : '';
 
         return `
-            <article class="question-card ${answeredClass}" role="article">
+            <article class="question-card ${answeredClass} ${isMyQuestion ? 'my-question' : ''}" role="article">
                 <div class="question-header">
-                    <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}</div>
+                    <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}${isMyQuestion ? ' <span style="background: #3498db; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 4px;">MY QUESTION</span>' : ''}</div>
                     <div class="question-content">
                         <div class="question-text markdown-content">${questionHtml}</div>
                         <div class="question-meta">
@@ -259,6 +274,7 @@ function renderQuestions() {
                     </div>
                     <div class="question-actions">
                         ${isAnswered ? '<span class="answer-badge answered" title="This question was answered in class">✓ Answered</span>' : ''}
+                        ${canEdit ? `<button class="btn btn-sm btn-secondary" onclick="editQuestion(${q.id}, '${escapeHtml(q.text).replace(/'/g, "\\'")}')">✏️ Edit</button>` : ''}
                         <button class="upvote-btn ${upvotedClass}"
                                 onclick="toggleVote(${q.id})"
                                 aria-label="${voteLabel}"
@@ -300,6 +316,11 @@ function renderQuestions() {
             const questionNumber = q.question_number || '?';
             const voteLabel = hasUpvoted ? 'Remove upvote' : 'Upvote question';
 
+            // Check if this is the student's own question and if they can still edit it
+            const isMyQuestion = q.student_id === studentId;
+            const timeSinceCreation = new Date() - new Date(q.created_at);
+            const canEdit = isMyQuestion && timeSinceCreation < (10 * 60 * 1000); // 10 minutes in milliseconds
+
             // Check if question has a published written answer
             const hasWrittenAnswer = q.answer && q.answer.is_approved;
             const answerText = hasWrittenAnswer ? q.answer.answer_text : '';
@@ -311,9 +332,9 @@ function renderQuestions() {
             const answerHtml = hasWrittenAnswer ? renderMarkdownFull(answerText) : '';
 
             return `
-                <article class="question-card ${answeredClass}" role="article">
+                <article class="question-card ${answeredClass} ${isMyQuestion ? 'my-question' : ''}" role="article">
                     <div class="question-header">
-                        <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}</div>
+                        <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}${isMyQuestion ? ' <span style="background: #3498db; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 4px;">MY QUESTION</span>' : ''}</div>
                         <div class="question-content">
                             <div class="question-text markdown-content">${questionHtml}</div>
                             <div class="question-meta">
@@ -322,6 +343,7 @@ function renderQuestions() {
                         </div>
                         <div class="question-actions">
                             ${isAnswered ? '<span class="answer-badge answered" title="This question was answered in class">✓ Answered</span>' : ''}
+                            ${canEdit ? `<button class="btn btn-sm btn-secondary" onclick="editQuestion(${q.id}, '${escapeHtml(q.text).replace(/'/g, "\\'")}')">✏️ Edit</button>` : ''}
                             <button class="upvote-btn ${upvotedClass}"
                                     onclick="toggleVote(${q.id})"
                                     aria-label="${voteLabel}"
@@ -424,8 +446,8 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
     showButtonLoading(submitBtn);
 
     try {
-        // v2 API: POST to /api/meetings/{code}/questions
-        const response = await fetch(`/api/meetings/${meetingCode}/questions`, {
+        // v2 API: POST to /api/meetings/{code}/questions with student_id
+        const response = await fetch(`/api/meetings/${meetingCode}/questions?student_id=${studentId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -450,6 +472,72 @@ document.getElementById('question-form').addEventListener('submit', async (e) =>
         hideButtonLoading(submitBtn);
     }
 });
+
+// Edit question functions
+function editQuestion(questionId, currentText) {
+    // Store question ID and set current text
+    document.getElementById('edit-question-id').value = questionId;
+    document.getElementById('edit-question-text').value = currentText;
+    
+    // Show modal
+    const modal = document.getElementById('edit-question-modal');
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    
+    // Focus on textarea
+    setTimeout(() => {
+        document.getElementById('edit-question-text').focus();
+    }, 100);
+}
+
+function closeEditQuestionDialog() {
+    const modal = document.getElementById('edit-question-modal');
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    
+    // Clear form
+    document.getElementById('edit-question-form').reset();
+}
+
+async function submitEditQuestion(event) {
+    event.preventDefault();
+    
+    const questionId = document.getElementById('edit-question-id').value;
+    const newText = document.getElementById('edit-question-text').value.trim();
+    
+    if (!newText) {
+        showNotification('Question text cannot be empty', 'error');
+        return;
+    }
+    
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    showButtonLoading(submitBtn);
+    
+    try {
+        const response = await fetch(`/api/questions/${questionId}/edit?student_id=${studentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: newText })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.detail || 'Failed to edit question');
+        }
+        
+        showNotification('Question updated successfully!', 'success');
+        closeEditQuestionDialog();
+        
+        // Update will be handled by WebSocket broadcast
+    } catch (error) {
+        console.error('Question edit error:', error);
+        showNotification('Failed to edit question: ' + error.message, 'error');
+    } finally {
+        hideButtonLoading(submitBtn);
+    }
+}
 
 // showNotification() and escapeHtml() are provided by shared.js
 
