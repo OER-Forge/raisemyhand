@@ -41,6 +41,8 @@
             align-items: center;
             justify-content: space-between;
             gap: 2rem;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
         }
 
         .header-content {
@@ -64,19 +66,7 @@
         }
 
         .qr-code-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .qr-code-container img {
-            width: 140px;
-            height: 140px;
-            border: 3px solid #3498db;
-            border-radius: 8px;
-            background: white;
-            padding: 4px;
+            display: none;
         }
 
         .activity-section {
@@ -88,22 +78,32 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-height: 0;
         }
 
         .questions-section h3 {
             color: #2c3e50;
-            margin-bottom: 1.5rem;
-            font-size: 2.5rem;
+            margin-bottom: clamp(0.8rem, 0.5rem + 1.3vh, 1.5rem);
+            font-size: clamp(1.6rem, 1.2rem + 1.3vh, 2.5rem);
             font-weight: 600;
+        }
+        
+        /* Scale emoji with text */
+        .questions-section h3::before {
+            display: inline-block;
+            transform: scale(1);
+            font-size: inherit;
         }
 
         .questions-list {
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: clamp(1rem, 0.5rem + 1.5vh, 2rem);
             overflow-y: auto;
             padding-right: 1.5rem;
+            padding-bottom: clamp(4rem, 2rem + 6vh, 8rem);
             flex: 1;
+            min-height: 0;
         }
 
         .questions-list::-webkit-scrollbar {
@@ -127,14 +127,14 @@
         .question-item {
             background: linear-gradient(90deg, #f8f9fa 0%, white 100%);
             border-radius: 4px;
-            padding: 1.5rem 2rem;
+            padding: clamp(0.8rem, 0.5rem + 1vh, 1.5rem) clamp(1rem, 0.5rem + 1.5vw, 2rem);
             border: none;
             border-left: 6px solid #3498db;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 2.5rem;
-            min-height: 120px;
+            gap: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+            min-height: clamp(80px, 60px + 6vh, 120px);
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             transition: background 0.2s ease;
         }
@@ -154,16 +154,16 @@
         .question-number {
             font-weight: 700;
             color: #3498db;
-            font-size: 1.8rem;
+            font-size: clamp(1.2rem, 1rem + 0.8vh, 1.8rem);
             letter-spacing: 1px;
-            min-width: 70px;
+            min-width: clamp(50px, 6vw, 70px);
             flex-shrink: 0;
         }
 
         .question-text {
             color: #2c3e50;
             line-height: 1.6;
-            font-size: 2.4rem;
+            font-size: clamp(1.4rem, 1rem + 1.4vh, 2.4rem);
             flex: 1;
         }
 
@@ -202,14 +202,19 @@
         .vote-count {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
-            padding: 0.9rem 1.8rem;
+            padding: clamp(0.5rem, 0.3rem + 1vh, 0.9rem) clamp(1rem, 0.5rem + 1.5vw, 1.8rem);
             border-radius: 6px;
             font-weight: 700;
-            font-size: 2.2rem;
-            min-width: 120px;
+            font-size: clamp(1.4rem, 1rem + 1.2vh, 2.2rem);
+            min-width: clamp(80px, 60px + 5vw, 120px);
             text-align: center;
             white-space: nowrap;
             box-shadow: none;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3em;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -427,6 +432,71 @@
                 font-size: 1.3rem;
             }
         }
+
+        /* Pagination Controls in Header */
+        .pagination-controls-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .pagination-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+            min-width: 50px;
+            min-height: 44px;
+        }
+
+        .pagination-btn:hover {
+            background: #2980b9;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .pagination-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+        }
+
+        .pagination-btn:focus {
+            outline: 2px solid #3498db;
+            outline-offset: 2px;
+        }
+
+        .pagination-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .pagination-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #page-indicator {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* Respect reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            .pagination-btn {
+                transition: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -436,6 +506,20 @@
                 <h2 id="class-name">Loading...</h2>
                 <div id="meeting-info" class="header-detail"></div>
             </div>
+            
+            <!-- Pagination Controls in Header -->
+            <nav id="pagination-controls" class="pagination-controls-header" style="display: none;" role="navigation" aria-label="Question pages">
+                <button id="prev-page" class="pagination-btn" aria-label="Go to previous page">
+                    ◄
+                </button>
+                <div class="pagination-info">
+                    <span id="page-indicator" aria-live="polite">Page 1 of 1</span>
+                </div>
+                <button id="next-page" class="pagination-btn" aria-label="Go to next page">
+                    ►
+                </button>
+            </nav>
+            
             <div class="qr-code-container">
                 <img id="qr-code" src="" alt="QR Code" style="display: none;">
             </div>
@@ -457,9 +541,9 @@
                 </div>
             </div>
 
-            <div class="questions-section">
+            <div class="questions-section" role="region" aria-label="Questions">
                 <h3>❓ Unanswered Questions</h3>
-                <div id="questions-list" class="questions-list"></div>
+                <div id="questions-list" class="questions-list" aria-live="polite"></div>
             </div>
         </div>
     </div>
@@ -469,6 +553,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         const sessionCode = urlParams.get('code');
 
+        // Declare global variables first
+        let ws = null;
+        let currentPage = 0;
+        let autoAdvanceTimer = null;
+        let autoAdvanceInterval = null;
+        let isPaused = false;
+        let timeRemaining = 30;
+        let allQuestions = [];
+
         if (!sessionCode) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').textContent = 'No session code provided';
@@ -477,8 +570,6 @@
             loadStats();
             connectWebSocket();
         }
-
-        let ws = null;
 
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -555,31 +646,209 @@
             document.getElementById('total-questions').textContent = questions.length;
             document.getElementById('unanswered-count').textContent = unansweredCount;
 
-            const questionsList = document.getElementById('questions-list');
             const unansweredQuestions = questions.filter(q => !q.is_answered_in_class);
+            unansweredQuestions.sort((a, b) => b.upvotes - a.upvotes);
+            
+            allQuestions = unansweredQuestions;
+            
+            const questionCount = unansweredQuestions.length;
+            
+            if (questionCount === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            // HYBRID APPROACH: Auto-shrink for 1-5, paginate for 6+
+            if (questionCount <= 5) {
+                applyAutoShrink(questionCount);
+                renderAllQuestions(unansweredQuestions);
+                hidePagination();
+            } else {
+                applyFixedSizing();
+                renderPaginatedQuestions(currentPage);
+                showPagination(questionCount);
+            }
+        }
 
-            if (unansweredQuestions.length === 0) {
-                questionsList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">✅</div>
-                        <div class="empty-state-text">All questions have been answered!</div>
+        function applyAutoShrink(count) {
+            // Scale font from 2.5rem (1 question) to 1.8rem (10 questions)
+            const fontSizeRem = 2.5 - (count - 1) * 0.0778;
+            
+            // Scale gap from 2rem to 1.5rem
+            const gapRem = 2.0 - (count - 1) * 0.0556;
+            
+            // Scale padding
+            const paddingV = 1.5 - (count - 1) * 0.033;
+            const paddingH = 2.0 - (count - 1) * 0.022;
+            
+            // Scale min-height
+            const minHeight = 120 - (count - 1) * 2;
+            
+            // Apply via CSS custom properties
+            document.documentElement.style.setProperty('--question-font-size', `${fontSizeRem}rem`);
+            document.documentElement.style.setProperty('--question-gap', `${gapRem}rem`);
+            document.documentElement.style.setProperty('--question-padding', `${paddingV}rem ${paddingH}rem`);
+            document.documentElement.style.setProperty('--question-min-height', `${minHeight}px`);
+            
+            const questionsList = document.getElementById('questions-list');
+            questionsList.style.fontSize = `${fontSizeRem}rem`;
+            questionsList.style.gap = `${gapRem}rem`;
+            
+            // Apply padding and min-height to all question items
+            const style = document.createElement('style');
+            style.id = 'dynamic-question-style';
+            style.textContent = `
+                .question-item {
+                    padding: ${paddingV}rem ${paddingH}rem !important;
+                    min-height: ${minHeight}px !important;
+                }
+            `;
+            
+            // Remove old dynamic style if exists
+            const oldStyle = document.getElementById('dynamic-question-style');
+            if (oldStyle) oldStyle.remove();
+            
+            document.head.appendChild(style);
+        }
+
+        function applyFixedSizing() {
+            // Lock at comfortable reading size for pagination
+            document.documentElement.style.setProperty('--question-font-size', '1.8rem');
+            document.documentElement.style.setProperty('--question-gap', '1.5rem');
+            document.documentElement.style.setProperty('--question-padding', '1.2rem 1.8rem');
+            document.documentElement.style.setProperty('--question-min-height', '100px');
+            
+            const questionsList = document.getElementById('questions-list');
+            questionsList.style.fontSize = '1.8rem';
+            questionsList.style.gap = '1.5rem';
+            
+            const style = document.createElement('style');
+            style.id = 'dynamic-question-style';
+            style.textContent = `
+                .question-item {
+                    padding: 1.2rem 1.8rem !important;
+                    min-height: 100px !important;
+                }
+            `;
+            
+            const oldStyle = document.getElementById('dynamic-question-style');
+            if (oldStyle) oldStyle.remove();
+            
+            document.head.appendChild(style);
+        }
+
+        function showEmptyState() {
+            const questionsList = document.getElementById('questions-list');
+            questionsList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">✅</div>
+                    <div class="empty-state-text">All questions have been answered!</div>
+                </div>
+            `;
+            hidePagination();
+        }
+
+        function renderAllQuestions(questions) {
+            const questionsList = document.getElementById('questions-list');
+            questionsList.innerHTML = questions.map((q, idx) => {
+                const questionNum = q.question_number || (idx + 1);
+                return `
+                    <div class="question-item">
+                        <div class="question-content">
+                            <div class="question-number">Q${questionNum}</div>
+                            <div class="question-text">${renderMarkdown(q.text)}</div>
+                        </div>
+                        <div class="vote-count">⬆️ ${q.upvotes}</div>
                     </div>
                 `;
-            } else {
-                unansweredQuestions.sort((a, b) => b.upvotes - a.upvotes);
-                
-                questionsList.innerHTML = unansweredQuestions.map((q, idx) => {
-                    const questionNum = q.question_number || (idx + 1);
-                    return `
-                        <div class="question-item">
-                            <div class="question-content">
-                                <div class="question-number">Q${questionNum}</div>
-                                <div class="question-text">${renderMarkdown(q.text)}</div>
-                            </div>
-                            <div class="vote-count">${q.upvotes}</div>
+            }).join('');
+        }
+
+        function renderPaginatedQuestions(page) {
+            const questionsPerPage = 5;
+            const start = page * questionsPerPage;
+            const end = start + questionsPerPage;
+            const pageQuestions = allQuestions.slice(start, end);
+            
+            const questionsList = document.getElementById('questions-list');
+            questionsList.innerHTML = pageQuestions.map((q, idx) => {
+                const questionNum = q.question_number || (start + idx + 1);
+                return `
+                    <div class="question-item">
+                        <div class="question-content">
+                            <div class="question-number">Q${questionNum}</div>
+                            <div class="question-text">${renderMarkdown(q.text)}</div>
                         </div>
-                    `;
-                }).join('');
+                        <div class="vote-count">⬆️ ${q.upvotes}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showPagination(totalQuestions) {
+            const paginationControls = document.getElementById('pagination-controls');
+            paginationControls.style.display = 'flex';
+            
+            updatePaginationUI(totalQuestions);
+            
+            // Add event listeners if not already added
+            if (!paginationControls.dataset.listenersAdded) {
+                document.getElementById('prev-page').addEventListener('click', prevPage);
+                document.getElementById('next-page').addEventListener('click', nextPage);
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', handleKeyboardNav);
+                
+                paginationControls.dataset.listenersAdded = 'true';
+            }
+        }
+
+        function hidePagination() {
+            const paginationControls = document.getElementById('pagination-controls');
+            paginationControls.style.display = 'none';
+        }
+
+        function updatePaginationUI(totalQuestions) {
+            const questionsPerPage = 5;
+            const totalPages = Math.ceil(totalQuestions / questionsPerPage);
+            
+            document.getElementById('page-indicator').textContent = 
+                `Page ${currentPage + 1} of ${totalPages} (${totalQuestions} questions)`;
+            
+            // Update button states
+            document.getElementById('prev-page').disabled = (currentPage === 0);
+            document.getElementById('next-page').disabled = (currentPage === totalPages - 1);
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                renderPaginatedQuestions(currentPage);
+                updatePaginationUI(allQuestions.length);
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(allQuestions.length / 5);
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+            } else {
+                currentPage = 0; // Loop back to first page
+            }
+            renderPaginatedQuestions(currentPage);
+            updatePaginationUI(allQuestions.length);
+        }
+
+        function handleKeyboardNav(event) {
+            // Only handle if pagination is visible
+            if (document.getElementById('pagination-controls').style.display === 'none') {
+                return;
+            }
+            
+            if (event.key === 'ArrowLeft') {
+                prevPage();
+            } else if (event.key === 'ArrowRight') {
+                nextPage();
             }
         }
 

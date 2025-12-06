@@ -28,9 +28,37 @@ async def create_question(
     question: QuestionCreate,
     background_tasks: BackgroundTasks,
     student_id: str = None,  # Should come from cookie/session
-    db: DBSession = Depends(get_db)
+    db: DBSession = Depends(get_db),
+    authorization: str = Header(None)
 ):
     """Submit a new question to a meeting."""
+    # Check maintenance mode
+    from security import check_maintenance_mode, verify_jwt_token
+    from models_v2 import Instructor
+    
+    user_role = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        payload = verify_jwt_token(token)
+        if payload:
+            sub = payload.get("sub")
+            if sub == "admin":
+                user_role = "SUPER_ADMIN"
+            else:
+                try:
+                    instructor_id = int(sub)
+                    instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
+                    if instructor:
+                        user_role = instructor.role
+                except (ValueError, TypeError):
+                    pass
+    
+    if check_maintenance_mode(db, user_role):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="System is currently in maintenance mode. Questions cannot be submitted at this time."
+        )
+    
     meeting = db.query(ClassMeeting).filter(
         ClassMeeting.meeting_code == meeting_code,
         ClassMeeting.is_active == True
@@ -55,16 +83,26 @@ async def create_question(
 
             # Check for profanity (strip markdown syntax first to avoid false negatives)
             import re
+            from models_config import SystemConfig
+            
+            # Check if profanity filter is enabled
+            profanity_filter_enabled = SystemConfig.get_value(db, "profanity_filter_enabled", default=True)
+            
             # Remove markdown formatting characters for profanity check
             text_without_markdown = re.sub(r'[*_`~\[\]()#]', ' ', question.text)
             # Convert to lowercase for case-insensitive matching
             contains_profanity = profanity.contains_profanity(text_without_markdown.lower())
-            question_status = "flagged" if contains_profanity else "approved"
-            flagged_reason = "profanity" if contains_profanity else None
-
-            # Create sanitized version (censor profanity in original text)
-            # Note: censor() is case-sensitive, so we flag but may not always censor perfectly
-            sanitized = profanity.censor(question.text) if contains_profanity else question.text
+            
+            # If filter is enabled, censor and approve; if disabled, flag but don't censor
+            if profanity_filter_enabled:
+                question_status = "flagged" if contains_profanity else "approved"
+                flagged_reason = "profanity" if contains_profanity else None
+                sanitized = profanity.censor(question.text) if contains_profanity else question.text
+            else:
+                # Filter disabled: flag for review but don't censor
+                question_status = "flagged" if contains_profanity else "approved"
+                flagged_reason = "profanity" if contains_profanity else None
+                sanitized = question.text  # Keep uncensored
 
             db_question = Question(
                 meeting_id=meeting.id,
@@ -149,11 +187,20 @@ def edit_question(
     
     # Check for profanity in updated text
     import re
+    from models_config import SystemConfig
+    
+    profanity_filter_enabled = SystemConfig.get_value(db, "profanity_filter_enabled", default=True)
     text_without_markdown = re.sub(r'[*_`~\[\]()#]', ' ', question_update.text)
     contains_profanity = profanity.contains_profanity(text_without_markdown.lower())
-    question_status = "flagged" if contains_profanity else "approved"
-    flagged_reason = "profanity" if contains_profanity else None
-    sanitized = profanity.censor(question_update.text) if contains_profanity else question_update.text
+    
+    if profanity_filter_enabled:
+        question_status = "flagged" if contains_profanity else "approved"
+        flagged_reason = "profanity" if contains_profanity else None
+        sanitized = profanity.censor(question_update.text) if contains_profanity else question_update.text
+    else:
+        question_status = "flagged" if contains_profanity else "approved"
+        flagged_reason = "profanity" if contains_profanity else None
+        sanitized = question_update.text
     
     try:
         # Update question text

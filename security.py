@@ -6,6 +6,8 @@ import secrets
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from config import settings
+from fastapi import HTTPException, status, Depends
+from sqlalchemy.orm import Session as DBSession
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -55,6 +57,85 @@ def generate_csrf_token() -> str:
 def verify_csrf_token(token: str, stored_token: str) -> bool:
     """Verify a CSRF token."""
     return secrets.compare_digest(token, stored_token)
+
+
+def check_maintenance_mode(db: DBSession, user_role: Optional[str] = None) -> bool:
+    """
+    Check if system is in maintenance mode.
+    Returns True if operations should be blocked.
+    Admins and super admins are exempt from maintenance mode.
+    """
+    from models_config import SystemConfig
+    
+    # Check if maintenance mode is enabled
+    maintenance_enabled = SystemConfig.get_value(db, "system_maintenance_mode", default=False)
+    
+    if not maintenance_enabled:
+        return False
+    
+    # Exempt admins and super admins
+    if user_role in ["ADMIN", "SUPER_ADMIN"]:
+        return False
+    
+    return True
+
+
+def require_not_maintenance(exempt_roles: list = ["ADMIN", "SUPER_ADMIN"]):
+    """
+    Dependency that blocks requests during maintenance mode.
+    Admins and super admins are exempt.
+    
+    Usage:
+        @router.post("/route")
+        def some_endpoint(
+            _: None = Depends(require_not_maintenance()),
+            db: Session = Depends(get_db)
+        ):
+            ...
+    """
+    from database import get_db
+    from models_v2 import Instructor
+    
+    async def check_maintenance(
+        authorization: str = Header(None),
+        db: DBSession = Depends(get_db)
+    ):
+        """Check if maintenance mode blocks this request."""
+        from models_config import SystemConfig
+        
+        # Check if maintenance mode is enabled
+        maintenance_enabled = SystemConfig.get_value(db, "system_maintenance_mode", default=False)
+        
+        if not maintenance_enabled:
+            return  # Not in maintenance mode
+        
+        # Check user role if authenticated
+        user_role = None
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ")[1]
+            payload = verify_jwt_token(token)
+            
+            if payload:
+                sub = payload.get("sub")
+                if sub == "admin":
+                    user_role = "SUPER_ADMIN"
+                else:
+                    try:
+                        instructor_id = int(sub)
+                        instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
+                        if instructor:
+                            user_role = instructor.role
+                    except (ValueError, TypeError):
+                        pass
+        
+        # Block if not an exempt role
+        if user_role not in exempt_roles:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="System is currently in maintenance mode. Please try again later."
+            )
+    
+    return check_maintenance
 
 
 def verify_role(required_role: str):

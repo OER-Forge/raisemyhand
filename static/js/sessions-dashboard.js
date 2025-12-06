@@ -5,6 +5,8 @@ let allMeetings = [];
 let filterClassId = null;
 let currentDateRange = 'all';
 let currentViewMode = 'flat';
+let maintenanceMode = false;
+let ws = null;
 
 // Check authentication on load
 function checkAuth() {
@@ -22,8 +24,40 @@ function checkAuth() {
         return;
     }
 
-    // Load meetings
+    // Check maintenance mode and load meetings
+    checkMaintenanceMode();
     loadMeetings();
+    connectWebSocket();
+}
+
+// Check maintenance mode and disable buttons accordingly
+async function checkMaintenanceMode() {
+    try {
+        const response = await fetch('/api/system/status');
+        const data = await response.json();
+        maintenanceMode = data.maintenance_mode;
+        updateCreateButtonState();
+    } catch (error) {
+        console.error('Error checking maintenance mode:', error);
+    }
+}
+
+// Update create button state based on maintenance mode
+function updateCreateButtonState() {
+    const createButtons = document.querySelectorAll('[onclick*="openCreateSessionModal"]');
+    createButtons.forEach(btn => {
+        if (maintenanceMode) {
+            btn.disabled = true;
+            btn.title = "System is in maintenance mode";
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "not-allowed";
+        } else {
+            btn.disabled = false;
+            btn.title = "";
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+        }
+    });
 }
 
 // Load all meetings (supports both JWT and API key auth)
@@ -338,6 +372,11 @@ function logout() {
 
 // Modal functions
 async function openCreateSessionModal() {
+    if (maintenanceMode) {
+        showNotification('System is in maintenance mode. Session creation is disabled.', 'error');
+        return;
+    }
+    
     console.log('openCreateSessionModal called');
     const modal = document.getElementById('create-session-modal');
     if (!modal) {
@@ -498,6 +537,44 @@ document.addEventListener('DOMContentLoaded', () => {
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleString();
+}
+
+// WebSocket connection for real-time updates
+function connectWebSocket() {
+    // Use a dummy session code for system-wide updates
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/system`;
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+        console.log('[SESSIONS] WebSocket connected for system updates');
+    };
+    
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('[SESSIONS] WebSocket message received:', data);
+        
+        if (data.type === 'maintenance_mode_changed') {
+            maintenanceMode = data.enabled;
+            updateCreateButtonState();
+            // Show notification
+            if (data.enabled) {
+                showNotification('System is now in maintenance mode', 'warning');
+            } else {
+                showNotification('Maintenance mode disabled', 'success');
+            }
+        }
+    };
+    
+    ws.onerror = (error) => {
+        console.error('[SESSIONS] WebSocket error:', error);
+    };
+    
+    ws.onclose = () => {
+        console.log('[SESSIONS] WebSocket closed, reconnecting in 5s...');
+        setTimeout(connectWebSocket, 5000);
+    };
 }
 
 // Utility functions (escapeHtml, showNotification) are in shared.js

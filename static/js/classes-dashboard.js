@@ -3,6 +3,8 @@
 let allClasses = [];
 let currentEditClassId = null;
 let showArchived = false;
+let maintenanceMode = false;
+let ws = null;
 
 // Check authentication on load
 function checkAuth() {
@@ -21,7 +23,39 @@ function checkAuth() {
         return;
     }
     console.log('Authentication found, loading classes...');
+    checkMaintenanceMode();
     loadClasses();
+    connectWebSocket();
+}
+
+// Check maintenance mode and disable buttons accordingly
+async function checkMaintenanceMode() {
+    try {
+        const response = await fetch('/api/system/status');
+        const data = await response.json();
+        maintenanceMode = data.maintenance_mode;
+        updateCreateButtonState();
+    } catch (error) {
+        console.error('Error checking maintenance mode:', error);
+    }
+}
+
+// Update create button state based on maintenance mode
+function updateCreateButtonState() {
+    const createButtons = document.querySelectorAll('[onclick*="openCreateClassModal"]');
+    createButtons.forEach(btn => {
+        if (maintenanceMode) {
+            btn.disabled = true;
+            btn.title = "System is in maintenance mode";
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "not-allowed";
+        } else {
+            btn.disabled = false;
+            btn.title = "";
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+        }
+    });
 }
 
 // Load all classes for authenticated user (v2 API)
@@ -237,6 +271,11 @@ function renderClassCards(classes, isArchived) {
 
 // Modal functions
 function openCreateClassModal() {
+    if (maintenanceMode) {
+        showNotification('System is in maintenance mode. Class creation is disabled.', 'error');
+        return;
+    }
+    
     currentEditClassId = null;
     document.getElementById('class-modal-title').textContent = 'Create New Class';
     document.getElementById('class-id').value = '';
@@ -378,6 +417,44 @@ async function unarchiveClass(classId) {
         console.error('Error unarchiving class:', error);
         showNotification(error.message || 'Failed to unarchive class', 'error');
     }
+}
+
+// WebSocket connection for real-time updates
+function connectWebSocket() {
+    // Use a dummy session code for system-wide updates
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/system`;
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+        console.log('[CLASSES] WebSocket connected for system updates');
+    };
+    
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('[CLASSES] WebSocket message received:', data);
+        
+        if (data.type === 'maintenance_mode_changed') {
+            maintenanceMode = data.enabled;
+            updateCreateButtonState();
+            // Show notification
+            if (data.enabled) {
+                showNotification('System is now in maintenance mode', 'warning');
+            } else {
+                showNotification('Maintenance mode disabled', 'success');
+            }
+        }
+    };
+    
+    ws.onerror = (error) => {
+        console.error('[CLASSES] WebSocket error:', error);
+    };
+    
+    ws.onclose = () => {
+        console.log('[CLASSES] WebSocket closed, reconnecting in 5s...');
+        setTimeout(connectWebSocket, 5000);
+    };
 }
 
 // View meetings for a specific class

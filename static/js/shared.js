@@ -705,3 +705,140 @@ if (document.readyState === 'loading') {
 } else {
     initPasswordToggles();
 }
+
+
+// ============================================================================
+// Maintenance Mode Banner
+// ============================================================================
+
+/**
+ * Check system status and show maintenance mode banner if active
+ */
+async function checkMaintenanceMode() {
+    try {
+        const response = await fetch('/api/system/status');
+        if (response.ok) {
+            const status = await response.json();
+            if (status.maintenance_mode) {
+                showMaintenanceBanner();
+            }
+        }
+    } catch (error) {
+        console.error('[SHARED] Failed to check maintenance mode:', error);
+    }
+}
+
+/**
+ * Show maintenance mode banner at top of page
+ */
+function showMaintenanceBanner() {
+    // Don't add duplicate banners
+    if (document.getElementById('maintenance-banner')) {
+        return;
+    }
+    
+    const banner = document.createElement('div');
+    banner.id = 'maintenance-banner';
+    banner.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: white;
+        padding: 12px 20px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 14px;
+        z-index: 10000;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        border-bottom: 3px solid #c0392b;
+    `;
+    banner.innerHTML = `
+        <span style="margin-right: 8px;">⚠️</span>
+        <strong>MAINTENANCE MODE:</strong> System is in read-only mode. New content cannot be created at this time.
+    `;
+    
+    document.body.insertBefore(banner, document.body.firstChild);
+    
+    // Adjust body padding to account for banner
+    document.body.style.paddingTop = '48px';
+}
+
+/**
+ * Hide maintenance mode banner
+ */
+function hideMaintenanceBanner() {
+    const banner = document.getElementById('maintenance-banner');
+    if (banner) {
+        banner.remove();
+        document.body.style.paddingTop = '0';
+    }
+}
+
+/**
+ * Setup WebSocket connection for system-wide updates
+ */
+function setupSystemWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/system`;
+    
+    try {
+        const ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+            console.log('[SHARED] System WebSocket connected');
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                // Handle maintenance mode changes
+                if (data.type === 'maintenance_mode_changed') {
+                    if (data.enabled) {
+                        showMaintenanceBanner();
+                    } else {
+                        hideMaintenanceBanner();
+                    }
+                }
+            } catch (error) {
+                console.error('[SHARED] Error parsing WebSocket message:', error);
+            }
+        };
+        
+        ws.onerror = (error) => {
+            console.error('[SHARED] System WebSocket error:', error);
+        };
+        
+        ws.onclose = () => {
+            console.log('[SHARED] System WebSocket disconnected, reconnecting in 5s...');
+            setTimeout(setupSystemWebSocket, 5000);
+        };
+        
+        // Keep connection alive with periodic pings
+        const pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send('ping');
+            } else {
+                clearInterval(pingInterval);
+            }
+        }, 30000);
+        
+    } catch (error) {
+        console.error('[SHARED] Failed to setup system WebSocket:', error);
+        // Retry after 5 seconds
+        setTimeout(setupSystemWebSocket, 5000);
+    }
+}
+
+// Auto-check maintenance mode when page loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        checkMaintenanceMode();
+        setupSystemWebSocket();
+    });
+} else {
+    checkMaintenanceMode();
+    setupSystemWebSocket();
+}

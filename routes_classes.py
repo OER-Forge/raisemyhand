@@ -76,6 +76,18 @@ def create_class(
     db: DBSession = Depends(get_db)
 ):
     """Create a new class (supports both JWT token and API key auth)."""
+    # Check maintenance mode
+    from security import check_maintenance_mode
+    user_role = instructor.role if instructor else None
+    logger.info(f"[MAINTENANCE CHECK] Creating class - user_role: {user_role}, instructor: {instructor}")
+    maintenance_blocked = check_maintenance_mode(db, user_role)
+    logger.info(f"[MAINTENANCE CHECK] maintenance_blocked: {maintenance_blocked}")
+    if maintenance_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="System is currently in maintenance mode. Classes cannot be created at this time."
+        )
+    
     # Try JWT token authentication first
     if instructor:
         instructor_id = instructor.id
@@ -305,6 +317,18 @@ def create_meeting(
     db: DBSession = Depends(get_db)
 ):
     """Create a new class meeting (supports both JWT token and API key auth)."""
+    # Check maintenance mode
+    from security import check_maintenance_mode
+    user_role = instructor.role if instructor else None
+    logger.info(f"[MAINTENANCE CHECK] Creating meeting - user_role: {user_role}, instructor: {instructor}")
+    maintenance_blocked = check_maintenance_mode(db, user_role)
+    logger.info(f"[MAINTENANCE CHECK] maintenance_blocked: {maintenance_blocked}")
+    if maintenance_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="System is currently in maintenance mode. Sessions cannot be created at this time."
+        )
+    
     # Try JWT token authentication first
     if instructor:
         instructor_id = instructor.id
@@ -524,6 +548,30 @@ def restart_meeting(
     Authentication: instructor_code in URL is sufficient (proves access to instructor link).
     Also supports JWT token and API key auth for backwards compatibility.
     """
+    # Check maintenance mode
+    from security import check_maintenance_mode
+    user_role = None
+    
+    # Try to get user role if authenticated
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            from routes_instructor import verify_instructor_token
+            token = authorization.split(" ")[1]
+            payload = verify_instructor_token(token)
+            instructor_id = int(payload.get("sub"))
+            instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
+            if instructor:
+                user_role = instructor.role
+        except Exception:
+            pass
+    
+    maintenance_blocked = check_maintenance_mode(db, user_role)
+    if maintenance_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="System is currently in maintenance mode. Meetings cannot be restarted at this time."
+        )
+    
     # First, verify the meeting exists and get it by instructor_code
     meeting = db.query(ClassMeeting).filter(
         ClassMeeting.instructor_code == instructor_code

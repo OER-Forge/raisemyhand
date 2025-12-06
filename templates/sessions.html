@@ -821,7 +821,7 @@
         
         <!-- Create Session Button -->
         <div style="margin-bottom: 2rem;">
-            <button 
+            <button id="createSessionBtn" 
                 class="btn btn-primary"
                 onclick="openCreateSessionModal()"
                 aria-label="Open create new session dialog"
@@ -897,7 +897,7 @@
             <div class="empty-state-icon">📝</div>
             <h2>No sessions yet</h2>
             <p>Create your first session to start collecting questions!</p>
-            <button onclick="openCreateSessionModal()" class="btn btn-primary">Create Session</button>
+            <button id="emptyStateCreateBtn" onclick="openCreateSessionModal()" class="btn btn-primary">Create Session</button>
         </div>
     </div>
 
