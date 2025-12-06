@@ -1,17 +1,10 @@
-# Docker Compose for ALL demo contexts
-# Loads all 5 STEM courses into a fresh database
-# Usage: docker-compose -f docker-compose.yml -f docker-compose.demo-all.yml up
+version: '2.4'
 
 services:
   app:
     environment:
-      # Enable demo mode
       - DEMO_MODE=true
-      
-      # Use demo database (writable for testing)
       - DATABASE_URL=sqlite:///./data/demo_raisemyhand.db
-    
-    # Load all 5 contexts before starting
     command: >
       sh -c "
         echo '🎯 Starting RaiseMyHand with ALL Demo Contexts' &&
@@ -19,7 +12,3 @@ services:
         echo '🚀 Starting application server...' &&
         uvicorn main:app --host 0.0.0.0 --port 8000 --reload
       "
-    
-    volumes:
-      - ./data:/app/data
-      - .:/app
