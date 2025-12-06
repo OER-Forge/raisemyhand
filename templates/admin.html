@@ -1725,9 +1725,10 @@
                     } else if (setting.key === 'session_timeout_hours') {
                         document.getElementById('session-timeout').value = setting.parsed_value || 24;
                     } else if (setting.key === 'profanity_filter_enabled') {
-                        document.getElementById('profanity-filter').checked = setting.parsed_value === 'True';
+                        // parsed_value comes as boolean True/False from Python
+                        document.getElementById('profanity-filter').checked = (setting.parsed_value === true || setting.parsed_value === 'True');
                     } else if (setting.key === 'system_maintenance_mode') {
-                        document.getElementById('maintenance-mode').checked = setting.parsed_value === 'True';
+                        document.getElementById('maintenance-mode').checked = (setting.parsed_value === true || setting.parsed_value === 'True');
                     }
                 });
             } catch (error) {
@@ -1809,14 +1810,16 @@
             const maintenanceMode = document.getElementById('maintenance-mode').checked;
 
             const settings = [
-                { key: 'max_questions_per_session', value: maxQuestions },
-                { key: 'session_timeout_hours', value: sessionTimeout },
-                { key: 'profanity_filter_enabled', value: profanityFilter.toString() },
-                { key: 'system_maintenance_mode', value: maintenanceMode.toString() }
+                { key: 'max_questions_per_session', value: parseInt(maxQuestions) },
+                { key: 'session_timeout_hours', value: parseInt(sessionTimeout) },
+                { key: 'profanity_filter_enabled', value: profanityFilter },
+                { key: 'system_maintenance_mode', value: maintenanceMode }
             ];
 
             try {
                 let savedCount = 0;
+                let failedSettings = [];
+                
                 for (const setting of settings) {
                     const response = await fetch(`/api/admin/config/${setting.key}`, {
                         method: 'PUT',
@@ -1825,14 +1828,31 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            value: setting.value
+                            value: String(setting.value)
                         })
                     });
 
-                    if (response.ok) savedCount++;
+                    if (response.ok) {
+                        savedCount++;
+                    } else {
+                        const error = await response.json();
+                        console.error(`Failed to update ${setting.key}:`, error);
+                        failedSettings.push(setting.key);
+                    }
                 }
 
-                showNotification(`Saved ${savedCount} system settings successfully`, 'success');
+                if (failedSettings.length > 0) {
+                    showNotification(`Failed to update settings: ${failedSettings.join(', ')}`, 'error');
+                } else if (savedCount === settings.length) {
+                    showNotification(`Successfully updated ${savedCount} settings`, 'success');
+                    // Reload page to update maintenance banner
+                    if (window.checkMaintenanceMode) {
+                        await window.checkMaintenanceMode();
+                    }
+                }
+                
+                // Don't reload settings - keep the values the user just set
+                // await loadSystemSettings();
             } catch (error) {
                 console.error('Error saving system settings:', error);
                 showNotification('Failed to save system settings', 'error');

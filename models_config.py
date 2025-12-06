@@ -50,7 +50,13 @@ class SystemConfig(Base):
         
         # Convert value to string for storage
         if value_type == "boolean":
-            str_value = "true" if value else "false"
+            # Handle both actual booleans and string representations
+            if isinstance(value, bool):
+                str_value = "true" if value else "false"
+            elif isinstance(value, str):
+                str_value = "true" if value.lower() in ('true', '1', 'yes') else "false"
+            else:
+                str_value = "true" if value else "false"
         elif value_type == "json":
             import json
             str_value = json.dumps(value)

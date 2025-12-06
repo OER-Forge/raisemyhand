@@ -89,7 +89,22 @@ def create_or_update_answer(
     Instructors can save answers as drafts (is_approved=false) or publish immediately.
     Supports both JWT token and API key authentication.
     """
+    # Check maintenance mode
+    from security import check_maintenance_mode
+    user_role = None
     instructor_id = get_instructor_id_from_auth(authorization, api_key, db)
+    
+    # Get user role
+    instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
+    if instructor:
+        user_role = instructor.role
+    
+    maintenance_blocked = check_maintenance_mode(db, user_role)
+    if maintenance_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="System is currently in maintenance mode. Answers cannot be created or updated at this time."
+        )
     
     # Get the question
     question = db.query(Question).filter(Question.id == question_id).first()

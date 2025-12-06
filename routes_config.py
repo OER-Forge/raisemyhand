@@ -15,6 +15,13 @@ from logging_config import get_logger, log_security_event
 router = APIRouter(prefix="/api/admin/config", tags=["admin-config"])
 logger = get_logger(__name__)
 
+# Import manager for broadcasting
+manager = None
+
+def set_manager(connection_manager):
+    global manager
+    manager = connection_manager
+
 
 @router.get("/all", response_model=List[ConfigResponse])
 async def list_all_config(
@@ -96,6 +103,15 @@ async def update_config(
             f"Admin updated config {key}: '{old_value}' -> '{request.value}'",
             severity="info"
         )
+        
+        # Broadcast maintenance mode changes to all connected clients
+        if key == "system_maintenance_mode" and manager:
+            # Convert string value to boolean for broadcast
+            enabled_bool = request.value in [True, "true", "True", "1", 1]
+            await manager.broadcast_to_all({
+                "type": "maintenance_mode_changed",
+                "enabled": enabled_bool
+            })
         
         return {"message": f"Configuration '{key}' updated successfully"}
     except Exception as e:

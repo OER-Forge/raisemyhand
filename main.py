@@ -71,7 +71,7 @@ from routes_questions import router as questions_router
 from routes_answers import router as answers_router
 from routes_admin import router as admin_router
 from routes_admin_users import router as admin_users_router
-from routes_config import router as config_router
+from routes_config import router as config_router, set_manager
 from logging_config import setup_logging, get_logger, log_request, log_database_operation, log_websocket_event, log_security_event
 
 # Configure centralized logging
@@ -92,6 +92,23 @@ app.include_router(answers_router)
 app.include_router(admin_router)
 app.include_router(admin_users_router)
 app.include_router(config_router)
+
+
+@app.get("/api/system/status")
+async def system_status(db: DBSession = Depends(get_db)):
+    """Get system status including maintenance mode."""
+    from models_config import SystemConfig
+    
+    maintenance_mode = SystemConfig.get_value(db, "system_maintenance_mode", default=False)
+    profanity_filter = SystemConfig.get_value(db, "profanity_filter_enabled", default=True)
+    registration_enabled = SystemConfig.get_value(db, "instructor_registration_enabled", default=True)
+    
+    return {
+        "maintenance_mode": maintenance_mode,
+        "profanity_filter_enabled": profanity_filter,
+        "registration_enabled": registration_enabled
+    }
+
 
 # Security Configuration
 security = HTTPBearer(auto_error=False)
@@ -399,8 +416,32 @@ class ConnectionManager:
             for conn in disconnected:
                 self.disconnect(conn, session_code)
 
+    async def broadcast_to_all(self, message: dict):
+        """Broadcast message to all active connections across all sessions."""
+        logger.info(f"[BROADCAST_TO_ALL] Starting broadcast. Active sessions: {list(self.active_connections.keys())}")
+        disconnected = []
+        sent_count = 0
+        for session_code, connections in self.active_connections.items():
+            logger.info(f"[BROADCAST_TO_ALL] Session '{session_code}' has {len(connections)} connections")
+            for connection in connections:
+                try:
+                    await connection.send_json(message)
+                    sent_count += 1
+                except (WebSocketDisconnect, RuntimeError, ConnectionError) as e:
+                    logger.warning(f"WebSocket connection error for session {session_code}: {e}")
+                    disconnected.append((connection, session_code))
+
+        # Clean up disconnected clients
+        for conn, session_code in disconnected:
+            self.disconnect(conn, session_code)
+        
+        logger.info(f"[BROADCAST_TO_ALL] Broadcast complete. Sent to {sent_count} connections, {len(disconnected)} failed")
+
 
 manager = ConnectionManager()
+
+# Pass manager to routes_config for broadcasting
+set_manager(manager)
 
 
 # Session endpoints
@@ -420,6 +461,15 @@ def restart_session(
     db: DBSession = Depends(get_db)
 ):
     """Restart an ended session (requires valid API key and CSRF token)."""
+    from security import check_maintenance_mode
+    
+    # Check maintenance mode (admins exempt)
+    if check_maintenance_mode(db):
+        raise HTTPException(
+            status_code=503,
+            detail="System is currently in maintenance mode. Sessions cannot be restarted at this time."
+        )
+    
     try:
         # API key and CSRF token are already verified by the dependencies
         session = db.query(Session).filter(Session.instructor_code == instructor_code).first()
@@ -555,7 +605,22 @@ async def websocket_endpoint(websocket: WebSocket, session_code: str, db: DBSess
     """
     WebSocket endpoint for real-time updates.
     Validates session existence and enforces rate limiting.
+    Special code 'system' is for system-wide broadcasts (maintenance mode, etc.).
     """
+    # Special handling for system-wide connection
+    if session_code == "system":
+        logger.info("WebSocket connection for system-wide updates")
+        await manager.connect(websocket, session_code)
+        try:
+            while True:
+                message = await websocket.receive_text()
+                if message.strip().lower() in ["ping", "keepalive"]:
+                    await websocket.send_json({"type": "pong"})
+        except WebSocketDisconnect:
+            manager.disconnect(websocket, session_code)
+            logger.info("System WebSocket disconnected")
+        return
+    
     try:
         # Validate that the session exists and is active BEFORE accepting connection
         logger.info(f"WebSocket validation: checking session code {session_code}")
