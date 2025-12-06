@@ -6,6 +6,20 @@ This directory contains scripts and data for generating and loading realistic de
 
 The demo system uses JSON-based fixtures to populate the database with realistic instructors, classes, meetings, questions, and votes. This allows you to quickly spin up a demo environment with pre-populated data.
 
+## Logging In
+You can log in as any of the demo instructors using the following credentials:
+
+| Instructor Name       | Email                              | Password  |
+|---------------------- |------------------------------------|-----------|
+| Dr. Sarah Einstein    | sarah.einstein@university.edu      | demo123   |
+
+
+Other demo instructors are similarly configured in their respective contexts. Check the `instructors.json` files in `demo/data/{context}/` for additional instructor credentials.
+
+You can also login as an admin user:
+* username: admin
+* password: demoadmin
+
 ## Available Contexts
 
 The system includes 5 pre-configured STEM course contexts:
