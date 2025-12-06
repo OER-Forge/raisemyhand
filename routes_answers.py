@@ -116,6 +116,10 @@ def create_or_update_answer(
             existing_answer.answer_text = data.answer_text
             existing_answer.is_approved = data.is_approved
             existing_answer.updated_at = datetime.utcnow()
+            
+            # Ensure question's has_written_answer flag is set
+            question.has_written_answer = True
+            
             db.commit()
             db.refresh(existing_answer)
             log_database_operation(logger, "UPDATE", "answers", existing_answer.id, success=True)
@@ -131,6 +135,10 @@ def create_or_update_answer(
                 updated_at=datetime.utcnow()
             )
             db.add(new_answer)
+            
+            # Update question's has_written_answer flag
+            question.has_written_answer = True
+            
             db.commit()
             db.refresh(new_answer)
             log_database_operation(logger, "CREATE", "answers", new_answer.id, success=True)
@@ -261,6 +269,10 @@ def delete_answer(
 
     try:
         db.delete(answer)
+        
+        # Update question's has_written_answer flag
+        question.has_written_answer = False
+        
         db.commit()
         log_database_operation(logger, "DELETE", "answers", answer.id, success=True)
         return {"message": "Answer deleted successfully"}

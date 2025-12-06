@@ -475,7 +475,37 @@
             document.getElementById('error').style.display = 'flex';
         } else {
             loadStats();
-            setInterval(loadStats, 5000);
+            connectWebSocket();
+        }
+
+        let ws = null;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/${sessionCode}`;
+
+            console.log('[STATS] Connecting to WebSocket:', wsUrl);
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('[STATS] WebSocket connected');
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                console.log('[STATS] WebSocket message received:', message.type);
+                // Reload stats when any change happens
+                loadStats();
+            };
+
+            ws.onerror = (error) => {
+                console.error('[STATS] WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                console.log('[STATS] WebSocket closed, reconnecting in 3 seconds...');
+                setTimeout(connectWebSocket, 3000);
+            };
         }
 
         async function loadStats() {

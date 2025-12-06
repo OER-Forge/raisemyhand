@@ -116,24 +116,34 @@ function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/${meetingData.meeting_code}`;
 
+    console.log('[INSTRUCTOR] Connecting to WebSocket:', wsUrl);
     ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+        console.log('[INSTRUCTOR] WebSocket connected');
+    };
 
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
+        console.log('[INSTRUCTOR] WebSocket message received:', message.type, message);
         handleWebSocketMessage(message);
     };
 
     ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('[INSTRUCTOR] WebSocket error:', error);
     };
 
     ws.onclose = () => {
+        console.log('[INSTRUCTOR] WebSocket closed, reconnecting in 3 seconds...');
         setTimeout(connectWebSocket, 3000);
     };
 }
 
 function handleWebSocketMessage(message) {
+    console.log('[INSTRUCTOR] Handling message type:', message.type);
+    
     if (message.type === 'new_question') {
+        console.log('[INSTRUCTOR] Adding new question:', message.question);
         // Add new question to meeting data
         meetingData.questions.push(message.question);
         renderQuestions();
@@ -201,15 +211,44 @@ function renderQuestions() {
         return;
     }
 
-    // Sort by upvotes (descending), then by creation time
+    // Sort: unanswered first (by upvotes), then answered at bottom (by upvotes)
     const sortedQuestions = [...approvedQuestions].sort((a, b) => {
+        const aAnswered = a.is_answered_in_class || a.is_answered || false;
+        const bAnswered = b.is_answered_in_class || b.is_answered || false;
+        
+        // If one is answered and one isn't, unanswered comes first
+        if (aAnswered !== bAnswered) {
+            return aAnswered ? 1 : -1;
+        }
+        
+        // Within same answered status, sort by upvotes (descending)
         if (b.upvotes !== a.upvotes) {
             return b.upvotes - a.upvotes;
         }
+        
+        // Then by creation time (newest first)
         return new Date(b.created_at) - new Date(a.created_at);
     });
 
-    questionsList.innerHTML = sortedQuestions.map(q => {
+    // Separate questions into unanswered and answered
+    const unansweredQuestions = sortedQuestions.filter(q => !(q.is_answered_in_class || q.is_answered));
+    const answeredQuestions = sortedQuestions.filter(q => q.is_answered_in_class || q.is_answered);
+    
+    // Build HTML with section headers
+    let questionsHtml = '';
+    
+    // Add unanswered section if there are unanswered questions
+    if (unansweredQuestions.length > 0) {
+        questionsHtml += `
+            <div class="questions-section-header" style="margin: 20px 0 15px 0; padding: 10px 0; border-bottom: 2px solid #e1e8ed;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #3498db; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.3rem;">🔵</span> Unanswered Questions
+                </h3>
+            </div>
+        `;
+    }
+    
+    questionsHtml += unansweredQuestions.map(q => {
         const createdTime = new Date(q.created_at).toLocaleTimeString();
         const isAnswered = q.is_answered_in_class || q.is_answered || false;
         const answeredClass = isAnswered ? 'answered' : '';
@@ -255,7 +294,9 @@ function renderQuestions() {
                             ${isAnswered ? '✓ Answered in Class' : 'Mark Answered in Class'}
                         </button>
                         <button class="btn btn-primary"
-                                onclick="openAnswerDialog(${q.id}, '${escapeHtml(q.text).replace(/'/g, "\\'")}', ${q.has_written_answer})"
+                                onclick="openAnswerDialog(${q.id})"
+                                data-question-text="${escapeHtml(q.text)}"
+                                data-has-answer="${q.has_written_answer}"
                                 aria-label="Write answer for this question">
                             ${q.has_written_answer ? '✏️ Edit Answer' : '📝 Write Answer'}
                         </button>
@@ -277,6 +318,88 @@ function renderQuestions() {
             </article>
         `;
     }).join('');
+    
+    // Add answered section if there are answered questions
+    if (answeredQuestions.length > 0) {
+        questionsHtml += `
+            <div class="questions-section-header" style="margin: 30px 0 15px 0; padding: 10px 0; border-bottom: 2px solid #e1e8ed;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #28a745; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.3rem;">✅</span> Answered Questions
+                </h3>
+            </div>
+        `;
+        
+        questionsHtml += answeredQuestions.map(q => {
+            const createdTime = new Date(q.created_at).toLocaleTimeString();
+            const isAnswered = q.is_answered_in_class || q.is_answered || false;
+            const answeredClass = isAnswered ? 'answered' : '';
+            const questionNumber = q.question_number || '?';
+            const answerLabel = isAnswered ? 'Mark as unanswered' : 'Mark as answered';
+
+            // Check if question has a written answer (published or draft)
+            const hasWrittenAnswer = q.answer && q.answer.answer_text;
+            const isPublished = hasWrittenAnswer && q.answer.is_approved;
+            const answerText = hasWrittenAnswer ? q.answer.answer_text : '';
+
+            // Render question text with markdown (no images - student submitted)
+            const questionHtml = renderMarkdownNoImages(q.text);
+
+            // Render answer text with full markdown (images allowed - instructor created)
+            const answerHtml = hasWrittenAnswer ? renderMarkdownFull(answerText) : '';
+
+            // Check if this question is flagged but has been approved and published
+            const isFlaggedAndApproved = q.flagged_reason && q.status === 'flagged' && q.status !== 'rejected';
+
+            return `
+                <article class="question-card ${answeredClass} ${isFlaggedAndApproved ? 'previously-flagged' : ''}" role="article">
+                    <div class="question-header">
+                        <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}</div>
+                        <div class="question-content">
+                            <div class="question-text markdown-content">${questionHtml}</div>
+                            <div class="question-meta">
+                                <time datetime="${q.created_at}">Asked at ${createdTime}</time>
+                                ${isFlaggedAndApproved ? '<span class="approved-badge">✅ Approved & Published</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="question-actions">
+                            <div class="upvote-btn" role="status" aria-label="${q.upvotes} upvotes">
+                                <span class="upvote-icon" aria-hidden="true">⬆️</span>
+                                <span class="upvote-count">${q.upvotes}</span>
+                            </div>
+                            <button class="btn ${isAnswered ? 'btn-secondary' : 'btn-success'}"
+                                    onclick="toggleAnswered(${q.id})"
+                                    aria-label="${answerLabel}"
+                                    aria-pressed="${isAnswered}">
+                                ${isAnswered ? '✓ Answered in Class' : 'Mark Answered in Class'}
+                            </button>
+                            <button class="btn btn-primary"
+                                    onclick="openAnswerDialog(${q.id})"
+                                    data-question-text="${escapeHtml(q.text)}"
+                                    data-has-answer="${q.has_written_answer}"
+                                    aria-label="Write answer for this question">
+                                ${q.has_written_answer ? '✏️ Edit Answer' : '📝 Write Answer'}
+                            </button>
+                            <button class="btn btn-danger"
+                                    onclick="deleteQuestion(${q.id})"
+                                    aria-label="Delete this question">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                    ${hasWrittenAnswer ? `
+                    <div class="written-answer ${isPublished ? 'published' : 'draft'}" role="region" aria-label="${isPublished ? 'Published written answer' : 'Draft answer (not visible to students)'}">
+                        <div class="written-answer-header">
+                            <strong>📝 ${isPublished ? 'Published Answer' : 'Draft Answer (Not Published)'}</strong>
+                        </div>
+                        <div class="written-answer-text markdown-content">${answerHtml}</div>
+                    </div>
+                    ` : ''}
+                </article>
+            `;
+        }).join('');
+    }
+    
+    questionsList.innerHTML = questionsHtml;
 }
 
 async function toggleAnswered(questionId) {
@@ -546,8 +669,13 @@ function logout() {
 let currentAnswerQuestionId = null;
 let currentAnswerData = null;
 
-async function openAnswerDialog(questionId, questionText, hasAnswer) {
+async function openAnswerDialog(questionId) {
     currentAnswerQuestionId = questionId;
+    
+    // Get question text and has_answer from data attributes
+    const button = event.currentTarget;
+    const questionText = button.getAttribute('data-question-text') || '';
+    const hasAnswer = button.getAttribute('data-has-answer') === 'true';
 
     // Set modal title and question text
     document.getElementById('answer-modal-title').textContent = hasAnswer ? 'Edit Answer' : 'Write Answer';
@@ -688,7 +816,11 @@ async function submitAnswer(event) {
         const question = meetingData.questions.find(q => q.id == questionId);
         if (question) {
             question.has_written_answer = true;
+            question.answer = data;
         }
+
+        // Re-render questions to show "Edit Answer" button instead of "Write Answer"
+        renderQuestions();
 
         // Don't close modal - allow user to publish or continue editing
     } catch (error) {
@@ -715,6 +847,12 @@ async function publishAnswer() {
         }
 
         showNotification('Answer published to students!', 'success');
+
+        // Update question in local data
+        const question = meetingData.questions.find(q => q.id == currentAnswerQuestionId);
+        if (question && question.answer) {
+            question.answer.is_approved = true;
+        }
 
         // Hide publish button
         document.getElementById('publish-answer-btn').style.display = 'none';
