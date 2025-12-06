@@ -191,15 +191,44 @@ function renderQuestions() {
         return;
     }
 
-    // Sort by upvotes (descending), then by creation time
+    // Sort: unanswered first (by upvotes), then answered at bottom (by upvotes)
     const sortedQuestions = [...visibleQuestions].sort((a, b) => {
+        const aAnswered = a.is_answered_in_class || a.is_answered || false;
+        const bAnswered = b.is_answered_in_class || b.is_answered || false;
+        
+        // If one is answered and one isn't, unanswered comes first
+        if (aAnswered !== bAnswered) {
+            return aAnswered ? 1 : -1;
+        }
+        
+        // Within same answered status, sort by upvotes (descending)
         if (b.upvotes !== a.upvotes) {
             return b.upvotes - a.upvotes;
         }
+        
+        // Then by creation time (newest first)
         return new Date(b.created_at) - new Date(a.created_at);
     });
 
-    questionsList.innerHTML = sortedQuestions.map(q => {
+    // Separate questions into unanswered and answered
+    const unansweredQuestions = sortedQuestions.filter(q => !(q.is_answered_in_class || q.is_answered));
+    const answeredQuestions = sortedQuestions.filter(q => q.is_answered_in_class || q.is_answered);
+    
+    // Build HTML with section headers
+    let questionsHtml = '';
+    
+    // Add unanswered section if there are unanswered questions
+    if (unansweredQuestions.length > 0) {
+        questionsHtml += `
+            <div class="questions-section-header" style="margin: 20px 0 15px 0; padding: 10px 0; border-bottom: 2px solid #e1e8ed;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #3498db; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.3rem;">🔵</span> Unanswered Questions
+                </h3>
+            </div>
+        `;
+    }
+    
+    questionsHtml += unansweredQuestions.map(q => {
         const createdTime = new Date(q.created_at).toLocaleTimeString();
         const isAnswered = q.is_answered_in_class || q.is_answered || false;
         const answeredClass = isAnswered ? 'answered' : '';
@@ -251,6 +280,72 @@ function renderQuestions() {
             </article>
         `;
     }).join('');
+    
+    // Add answered section if there are answered questions
+    if (answeredQuestions.length > 0) {
+        questionsHtml += `
+            <div class="questions-section-header" style="margin: 30px 0 15px 0; padding: 10px 0; border-bottom: 2px solid #e1e8ed;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #28a745; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.3rem;">✅</span> Answered Questions
+                </h3>
+            </div>
+        `;
+        
+        questionsHtml += answeredQuestions.map(q => {
+            const createdTime = new Date(q.created_at).toLocaleTimeString();
+            const isAnswered = q.is_answered_in_class || q.is_answered || false;
+            const answeredClass = isAnswered ? 'answered' : '';
+            const hasUpvoted = upvotedQuestions.has(q.id);
+            const upvotedClass = hasUpvoted ? 'upvoted' : '';
+            const questionNumber = q.question_number || '?';
+            const voteLabel = hasUpvoted ? 'Remove upvote' : 'Upvote question';
+
+            // Check if question has a published written answer
+            const hasWrittenAnswer = q.answer && q.answer.is_approved;
+            const answerText = hasWrittenAnswer ? q.answer.answer_text : '';
+
+            // Render question text with markdown (no images allowed for students)
+            const questionHtml = renderMarkdownNoImages(q.text);
+
+            // Render answer text with full markdown (images allowed for instructors)
+            const answerHtml = hasWrittenAnswer ? renderMarkdownFull(answerText) : '';
+
+            return `
+                <article class="question-card ${answeredClass}" role="article">
+                    <div class="question-header">
+                        <div class="question-badge" aria-label="Question number ${questionNumber}">Q${questionNumber}</div>
+                        <div class="question-content">
+                            <div class="question-text markdown-content">${questionHtml}</div>
+                            <div class="question-meta">
+                                <time datetime="${q.created_at}">Asked at ${createdTime}</time>
+                            </div>
+                        </div>
+                        <div class="question-actions">
+                            ${isAnswered ? '<span class="answer-badge answered" title="This question was answered in class">✓ Answered</span>' : ''}
+                            <button class="upvote-btn ${upvotedClass}"
+                                    onclick="toggleVote(${q.id})"
+                                    aria-label="${voteLabel}"
+                                    aria-pressed="${hasUpvoted}"
+                                    ${!meetingData.is_active ? 'disabled aria-disabled="true"' : ''}>
+                                <span class="upvote-icon" aria-hidden="true">⬆️</span>
+                                <span class="upvote-count" aria-label="${q.upvotes} upvotes">${q.upvotes}</span>
+                            </button>
+                        </div>
+                    </div>
+                    ${hasWrittenAnswer ? `
+                    <div class="written-answer" role="region" aria-label="Instructor's written answer">
+                        <div class="written-answer-header">
+                            <strong>📝 Instructor's Answer:</strong>
+                        </div>
+                        <div class="written-answer-text markdown-content">${answerHtml}</div>
+                    </div>
+                    ` : ''}
+                </article>
+            `;
+        }).join('');
+    }
+    
+    questionsList.innerHTML = questionsHtml;
     
     // Trigger MathJax to render any equations in the content
     if (window.MathJax) {
