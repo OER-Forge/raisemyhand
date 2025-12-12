@@ -4,6 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Class Statistics</title>
+
+    <!-- MathJax for LaTeX rendering -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax is loaded and ready');
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -762,6 +785,9 @@
                     </div>
                 `;
             }).join('');
+
+            // Trigger MathJax to process the new content
+            typesetMath();
         }
 
         function renderPaginatedQuestions(page) {
@@ -769,7 +795,7 @@
             const start = page * questionsPerPage;
             const end = start + questionsPerPage;
             const pageQuestions = allQuestions.slice(start, end);
-            
+
             const questionsList = document.getElementById('questions-list');
             questionsList.innerHTML = pageQuestions.map((q, idx) => {
                 const questionNum = q.question_number || (start + idx + 1);
@@ -783,6 +809,19 @@
                     </div>
                 `;
             }).join('');
+
+            // Trigger MathJax to process the new content
+            typesetMath();
+        }
+
+        // Helper function to safely trigger MathJax
+        function typesetMath() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise().catch((err) => console.log('MathJax error:', err));
+            } else if (window.MathJax && window.MathJax.Hub) {
+                // MathJax 2.x fallback
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            }
         }
 
         function showPagination(totalQuestions) {

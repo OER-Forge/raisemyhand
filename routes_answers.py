@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional
 
 from database import get_db
-from models_v2 import Answer, Question, ClassMeeting, APIKey as APIKeyV2
+from models_v2 import Answer, Question, ClassMeeting, APIKey as APIKeyV2, Instructor
 from schemas_v2 import AnswerCreate, AnswerUpdate, AnswerResponse
 from logging_config import get_logger, log_database_operation
 
