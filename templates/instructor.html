@@ -7,6 +7,28 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <!-- EasyMDE markdown editor CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+
+    <!-- MathJax for LaTeX rendering in questions -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax is loaded and ready');
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         header {
             background: var(--primary-color);

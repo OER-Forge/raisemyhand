@@ -398,8 +398,16 @@ function renderQuestions() {
             `;
         }).join('');
     }
-    
+
     questionsList.innerHTML = questionsHtml;
+
+    // Trigger MathJax to process the new content
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise().catch((err) => console.log('MathJax error:', err));
+    } else if (window.MathJax && window.MathJax.Hub) {
+        // MathJax 2.x fallback
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    }
 }
 
 async function toggleAnswered(questionId) {
