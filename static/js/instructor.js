@@ -101,6 +101,15 @@ async function loadSession() {
         }
 
         renderQuestions();
+        // Also load flagged questions on initial page load
+        loadFlaggedQuestions();
+
+        // Restore the active tab from localStorage
+        const savedTab = localStorage.getItem(`instructor_active_tab_${instructorCode}`);
+        if (savedTab === 'flagged') {
+            switchQuestionTab('flagged');
+        }
+
         connectWebSocket();
     } catch (error) {
         console.error('Error loading meeting:', error);
@@ -151,6 +160,8 @@ function handleWebSocketMessage(message) {
         // Show different notification for flagged vs normal questions
         if (message.question.status === 'flagged') {
             showNotification('⚠️ Question flagged for review!', 'warning');
+            // Reload flagged questions tab to show new flagged question
+            loadFlaggedQuestions();
         } else {
             showNotification('New question received!', 'success');
         }
@@ -941,6 +952,9 @@ function switchQuestionTab(tab) {
     });
     document.getElementById(`${tab}-questions-tab`).classList.add('active');
 
+    // Save the active tab to localStorage so it persists across page refreshes
+    localStorage.setItem(`instructor_active_tab_${instructorCode}`, tab);
+
     // Load flagged questions if switching to that tab
     if (tab === 'flagged') {
         loadFlaggedQuestions();
@@ -1002,10 +1016,11 @@ function renderFlaggedQuestion(q) {
     const showComparison = q.sanitized_text && q.sanitized_text !== q.text;
 
     // Determine button states based on current status
+    // Profanity questions can be approved (showing censored version), rejected, or deleted
     const approveButtonClass = isRejected ? 'btn-secondary' : 'btn-success';
     const rejectButtonClass = isRejected ? 'btn-success' : 'btn-secondary';
     const approveButtonLabel = isRejected ? '↩️ Approve' : '✓ Approve & Show';
-    const rejectButtonLabel = isRejected ? '✗ Rejected' : '✗ Reject & Hide';
+    const rejectButtonLabel = isRejected ? '↩️ Unflag' : '✗ Reject & Hide';
 
     return `
         <div class="question-card flagged ${isRejected ? 'rejected' : ''}" data-question-id="${q.id}">
@@ -1024,19 +1039,19 @@ function renderFlaggedQuestion(q) {
                 <div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #ff9800; border-radius: 4px; font-size: 0.9em;">
                     <strong>Original text:</strong> ${escapeHtml(q.text)}<br>
                     <strong>Censored as:</strong> ${escapeHtml(q.sanitized_text)}<br>
-                    <em>Profanity detected and censored</em>
+                    <em>Profanity detected and censored. Approve to show censored version to students, or reject to hide completely.</em>
                 </div>
             ` : ''}
             <div class="question-actions moderation-actions">
-                <button class="btn ${approveButtonClass}" 
+                <button class="btn ${approveButtonClass}"
                         onclick="approveQuestion(${q.id})"
-                        aria-label="Approve this question"
-                        ${isRejected ? '' : 'disabled'}>
+                        aria-label="Approve this question. Censored version will be shown to students."
+                        ${isRejected ? 'disabled' : ''}>
                     ${approveButtonLabel}
                 </button>
-                <button class="btn ${rejectButtonClass}" 
+                <button class="btn ${rejectButtonClass}"
                         onclick="rejectQuestion(${q.id})"
-                        aria-label="Reject and hide this question"
+                        aria-label="${isRejected ? 'Restore this question' : 'Reject and hide this question'}"
                         ${isRejected ? 'disabled' : ''}>
                     ${rejectButtonLabel}
                 </button>

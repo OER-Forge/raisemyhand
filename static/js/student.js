@@ -160,14 +160,26 @@ function connectWebSocket() {
 
 function handleWebSocketMessage(message) {
     console.log('[STUDENT] Handling message type:', message.type);
-    
+
     if (message.type === 'new_question') {
-        console.log('[STUDENT] Adding new question:', message.question);
-        // Add new question to meeting data
-        meetingData.questions.push(message.question);
-        renderQuestions();
+        console.log('[STUDENT] New question received:', message.question);
+
+        // SECURITY FIX: Only add questions that are approved for student viewing
+        // Students should NEVER see flagged (pending moderation) or rejected questions
+        const q = message.question;
+        if (q.status === 'approved' && !q.flagged_reason) {
+            console.log('[STUDENT] Question approved for display, adding to list');
+            meetingData.questions.push(q);
+            renderQuestions();
+        } else {
+            console.log('[STUDENT] Question filtered out:', {
+                status: q.status,
+                flagged_reason: q.flagged_reason,
+                reason: 'Not approved for student viewing'
+            });
+        }
     } else if (message.type === 'upvote' || message.type === 'vote_update') {
-        // Update vote count
+        // Update vote count for visible questions
         const question = meetingData.questions.find(q => q.id === message.question_id);
         if (question) {
             question.upvotes = message.upvotes;
@@ -181,13 +193,19 @@ function handleWebSocketMessage(message) {
             renderQuestions();
         }
     } else if (message.type === 'question_updated') {
-        // Update question text
+        // Update question text - only if it's still approved
         const question = meetingData.questions.find(q => q.id === message.question_id);
         if (question) {
             question.text = message.text;
             question.sanitized_text = message.sanitized_text;
             question.status = message.status;
             question.flagged_reason = message.flagged_reason;
+
+            // If question was rejected/flagged after being visible, remove it
+            if (message.status !== 'approved' || message.flagged_reason) {
+                console.log('[STUDENT] Question became ineligible for viewing, removing from list');
+                meetingData.questions = meetingData.questions.filter(q => q.id !== message.question_id);
+            }
             renderQuestions();
         }
     }
@@ -197,9 +215,10 @@ function renderQuestions() {
     const questionsList = document.getElementById('questions-list');
     const questions = meetingData.questions || [];
 
-    // NOTE: Server-side filtering now handles removing flagged/rejected questions for students
-    // All questions in this array are already approved for student viewing
-    const visibleQuestions = questions;
+    // SECURITY: Filter out any flagged or rejected questions
+    // Students should ONLY see approved questions with no flagged reason
+    // This is a defensive layer in case flagged questions somehow made it to this array
+    const visibleQuestions = questions.filter(q => q.status === 'approved' && !q.flagged_reason);
 
     // Update count
     document.getElementById('question-count').textContent =
