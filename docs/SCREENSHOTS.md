@@ -487,3 +487,229 @@ Always include:
 - Descriptive alt text
 - Caption with "Figure X:" numbering
 - Context explaining what's shown
+
+---
+
+## Screenshots Referenced in Documentation
+
+This section lists all screenshots mentioned throughout the documentation and where they should appear.
+
+### FAQ Screenshots (docs/FAQ.md)
+
+**For Quick Start & Getting Started:**
+1. **instructor-login-page.png**
+   - Location: FAQ → "Getting Started"
+   - Shows: API key entry field, login button
+   - Purpose: Visual reference for where to paste API key
+
+2. **session-creation-form.png**
+   - Location: FAQ → "Creating a Session"
+   - Shows: Session title input, password field, create button
+   - Purpose: Shows session creation interface
+
+3. **session-created-success.png**
+   - Location: FAQ → "Creating a Session"
+   - Shows: Confirmation with both student and instructor URLs
+   - Purpose: What to expect after session creation
+
+**For Sharing with Students:**
+4. **qr-code-display-modal.png**
+   - Location: FAQ → "Best way to share?"
+   - Shows: Large, clear QR code with session title above
+   - Purpose: Shows students what QR code looks like before scanning
+
+5. **my-sessions-download.png**
+   - Location: FAQ → "Downloading Session Questions"
+   - Shows: "My Sessions" view with download buttons for each session
+   - Purpose: Shows where to find download options
+
+**For Moderation:**
+6. **flagged-questions-tab.png**
+   - Location: FAQ → "Profanity Questions"
+   - Shows: "Flagged for Review" tab with red badge count showing flagged questions
+   - Shows: Censored question text (e.g., "What the *** is this?")
+   - Shows: Three action buttons (Approve & Show, Reject & Hide, Delete)
+   - Purpose: Shows the flagged moderation workflow
+
+7. **moderation-buttons-close-up.png**
+   - Location: FAQ → "Approve/Reject Questions"
+   - Shows: Close-up of the three action buttons
+   - Shows: Button states and labels clearly
+   - Purpose: Makes button options clear and unambiguous
+
+**For Answering Questions:**
+8. **answer-writing-modal.png**
+   - Location: FAQ → "Writing Detailed Answers"
+   - Shows: Answer text editor with markdown formatting
+   - Shows: Live preview pane
+   - Shows: Publish button
+   - Purpose: Shows answer composition interface
+
+9. **question-with-answer.png**
+   - Location: FAQ → "Writing Detailed Answers"
+   - Shows: Student view of question with published answer below
+   - Shows: Instructor response clearly visible
+   - Purpose: Shows what student sees after answer is published
+
+**For Dashboard:**
+10. **instructor-dashboard-overview.png**
+    - Location: FAQ → "Session Workflow"
+    - Shows: Full instructor dashboard with:
+      - Session title and metadata
+      - "All Questions" tab
+      - Multiple questions with vote counts
+      - Question numbering (Q1, Q2, etc.)
+      - Action buttons (Mark as Answered, Write Answer, etc.)
+      - Toggle voting button at bottom
+    - Purpose: Shows primary workspace
+
+11. **dashboard-with-checkmark.png**
+    - Location: FAQ → "Marking Questions as Answered"
+    - Shows: Dashboard with some questions marked with checkmark
+    - Shows: Visual indicator that question is addressed
+    - Purpose: Shows what answered questions look like
+
+---
+
+### Instructor Guide Screenshots (docs/INSTRUCTOR_GUIDE.md)
+
+**Already documented in guide, recommend adding:**
+
+12. **qr-code-presentation-projector.png**
+    - Location: INSTRUCTOR_GUIDE.md → "QR Code Section"
+    - Shows: QR code as it appears when displayed on projector
+    - Shows: Session title clearly visible
+    - Shows: Instructions for students to scan
+    - Purpose: Instructor preview of what students see
+
+13. **voting-toggle-example.png**
+    - Location: INSTRUCTOR_GUIDE.md → "Managing Voting"
+    - Shows: Dashboard with voting ON (questions sorted by votes)
+    - Shows: Dashboard with voting OFF (same order)
+    - Purpose: Visual comparison of voting states
+
+14. **my-sessions-list.png**
+    - Location: INSTRUCTOR_GUIDE.md → "Managing Sessions"
+    - Shows: "My Sessions" page with multiple sessions
+    - Shows: Active vs ended session indicators
+    - Shows: Status badges and timestamps
+    - Purpose: Shows session management interface
+
+---
+
+### Troubleshooting Screenshots (docs/TROUBLESHOOTING.md)
+
+**Consider adding:**
+
+15. **browser-console-errors.png**
+    - Location: TROUBLESHOOTING.md → "WebSocket Failed"
+    - Shows: F12 Developer Tools → Console tab
+    - Shows: Example WebSocket error messages
+    - Shows: Where to look for errors
+    - Purpose: Helps users diagnose connection issues
+
+16. **network-tab-websocket.png**
+    - Location: TROUBLESHOOTING.md → "WebSocket Failed"
+    - Shows: F12 Developer Tools → Network tab
+    - Shows: WebSocket connection (ws:// or wss://)
+    - Shows: Connection status (successful or failed)
+    - Purpose: Shows advanced diagnosis
+
+---
+
+### Directory Structure for Screenshots
+
+**Recommended organization:**
+
+```
+docs/screenshots/
+├── README.md (index of all screenshots)
+├── getting-started/
+│   ├── instructor-login-page.png
+│   ├── session-creation-form.png
+│   └── session-created-success.png
+├── sharing/
+│   ├── qr-code-display-modal.png
+│   └── qr-code-presentation-projector.png
+├── moderation/
+│   ├── flagged-questions-tab.png
+│   └── moderation-buttons-close-up.png
+├── answering/
+│   ├── answer-writing-modal.png
+│   └── question-with-answer.png
+├── dashboard/
+│   ├── instructor-dashboard-overview.png
+│   ├── dashboard-with-checkmark.png
+│   ├── my-sessions-list.png
+│   └── voting-toggle-example.png
+└── troubleshooting/
+    ├── browser-console-errors.png
+    └── network-tab-websocket.png
+```
+
+---
+
+### Screenshot Priority
+
+**High Priority (Essential):**
+- instructor-dashboard-overview.png
+- qr-code-display-modal.png
+- flagged-questions-tab.png
+- session-creation-form.png
+
+**Medium Priority (Important):**
+- my-sessions-list.png
+- answer-writing-modal.png
+- instructor-login-page.png
+- moderation-buttons-close-up.png
+
+**Low Priority (Nice to have):**
+- browser-console-errors.png
+- voting-toggle-example.png
+- question-with-answer.png
+
+---
+
+### How to Add Screenshots to Documentation
+
+Once screenshots are captured, add them like this:
+
+**In Markdown:**
+```markdown
+![Description of screenshot](../screenshots/folder/filename.png)
+
+**Figure X:** Explain what user should notice in this screenshot
+```
+
+**Example:**
+```markdown
+![Instructor dashboard showing multiple questions](../screenshots/dashboard/instructor-dashboard-overview.png)
+
+**Figure 1:** Instructor dashboard showing real-time questions sorted by votes
+```
+
+---
+
+### Linking Screenshots from FAQ
+
+The [FAQ.md](FAQ.md) file includes suggestions for where to add screenshots. Each suggestion is marked with:
+
+```
+**Screenshot Suggestion:** [Description of what to show]
+```
+
+When screenshots are captured, update FAQ.md and other guides to include the image links.
+
+---
+
+### Verification Checklist
+
+When adding screenshots:
+- [ ] Filename follows naming convention (kebab-case, descriptive)
+- [ ] Image placed in correct subdirectory
+- [ ] Alt text is descriptive (for accessibility)
+- [ ] Image is high quality (PNG, 1920x1080 or smaller)
+- [ ] Figure caption included in markdown
+- [ ] Links work in both HTML and raw markdown views
+- [ ] Mobile screenshots also included where relevant
+- [ ] No sensitive information visible (passwords, keys, etc.)
