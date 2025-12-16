@@ -407,10 +407,10 @@ def get_meeting_by_code(
         Question.meeting_id == meeting.id
     )
     
-    # SECURITY: For students, only show approved questions (both clean and approved-with-profanity)
-    # For instructors, show all questions
-    if not is_instructor_view:
-        query = query.filter(Question.status == 'approved')
+    # SECURITY: For BOTH students and instructors, only show approved questions in main view
+    # Flagged/rejected questions are shown separately via /api/meetings/{code}/flagged-questions endpoint
+    # This prevents flagged profanity from appearing in the main questions list
+    query = query.filter(Question.status == 'approved')
     
     questions = query.order_by(Question.created_at.desc()).all()
     
