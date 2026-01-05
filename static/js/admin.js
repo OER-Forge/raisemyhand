@@ -619,7 +619,7 @@ async function loadApiKeys() {
 
 function renderApiKeys(apiKeys) {
     const tbody = document.getElementById('api-keys-tbody');
-    
+
     if (apiKeys.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -638,15 +638,18 @@ function renderApiKeys(apiKeys) {
             ? '<span class="badge badge-active">Active</span>'
             : '<span class="badge badge-ended">Inactive</span>';
 
+        // Use key_masked (or key_preview) if available, otherwise fall back to key field
+        const displayKey = key.key_masked || key.key_preview || key.key;
+
         return `
             <tr>
                 <td><strong>${escapeHtml(key.name)}</strong></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <code class="code-snippet" style="flex: 1; user-select: all;" id="key-${key.id}">
-                            ${escapeHtml(key.key)}
+                            ${escapeHtml(displayKey)}
                         </code>
-                        <button class="btn-view" style="padding: 4px 8px; min-width: 70px;" onclick="copyApiKeyById(${key.id}, '${key.key}', this)">📋 Copy</button>
+                        <button class="btn-view" style="padding: 4px 8px; min-width: 70px;" id="reveal-btn-${key.id}" onclick="revealApiKey(${key.id}, this)">👁️ Reveal</button>
                     </div>
                 </td>
                 <td>${createdDate.toLocaleString()}</td>
@@ -761,6 +764,50 @@ async function deleteApiKey(keyId, keyName) {
         console.error('Error deleting API key:', error);
         showNotification('Failed to delete API key', 'error');
     }
+}
+
+async function revealApiKey(keyId, button) {
+    try {
+        const response = await fetch(`/api/admin/api-keys/${keyId}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error('Failed to reveal API key');
+
+        const apiKey = await response.json();
+        const codeElement = document.getElementById(`key-${keyId}`);
+
+        // Check if already revealed
+        if (codeElement.textContent.includes(apiKey.key)) {
+            // Already revealed, now hide it
+            hideApiKey(keyId, button);
+            return;
+        }
+
+        // Reveal the key
+        codeElement.textContent = apiKey.key;
+        button.textContent = '🙈 Hide';
+        button.style.background = '#f39c12';
+
+        // Add copy button functionality
+        codeElement.style.userSelect = 'all';
+        showNotification('API key revealed! Be careful with this key.', 'warning');
+
+    } catch (error) {
+        console.error('Error revealing API key:', error);
+        showNotification('Failed to reveal API key', 'error');
+    }
+}
+
+function hideApiKey(keyId, button) {
+    const codeElement = document.getElementById(`key-${keyId}`);
+    // Restore masked version - need to get it from somewhere
+    // For now, use a fallback pattern
+    const masked = codeElement.textContent.substring(0, 7) + '...' + codeElement.textContent.slice(-4);
+    codeElement.textContent = masked;
+    button.textContent = '👁️ Reveal';
+    button.style.background = '';
 }
 
 function copyApiKeyById(keyId, keyText, button) {

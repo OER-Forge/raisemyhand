@@ -11,11 +11,13 @@ from database import get_db
 from models_v2 import Instructor, APIKey as APIKeyV2
 from schemas_v2 import (
     InstructorRegister, InstructorLogin, InstructorResponse,
-    InstructorUpdate, Token, APIKeyCreate, APIKeyResponse
+    InstructorUpdate, Token, APIKeyCreate, APIKeyResponse, APIKeyMaskedResponse,
+    PasswordConfirmation
 )
 from config import settings
 from security import verify_password, get_password_hash
 from logging_config import get_logger, log_security_event, log_database_operation
+from services.api_key_service import APIKeyService
 
 router = APIRouter(prefix="/api/instructors", tags=["instructors"])
 logger = get_logger(__name__)
@@ -106,6 +108,15 @@ def register_instructor(data: InstructorRegister, db: DBSession = Depends(get_db
         db.add(instructor)
         db.commit()
         db.refresh(instructor)
+
+        # Auto-generate API key for the instructor
+        try:
+            APIKeyService.auto_generate_api_key(instructor, db)
+        except Exception as e:
+            logger.error(f"Failed to auto-generate API key for instructor {instructor.id}: {e}", exc_info=True)
+            # Don't fail the registration if API key generation fails
+            # Log it but continue
+
         log_security_event(logger, "REGISTRATION_SUCCESS", f"New instructor registered: {data.username}", severity="info")
         log_database_operation(logger, "CREATE", "instructors", instructor.id, success=True)
         return instructor
@@ -208,14 +219,14 @@ def update_profile(
         raise HTTPException(status_code=500, detail="Failed to update profile")
 
 
-@router.get("/api-keys", response_model=list[APIKeyResponse])
+@router.get("/api-keys", response_model=list[APIKeyMaskedResponse])
 def list_api_keys(
     instructor: Instructor = Depends(get_current_instructor),
     db: DBSession = Depends(get_db)
 ):
-    """List instructor's API keys."""
+    """List instructor's API keys (masked by default for security)."""
     keys = db.query(APIKeyV2).filter(APIKeyV2.instructor_id == instructor.id).all()
-    return keys
+    return [APIKeyMaskedResponse.from_api_key(key) for key in keys]
 
 
 @router.post("/api-keys", response_model=APIKeyResponse, status_code=status.HTTP_201_CREATED)
@@ -241,6 +252,34 @@ def create_api_key(
         db.rollback()
         logger.error(f"Failed to create API key: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to create API key")
+
+
+@router.post("/api-keys/{key_id}/reveal", response_model=APIKeyResponse)
+def reveal_api_key(
+    key_id: int,
+    password_data: PasswordConfirmation,
+    instructor: Instructor = Depends(get_current_instructor),
+    db: DBSession = Depends(get_db)
+):
+    """Reveal the full API key after password confirmation."""
+    # Verify password
+    if not verify_password(password_data.password, instructor.password_hash):
+        log_security_event(logger, "FAILED_PASSWORD_CONFIRMATION", f"Failed password confirmation for API key reveal by {instructor.username}", severity="warning")
+        raise HTTPException(status_code=401, detail="Invalid password")
+
+    # Get API key
+    api_key = db.query(APIKeyV2).filter(
+        APIKeyV2.id == key_id,
+        APIKeyV2.instructor_id == instructor.id
+    ).first()
+
+    if not api_key:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    # Log the reveal action
+    log_security_event(logger, "API_KEY_REVEALED_BY_INSTRUCTOR", f"Instructor {instructor.username} revealed their API key {key_id}", severity="info")
+
+    return api_key
 
 
 @router.delete("/api-keys/{key_id}", status_code=status.HTTP_204_NO_CONTENT)

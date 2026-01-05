@@ -9,6 +9,7 @@ from models_v2 import Instructor, ClassMeeting, APIKey
 from security import get_password_hash
 from logging_config import log_security_event, get_logger
 from typing import Optional
+from services.api_key_service import APIKeyService
 
 logger = get_logger(__name__)
 
@@ -110,14 +111,23 @@ class UserManagementService:
         
         db.add(instructor)
         db.commit()
-        
+        db.refresh(instructor)
+
+        # Auto-generate API key for the instructor
+        try:
+            APIKeyService.auto_generate_api_key(instructor, db)
+        except Exception as e:
+            logger.error(f"Failed to auto-generate API key for instructor {instructor.id}: {e}", exc_info=True)
+            # Don't fail the instructor creation if API key generation fails
+            # Log it but continue
+
         log_security_event(
             logger,
             "INSTRUCTOR_CREATED",
             f"Admin {admin.username} created instructor: {username} (role: {role})",
             severity="info"
         )
-        
+
         return instructor
     
     @staticmethod

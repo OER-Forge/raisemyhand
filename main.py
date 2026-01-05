@@ -61,6 +61,7 @@ from schemas_v2 import (
     SessionPasswordVerify,
     APIKeyCreate,
     APIKeyResponse,
+    APIKeyMaskedResponse,
     InstructorAuth
 )
 
@@ -799,11 +800,44 @@ def create_api_key(request: Request, key_data: APIKeyCreate, username: str = Dep
         logger.error(f"Failed to create API key: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to create API key. Please try again.")
 
-@app.get("/api/admin/api-keys", response_model=list[APIKeyResponse])
+@app.get("/api/admin/api-keys", response_model=list[APIKeyMaskedResponse])
 @limiter.limit("60/minute")
-def list_api_keys(request: Request, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
-    """List all API keys (admin only, rate limited: 60/min)."""
-    return db.query(APIKey).order_by(APIKey.created_at.desc()).all()
+def list_api_keys(request: Request, reveal: bool = False, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """List all API keys (admin only, rate limited: 60/min).
+
+    By default, returns masked keys. Set reveal=true to show full keys (not recommended).
+    """
+    api_keys = db.query(APIKey).order_by(APIKey.created_at.desc()).all()
+
+    if reveal:
+        # For reveal=true, return full keys (still wrapped in masked response for consistency)
+        # Admin explicitly requested to reveal - this should be logged
+        log_security_event(logger, "API_KEYS_REVEALED", f"Admin {username} requested full API keys list", severity="warning")
+
+    return [APIKeyMaskedResponse.from_api_key(key) for key in api_keys]
+
+@app.get("/api/admin/api-keys/{key_id}", response_model=APIKeyResponse)
+@limiter.limit("30/minute")
+def reveal_api_key(request: Request, key_id: int, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """Reveal the full API key (admin only, rate limited: 30/min).
+
+    This endpoint returns the full, unmasked API key. Use with caution!
+    """
+    try:
+        api_key = db.query(APIKey).filter(APIKey.id == key_id).first()
+        if not api_key:
+            raise HTTPException(status_code=404, detail="API key not found")
+
+        # Log the reveal action
+        log_security_event(logger, "API_KEY_REVEALED", f"Admin {username} revealed API key {key_id}", severity="warning")
+
+        return api_key
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to reveal API key: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to reveal API key. Please try again.")
+
 
 @app.delete("/api/admin/api-keys/{key_id}")
 @limiter.limit("20/minute")

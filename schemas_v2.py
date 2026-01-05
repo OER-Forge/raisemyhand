@@ -51,6 +51,11 @@ class InstructorResponse(BaseModel):
 # API Key Schemas
 # ============================================================================
 
+class PasswordConfirmation(BaseModel):
+    """Password confirmation for sensitive operations."""
+    password: str = Field(..., min_length=1)
+
+
 class APIKeyCreate(BaseModel):
     """Create a new API key."""
     name: str = Field(..., min_length=1, max_length=100)
@@ -68,6 +73,51 @@ class APIKeyResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @staticmethod
+    def mask_key(full_key: str) -> str:
+        """Mask an API key for display (show first 7 + last 4 chars)."""
+        if len(full_key) <= 11:
+            return "****"
+        return f"{full_key[:7]}...{full_key[-4:]}"
+
+    def get_masked_key(self) -> str:
+        """Get the masked version of this key."""
+        return self.mask_key(self.key)
+
+    def get_preview(self) -> str:
+        """Get a preview of the key (masked version)."""
+        return self.get_masked_key()
+
+
+class APIKeyMaskedResponse(BaseModel):
+    """API key with masked key for listing (sensitive data hidden by default)."""
+    id: int
+    instructor_id: int
+    key_masked: str  # Masked version like "rmh_abc...xyz"
+    key_preview: str  # Same as key_masked for backwards compatibility
+    name: str
+    created_at: datetime
+    last_used: Optional[datetime]
+    is_active: bool
+
+    class Config:
+        from_attributes = False  # We build this manually
+
+    @classmethod
+    def from_api_key(cls, api_key):
+        """Create a masked response from an APIKey model."""
+        masked = APIKeyResponse.mask_key(api_key.key)
+        return cls(
+            id=api_key.id,
+            instructor_id=api_key.instructor_id,
+            key_masked=masked,
+            key_preview=masked,
+            name=api_key.name,
+            created_at=api_key.created_at,
+            last_used=api_key.last_used,
+            is_active=api_key.is_active
+        )
 
 
 class InstructorAuth(BaseModel):
