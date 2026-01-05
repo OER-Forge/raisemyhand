@@ -641,9 +641,12 @@ function renderApiKeys(apiKeys) {
         // Use key_masked (or key_preview) if available, otherwise fall back to key field
         const displayKey = key.key_masked || key.key_preview || key.key;
 
+        // Display instructor info: prefer display_name, fallback to username
+        const instructorDisplay = key.instructor_display_name || key.instructor_username || 'Unknown';
+
         return `
             <tr>
-                <td><strong>${escapeHtml(key.name)}</strong></td>
+                <td><strong>${escapeHtml(instructorDisplay)}</strong></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <code class="code-snippet" style="flex: 1; user-select: all;" id="key-${key.id}">
@@ -656,7 +659,7 @@ function renderApiKeys(apiKeys) {
                 <td>${lastUsedDate ? lastUsedDate.toLocaleString() : 'Never'}</td>
                 <td>${statusBadge}</td>
                 <td>
-                    <button class="btn-delete" onclick="deleteApiKey(${key.id}, '${escapeHtml(key.name)}')">🗑️ Delete</button>
+                    <button class="btn-delete" onclick="deleteApiKey(${key.id}, '${escapeHtml(instructorDisplay)}')">🔒 Revoke</button>
                 </td>
             </tr>
         `;
@@ -745,24 +748,39 @@ async function handleCreateApiKey(event) {
 }
 
 async function deleteApiKey(keyId, keyName) {
-    if (!confirm(`Are you sure you want to delete the API key "${keyName}"?\n\nThis will prevent anyone using this key from creating new sessions.`)) {
+    // First confirm the revocation
+    if (!confirm(`Are you sure you want to revoke the API key for "${keyName}"?\n\nThis will prevent anyone using this key from accessing the system.`)) {
+        return;
+    }
+
+    // Prompt for revocation reason
+    const reason = prompt('Please provide a reason for revoking this API key:', 'Security policy');
+    if (!reason) {
+        showNotification('Revocation cancelled - no reason provided', 'info');
         return;
     }
 
     try {
         const response = await fetch(`/api/admin/api-keys/${keyId}`, {
             method: 'DELETE',
-            headers: getAuthHeaders()
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason })
         });
 
         if (handleAuthError(response)) return;
-        if (!response.ok) throw new Error('Failed to delete API key');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to revoke API key');
+        }
 
-        showNotification('API key deleted successfully', 'success');
+        showNotification('API key revoked successfully', 'success');
         loadApiKeys(); // Refresh the list
     } catch (error) {
-        console.error('Error deleting API key:', error);
-        showNotification('Failed to delete API key', 'error');
+        console.error('Error revoking API key:', error);
+        showNotification(`Failed to revoke API key: ${error.message}`, 'error');
     }
 }
 

@@ -62,6 +62,7 @@ from schemas_v2 import (
     APIKeyCreate,
     APIKeyResponse,
     APIKeyMaskedResponse,
+    APIKeyRevocationRequest,
     InstructorAuth
 )
 
@@ -805,16 +806,19 @@ def create_api_key(request: Request, key_data: APIKeyCreate, username: str = Dep
 def list_api_keys(request: Request, reveal: bool = False, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
     """List all API keys (admin only, rate limited: 60/min).
 
-    By default, returns masked keys. Set reveal=true to show full keys (not recommended).
+    By default, returns masked keys with instructor information. Set reveal=true to show full keys (not recommended).
     """
-    api_keys = db.query(APIKey).order_by(APIKey.created_at.desc()).all()
+    # Join with instructor table to get instructor details
+    results = db.query(APIKey, Instructor).join(
+        Instructor, APIKey.instructor_id == Instructor.id
+    ).order_by(APIKey.created_at.desc()).all()
 
     if reveal:
         # For reveal=true, return full keys (still wrapped in masked response for consistency)
         # Admin explicitly requested to reveal - this should be logged
         log_security_event(logger, "API_KEYS_REVEALED", f"Admin {username} requested full API keys list", severity="warning")
 
-    return [APIKeyMaskedResponse.from_api_key(key) for key in api_keys]
+    return [APIKeyMaskedResponse.from_api_key(key, instructor) for key, instructor in results]
 
 @app.get("/api/admin/api-keys/{key_id}", response_model=APIKeyResponse)
 @limiter.limit("30/minute")
@@ -841,22 +845,36 @@ def reveal_api_key(request: Request, key_id: int, username: str = Depends(verify
 
 @app.delete("/api/admin/api-keys/{key_id}")
 @limiter.limit("20/minute")
-def delete_api_key(request: Request, key_id: int, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
-    """Deactivate an API key (admin only, rate limited: 20/min)."""
+def delete_api_key(request: Request, key_id: int, revocation_data: APIKeyRevocationRequest, username: str = Depends(verify_token), db: DBSession = Depends(get_db)):
+    """Revoke an API key (admin only, rate limited: 20/min)."""
     try:
         api_key = db.query(APIKey).filter(APIKey.id == key_id).first()
         if not api_key:
             raise HTTPException(status_code=404, detail="API key not found")
 
+        # Get admin instructor record for tracking who revoked the key
+        admin_instructor = db.query(Instructor).filter(Instructor.username == username).first()
+
+        # Mark the API key as revoked with full audit tracking
         api_key.is_active = False
+        api_key.revoked_at = datetime.utcnow()
+        api_key.revocation_reason = revocation_data.reason
+        if admin_instructor:
+            api_key.revoked_by = admin_instructor.id
+
         db.commit()
-        return {"message": "API key deactivated successfully"}
+
+        # Log the revocation event
+        admin_identifier = admin_instructor.username if admin_instructor else username
+        log_security_event(logger, "API_KEY_REVOKED", f"Admin {admin_identifier} revoked API key {key_id}: {revocation_data.reason}", severity="warning")
+
+        return {"message": "API key revoked successfully"}
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"Failed to deactivate API key: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to deactivate API key. Please try again.")
+        logger.error(f"Failed to revoke API key: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to revoke API key. Please try again.")
 
 @app.post("/api/instructor/auth")
 def instructor_auth(auth_data: InstructorAuth, db: DBSession = Depends(get_db)):

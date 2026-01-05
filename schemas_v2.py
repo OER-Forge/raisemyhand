@@ -61,6 +61,11 @@ class APIKeyCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
 
 
+class APIKeyRevocationRequest(BaseModel):
+    """Request to revoke an API key."""
+    reason: str = Field(..., min_length=1, max_length=500)
+
+
 class APIKeyResponse(BaseModel):
     """API key with metadata."""
     id: int
@@ -100,13 +105,20 @@ class APIKeyMaskedResponse(BaseModel):
     created_at: datetime
     last_used: Optional[datetime]
     is_active: bool
+    instructor_username: Optional[str] = None  # For admin UI display
+    instructor_display_name: Optional[str] = None  # For admin UI display
 
     class Config:
         from_attributes = False  # We build this manually
 
     @classmethod
-    def from_api_key(cls, api_key):
-        """Create a masked response from an APIKey model."""
+    def from_api_key(cls, api_key, instructor=None):
+        """Create a masked response from an APIKey model.
+
+        Args:
+            api_key: The APIKey database model
+            instructor: Optional Instructor model for including instructor details
+        """
         masked = APIKeyResponse.mask_key(api_key.key)
         return cls(
             id=api_key.id,
@@ -116,7 +128,9 @@ class APIKeyMaskedResponse(BaseModel):
             name=api_key.name,
             created_at=api_key.created_at,
             last_used=api_key.last_used,
-            is_active=api_key.is_active
+            is_active=api_key.is_active,
+            instructor_username=instructor.username if instructor else None,
+            instructor_display_name=instructor.display_name if instructor else None
         )
 
 

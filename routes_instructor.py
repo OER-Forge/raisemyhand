@@ -288,7 +288,7 @@ def delete_api_key(
     instructor: Instructor = Depends(get_current_instructor),
     db: DBSession = Depends(get_db)
 ):
-    """Deactivate an API key."""
+    """Revoke an API key (self-service for instructors)."""
     api_key = db.query(APIKeyV2).filter(
         APIKeyV2.id == key_id,
         APIKeyV2.instructor_id == instructor.id
@@ -298,10 +298,14 @@ def delete_api_key(
         raise HTTPException(status_code=404, detail="API key not found")
 
     try:
+        # Mark the API key as revoked with full audit tracking
         api_key.is_active = False
+        api_key.revoked_at = datetime.utcnow()
+        api_key.revoked_by = instructor.id  # Self-revocation
+        api_key.revocation_reason = "Self-revoked by instructor"
         db.commit()
         log_database_operation(logger, "UPDATE", "api_keys", api_key.id, success=True)
     except Exception as e:
         db.rollback()
-        logger.error(f"Failed to deactivate API key: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to deactivate API key")
+        logger.error(f"Failed to revoke API key: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to revoke API key")
