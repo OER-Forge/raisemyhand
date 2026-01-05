@@ -240,6 +240,50 @@
                     <button type="button" class="btn btn-primary" id="saveBtn" onclick="saveProfile()">Save Changes</button>
                 </div>
             </div>
+
+            <!-- API Access -->
+            <div class="profile-card">
+                <h2>🔑 API Access</h2>
+                <p style="color: #666; margin-bottom: 15px;">Your API key for programmatic access to the platform</p>
+
+                <div id="apiKeyContainer" style="display: none;">
+                    <div class="form-group">
+                        <label>Your API Key</label>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                            <code id="apiKeyDisplay" class="code-snippet" style="flex: 1; user-select: all; padding: 8px; background: #f5f5f5; border-radius: 4px; font-family: monospace; word-break: break-all;">
+                                Loading...
+                            </code>
+                            <button type="button" class="btn btn-secondary" id="revealApiKeyBtn" onclick="toggleApiKeyReveal()" style="padding: 6px 12px; min-width: 80px;">
+                                👁️ Reveal
+                            </button>
+                        </div>
+                        <small style="display: block; margin-bottom: 8px;">Created: <span id="apiKeyCreatedDate">—</span></small>
+                        <small style="display: block;">Last used: <span id="apiKeyLastUsed">Never</span></small>
+                    </div>
+
+                    <div class="form-group" id="passwordConfirmGroup" style="display: none;">
+                        <label for="revealPassword">Enter your password to reveal the full key</label>
+                        <input type="password" id="revealPassword" placeholder="Enter password">
+                        <small>Password confirmation required for security</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="confirmRevealBtn" onclick="revealApiKey()" style="display: none;">
+                            🔓 Confirm & Reveal
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="copyApiKeyBtn" onclick="copyApiKey()" style="display: none;">
+                            📋 Copy
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelRevealBtn" onclick="cancelApiKeyReveal()" style="display: none;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <div id="apiKeyLoading" style="text-align: center; color: #666;">
+                    <p>Loading API key information...</p>
+                </div>
+            </div>
         </div>
     </div>
 
