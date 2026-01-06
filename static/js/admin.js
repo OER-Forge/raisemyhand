@@ -659,7 +659,16 @@ function renderApiKeys(apiKeys) {
                 <td>${lastUsedDate ? lastUsedDate.toLocaleString() : 'Never'}</td>
                 <td>${statusBadge}</td>
                 <td>
-                    <button class="btn-delete" onclick="deleteApiKey(${key.id}, '${escapeHtml(instructorDisplay)}')">🔒 Revoke</button>
+                    ${key.is_active ? `
+                        <button class="btn-warning" style="margin-right: 5px;" onclick="regenerateApiKeyFromDashboard(${key.instructor_id}, '${escapeHtml(instructorDisplay)}')">
+                            🔄 Regenerate
+                        </button>
+                        <button class="btn-delete" onclick="deleteApiKey(${key.id}, '${escapeHtml(instructorDisplay)}')">
+                            🔒 Revoke
+                        </button>
+                    ` : `
+                        <span style="color: #999;">Revoked</span>
+                    `}
                 </td>
             </tr>
         `;
@@ -744,6 +753,59 @@ async function handleCreateApiKey(event) {
     } catch (error) {
         console.error('Error creating API key:', error);
         showNotification('Failed to create API key', 'error');
+    }
+}
+
+async function regenerateApiKeyFromDashboard(instructorId, instructorName) {
+    const reason = prompt(`Regenerate API key for ${instructorName}?\n\nThis will revoke all active keys and create a new one.\n\nPlease provide a reason (e.g., "Compromised", "Security update"):`);
+
+    if (!reason || reason.trim() === '') {
+        return; // User cancelled or provided empty reason
+    }
+
+    try {
+        const response = await fetch(`/api/admin/api-keys/${instructorId}/regenerate`, {
+            method: 'POST',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+        });
+
+        if (handleAuthError(response)) return;
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to regenerate API key');
+        }
+
+        const result = await response.json();
+
+        // Show the new API key
+        const newKey = result.api_key.key;
+        const message = `✅ New API key generated successfully!\n\nKey: ${newKey}\n\n⚠️ IMPORTANT: Copy this key now! You won't be able to see it again.\n\nThis key has been copied to your clipboard.`;
+
+        // Copy to clipboard
+        if (navigator.clipboard) {
+            await navigator.clipboard.writeText(newKey);
+        } else {
+            // Fallback
+            const textArea = document.createElement('textarea');
+            textArea.value = newKey;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        }
+
+        alert(message);
+
+        showNotification('API key regenerated successfully', 'success');
+        loadApiKeys(); // Refresh the list
+    } catch (error) {
+        console.error('Error regenerating API key:', error);
+        showNotification(`Failed to regenerate API key: ${error.message}`, 'error');
     }
 }
 

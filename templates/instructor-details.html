@@ -575,13 +575,24 @@
 
         function populateApiKeysTable(apiKeys) {
             const container = document.getElementById('api-keys-table-container');
-            
+
+            console.log('[Admin] populateApiKeysTable called with', apiKeys.length, 'keys');
+            console.log('[Admin] API keys:', apiKeys);
+
             if (apiKeys.length === 0) {
                 container.innerHTML = '<div class="empty-state">No API keys found.</div>';
                 return;
             }
 
+            const activeKeyCount = apiKeys.filter(k => k.is_active).length;
+            console.log('[Admin] Active keys:', activeKeyCount);
+            const regenerateNote = activeKeyCount > 0 ?
+                `<p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                    <strong>Note:</strong> Regenerating will revoke all active keys and create a new one.
+                </p>` : '';
+
             const table = `
+                ${regenerateNote}
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -590,6 +601,7 @@
                             <th>Created</th>
                             <th>Last Used</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -603,13 +615,21 @@
                                     <span class="badge ${key.is_active ? 'badge-active' : 'badge-ended'}">
                                         ${key.is_active ? '🟢 Active' : '🔴 Inactive'}
                                     </span>
+                                    ${key.revoked_at ? `<br><small style="color: #666;">Revoked: ${new Date(key.revoked_at).toLocaleDateString()}</small>` : ''}
+                                </td>
+                                <td>
+                                    ${key.is_active ?
+                                        `<button class="action-btn btn-warning" onclick="regenerateInstructorApiKey()" title="Regenerate API Key">
+                                            🔄 Regenerate
+                                        </button>` :
+                                        '<span style="color: #999;">—</span>'}
                                 </td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             `;
-            
+
             container.innerHTML = table;
         }
 
@@ -693,6 +713,59 @@
 
         function hidePasswordResetModal() {
             document.getElementById('password-reset-modal').classList.remove('active');
+        }
+
+        async function regenerateInstructorApiKey() {
+            if (!currentInstructor) return;
+
+            const reason = prompt(`Regenerate API key for "${currentInstructor.display_name || currentInstructor.username}"?\n\nThis will revoke all active keys and create a new one.\n\nPlease provide a reason (e.g., "Compromised", "Security update"):`);
+
+            if (!reason || reason.trim() === '') {
+                return; // User cancelled or provided empty reason
+            }
+
+            try {
+                const response = await fetch(`/api/admin/api-keys/${currentInstructor.id}/regenerate`, {
+                    method: 'POST',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason: reason.trim() })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to regenerate API key');
+                }
+
+                const result = await response.json();
+
+                // Show the new API key in a modal/alert
+                const newKey = result.api_key.key;
+                const message = `✅ New API key generated successfully!\n\nKey: ${newKey}\n\n⚠️ IMPORTANT: Copy this key now! You won't be able to see it again.\n\nThis key has been copied to your clipboard.`;
+
+                // Copy to clipboard
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(newKey);
+                } else {
+                    // Fallback
+                    const textArea = document.createElement('textarea');
+                    textArea.value = newKey;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+
+                alert(message);
+
+                showNotification('API key regenerated successfully', 'success');
+                await loadInstructorDetails();
+            } catch (error) {
+                console.error('Error regenerating API key:', error);
+                showNotification(error.message || 'Failed to regenerate API key', 'error');
+            }
         }
 
         function goToAdminDashboard() {

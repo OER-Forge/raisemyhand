@@ -218,8 +218,12 @@ async function loadApiKeys() {
 
         const apiKeys = await response.json();
 
-        // Get the first API key (instructors should have only one)
-        const apiKey = apiKeys.length > 0 ? apiKeys[0] : null;
+        console.log('[Profile] Received API keys:', apiKeys);
+
+        // Get the ACTIVE API key (filter out revoked ones)
+        const apiKey = apiKeys.find(key => key.is_active) || null;
+
+        console.log('[Profile] Active API key:', apiKey ? `ID ${apiKey.id}` : 'none');
 
         const apiKeyContainer = document.getElementById('apiKeyContainer');
         const apiKeyLoading = document.getElementById('apiKeyLoading');
@@ -377,6 +381,158 @@ function copyApiKey() {
         document.execCommand('copy');
         document.body.removeChild(textArea);
         showNotification('API key copied to clipboard!', 'success');
+    });
+}
+
+/**
+ * Show regenerate API key modal
+ */
+function showRegenerateModal() {
+    const modal = document.getElementById('regenerateModal');
+    const password = document.getElementById('regeneratePassword');
+    const errorDiv = document.getElementById('regenerateError');
+    const newKeyDisplay = document.getElementById('regenerateNewKeyDisplay');
+    const confirmBtn = document.getElementById('confirmRegenerateBtn');
+    const copyBtn = document.getElementById('copyNewKeyBtn');
+
+    // Reset modal state
+    password.value = '';
+    errorDiv.style.display = 'none';
+    newKeyDisplay.style.display = 'none';
+    confirmBtn.style.display = 'inline-block';
+    copyBtn.style.display = 'none';
+
+    // Show modal
+    modal.style.display = 'flex';
+    password.focus();
+}
+
+/**
+ * Close regenerate modal
+ */
+function closeRegenerateModal() {
+    const modal = document.getElementById('regenerateModal');
+    const password = document.getElementById('regeneratePassword');
+    const errorDiv = document.getElementById('regenerateError');
+    const newKeyDisplay = document.getElementById('regenerateNewKeyDisplay');
+    const confirmBtn = document.getElementById('confirmRegenerateBtn');
+    const copyBtn = document.getElementById('copyNewKeyBtn');
+
+    // Reset modal state
+    modal.style.display = 'none';
+    password.value = '';
+    errorDiv.style.display = 'none';
+    newKeyDisplay.style.display = 'none';
+    confirmBtn.style.display = 'inline-block';
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = '🔄 Regenerate Now';
+    copyBtn.style.display = 'none';
+
+    // Reload API keys to show updated information
+    console.log('[Profile] Reloading API keys after regeneration');
+    loadApiKeys();
+}
+
+/**
+ * Confirm and execute API key regeneration
+ */
+async function confirmRegenerate() {
+    const password = document.getElementById('regeneratePassword').value;
+    const errorDiv = document.getElementById('regenerateError');
+    const confirmBtn = document.getElementById('confirmRegenerateBtn');
+    const copyBtn = document.getElementById('copyNewKeyBtn');
+    const newKeyDisplay = document.getElementById('regenerateNewKeyDisplay');
+    const newKeyCode = document.getElementById('regenerateNewKey');
+
+    if (!password) {
+        errorDiv.textContent = 'Please enter your password';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    // Disable button to prevent double-clicks
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = '🔄 Regenerating...';
+    errorDiv.style.display = 'none';
+
+    try {
+        const response = await authenticatedFetch('/api/instructors/api-keys/regenerate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: password })
+        });
+
+        if (response.status === 401) {
+            const error = await response.json();
+            if (error.detail === 'Invalid password') {
+                errorDiv.textContent = 'Invalid password. Please try again.';
+                errorDiv.style.display = 'block';
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = '🔄 Regenerate Now';
+                return;
+            }
+            handleAuthError();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to regenerate API key');
+        }
+
+        const result = await response.json();
+
+        // Display the new key
+        newKeyCode.textContent = result.key;
+        newKeyDisplay.style.display = 'block';
+
+        // Hide confirm button, show copy button
+        confirmBtn.style.display = 'none';
+        copyBtn.style.display = 'inline-block';
+
+        // Clear password field
+        document.getElementById('regeneratePassword').value = '';
+
+        // Reload API keys in the background to update the display
+        console.log('[Profile] API key regenerated, reloading display');
+        loadApiKeys();
+
+        showNotification('API key regenerated successfully! Copy it now.', 'success');
+
+    } catch (error) {
+        console.error('[Profile] Error regenerating API key:', error);
+        errorDiv.textContent = 'Failed to regenerate API key. Please try again.';
+        errorDiv.style.display = 'block';
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '🔄 Regenerate Now';
+    }
+}
+
+/**
+ * Copy newly generated API key to clipboard
+ */
+function copyNewKey() {
+    const keyText = document.getElementById('regenerateNewKey').textContent;
+
+    navigator.clipboard.writeText(keyText).then(() => {
+        showNotification('New API key copied to clipboard!', 'success');
+        // Close modal after a short delay
+        setTimeout(() => {
+            closeRegenerateModal();
+        }, 1500);
+    }).catch(() => {
+        // Fallback
+        const textArea = document.createElement('textarea');
+        textArea.value = keyText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showNotification('New API key copied to clipboard!', 'success');
+        setTimeout(() => {
+            closeRegenerateModal();
+        }, 1500);
     });
 }
 

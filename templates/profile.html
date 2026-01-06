@@ -278,10 +278,65 @@
                             Cancel
                         </button>
                     </div>
+
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+                    <div class="form-group">
+                        <label>⚠️ Regenerate API Key</label>
+                        <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                            If your API key has been compromised, you can regenerate it. This will immediately revoke your current key and create a new one.
+                        </p>
+                        <button type="button" class="btn btn-danger" onclick="showRegenerateModal()" style="background-color: #dc3545;">
+                            🔄 Regenerate API Key
+                        </button>
+                    </div>
                 </div>
 
                 <div id="apiKeyLoading" style="text-align: center; color: #666;">
                     <p>Loading API key information...</p>
+                </div>
+            </div>
+
+            <!-- Regenerate API Key Modal -->
+            <div id="regenerateModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <h3 style="margin-top: 0; color: #dc3545;">⚠️ Regenerate API Key</h3>
+                    <p style="color: #666; margin-bottom: 15px;">
+                        <strong>Warning:</strong> This action will immediately revoke your current API key and generate a new one.
+                        Any applications using the old key will stop working.
+                    </p>
+                    <p style="color: #666; margin-bottom: 20px;">
+                        Are you sure you want to continue?
+                    </p>
+
+                    <div class="form-group">
+                        <label for="regeneratePassword">Enter your password to confirm</label>
+                        <input type="password" id="regeneratePassword" placeholder="Enter password" style="width: 100%;">
+                    </div>
+
+                    <div id="regenerateNewKeyDisplay" style="display: none; margin: 15px 0;">
+                        <label style="color: #28a745;">✅ New API Key Generated</label>
+                        <div style="background: #f0f8f0; padding: 10px; border-radius: 4px; border: 1px solid #28a745; margin-top: 5px;">
+                            <code id="regenerateNewKey" style="word-break: break-all; display: block; user-select: all;"></code>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            ⚠️ Copy this key now! You won't be able to see it again.
+                        </small>
+                    </div>
+
+                    <div id="regenerateError" style="display: none; color: #dc3545; margin-bottom: 15px; padding: 10px; background: #fee; border-radius: 4px;"></div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeRegenerateModal()">
+                            Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" id="copyNewKeyBtn" onclick="copyNewKey()" style="display: none; background-color: #28a745;">
+                            📋 Copy New Key
+                        </button>
+                        <button type="button" class="btn btn-danger" id="confirmRegenerateBtn" onclick="confirmRegenerate()" style="background-color: #dc3545;">
+                            🔄 Regenerate Now
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

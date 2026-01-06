@@ -876,6 +876,76 @@ def delete_api_key(request: Request, key_id: int, revocation_data: APIKeyRevocat
         logger.error(f"Failed to revoke API key: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to revoke API key. Please try again.")
 
+
+@app.post("/api/admin/api-keys/{instructor_id}/regenerate")
+@limiter.limit("10/minute")
+def regenerate_api_key_admin(
+    request: Request,
+    instructor_id: int,
+    regeneration_data: APIKeyRevocationRequest,
+    username: str = Depends(verify_token),
+    db: DBSession = Depends(get_db)
+):
+    """
+    Regenerate an API key for an instructor (admin only, rate limited: 10/min).
+
+    This will:
+    1. Revoke all existing active API keys for the instructor
+    2. Generate a new API key
+    3. Return the new key (unmasked, one-time view)
+    """
+    try:
+        # Get the instructor
+        instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
+        if not instructor:
+            raise HTTPException(status_code=404, detail="Instructor not found")
+
+        # Get admin instructor record for tracking
+        # Note: Admin users (username="admin") may not have an instructor record
+        admin_instructor = db.query(Instructor).filter(Instructor.username == username).first()
+
+        # Use admin instructor ID if exists, otherwise use the target instructor's ID
+        # (for audit trail when admin doesn't have instructor record)
+        admin_id = admin_instructor.id if admin_instructor else instructor_id
+
+        # Import APIKeyService
+        from services.api_key_service import APIKeyService
+
+        # Regenerate the API key
+        reason = f"Admin regenerated: {regeneration_data.reason}"
+        new_key = APIKeyService.regenerate_api_key(
+            instructor=instructor,
+            reason=reason,
+            revoked_by_id=admin_id,
+            db=db
+        )
+
+        # Log the regeneration event
+        admin_identifier = admin_instructor.username if admin_instructor else username
+        log_security_event(
+            logger,
+            "API_KEY_ADMIN_REGENERATED",
+            f"Admin {admin_identifier} regenerated API key for instructor {instructor.username}: {regeneration_data.reason}",
+            severity="warning"
+        )
+
+        return {
+            "message": "API key regenerated successfully",
+            "api_key": {
+                "id": new_key.id,
+                "key": new_key.key,  # Return unmasked key (one-time view)
+                "name": new_key.name,
+                "created_at": new_key.created_at,
+                "is_active": new_key.is_active
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to regenerate API key: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to regenerate API key. Please try again.")
+
 @app.post("/api/instructor/auth")
 def instructor_auth(auth_data: InstructorAuth, db: DBSession = Depends(get_db)):
     """Authenticate instructor with API key and return session cookie data."""
