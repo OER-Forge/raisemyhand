@@ -195,6 +195,348 @@ function resetForm() {
 }
 
 /**
+ * Load and display API key information
+ */
+async function loadApiKeys() {
+    try {
+        console.log('[Profile] loadApiKeys() called');
+
+        if (!isAuthenticated()) {
+            return;
+        }
+
+        const response = await authenticatedFetch('/api/instructors/api-keys');
+
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to load API keys');
+        }
+
+        const apiKeys = await response.json();
+
+        console.log('[Profile] Received API keys:', apiKeys);
+
+        // Get the ACTIVE API key (filter out revoked ones)
+        const apiKey = apiKeys.find(key => key.is_active) || null;
+
+        console.log('[Profile] Active API key:', apiKey ? `ID ${apiKey.id}` : 'none');
+
+        const apiKeyContainer = document.getElementById('apiKeyContainer');
+        const apiKeyLoading = document.getElementById('apiKeyLoading');
+
+        if (apiKey) {
+            // Show the API key info
+            const maskedKey = apiKey.key_masked || apiKey.key_preview || '****';
+            document.getElementById('apiKeyDisplay').textContent = maskedKey;
+            document.getElementById('apiKeyCreatedDate').textContent = formatDateTime(apiKey.created_at) || '—';
+            document.getElementById('apiKeyLastUsed').textContent = apiKey.last_used
+                ? formatDateTime(apiKey.last_used)
+                : 'Never';
+
+            // Store the key ID for later use
+            window.currentApiKeyId = apiKey.id;
+
+            apiKeyContainer.style.display = 'block';
+            apiKeyLoading.style.display = 'none';
+        } else {
+            // No API key found
+            apiKeyLoading.innerHTML = '<p style="color: #dc3545;">No API key found. Please contact an administrator.</p>';
+            apiKeyLoading.style.display = 'block';
+        }
+
+    } catch (error) {
+        console.error('[Profile] Error loading API keys:', error);
+        document.getElementById('apiKeyLoading').innerHTML = '<p style="color: #dc3545;">Failed to load API key information</p>';
+    }
+}
+
+/**
+ * Toggle API key reveal interface
+ */
+function toggleApiKeyReveal() {
+    const passwordGroup = document.getElementById('passwordConfirmGroup');
+    const revealBtn = document.getElementById('revealApiKeyBtn');
+    const confirmBtn = document.getElementById('confirmRevealBtn');
+    const copyBtn = document.getElementById('copyApiKeyBtn');
+    const cancelBtn = document.getElementById('cancelRevealBtn');
+    const revealPassword = document.getElementById('revealPassword');
+
+    // Check if already revealed (button says "Hide")
+    if (revealBtn.textContent.includes('Hide')) {
+        // Hide the key
+        cancelApiKeyReveal();
+        return;
+    }
+
+    // Show password input
+    passwordGroup.style.display = 'block';
+    revealBtn.style.display = 'none';
+    confirmBtn.style.display = 'inline-block';
+    copyBtn.style.display = 'none';
+    cancelBtn.style.display = 'inline-block';
+    revealPassword.focus();
+}
+
+/**
+ * Reveal full API key with password confirmation
+ */
+async function revealApiKey() {
+    try {
+        const password = document.getElementById('revealPassword').value;
+
+        if (!password) {
+            showNotification('Please enter your password', 'error');
+            return;
+        }
+
+        const response = await authenticatedFetch(`/api/instructors/api-keys/${window.currentApiKeyId}/reveal`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: password })
+        });
+
+        if (response.status === 401) {
+            if (response.headers.get('content-type')?.includes('application/json')) {
+                const error = await response.json();
+                if (error.detail === 'Invalid password') {
+                    showNotification('Invalid password', 'error');
+                    return;
+                }
+            }
+            handleAuthError();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to reveal API key');
+        }
+
+        const apiKey = await response.json();
+
+        // Display full key
+        document.getElementById('apiKeyDisplay').textContent = apiKey.key;
+        document.getElementById('apiKeyDisplay').style.userSelect = 'all';
+
+        // Hide password input and show copy/cancel buttons
+        document.getElementById('passwordConfirmGroup').style.display = 'none';
+        document.getElementById('revealPassword').value = '';
+        document.getElementById('revealApiKeyBtn').textContent = '🙈 Hide';
+        document.getElementById('revealApiKeyBtn').style.display = 'inline-block';
+        document.getElementById('confirmRevealBtn').style.display = 'none';
+        document.getElementById('copyApiKeyBtn').style.display = 'inline-block';
+        document.getElementById('cancelRevealBtn').style.display = 'inline-block';
+
+        showNotification('API key revealed! Be careful with this sensitive information.', 'warning');
+
+    } catch (error) {
+        console.error('[Profile] Error revealing API key:', error);
+        showNotification('Failed to reveal API key', 'error');
+    }
+}
+
+/**
+ * Cancel API key reveal
+ */
+function cancelApiKeyReveal() {
+    const passwordGroup = document.getElementById('passwordConfirmGroup');
+    const revealBtn = document.getElementById('revealApiKeyBtn');
+    const confirmBtn = document.getElementById('confirmRevealBtn');
+    const copyBtn = document.getElementById('copyApiKeyBtn');
+    const cancelBtn = document.getElementById('cancelRevealBtn');
+    const revealPassword = document.getElementById('revealPassword');
+
+    // Restore masked key
+    loadApiKeys();
+
+    // Reset UI
+    passwordGroup.style.display = 'none';
+    revealPassword.value = '';
+    revealBtn.textContent = '👁️ Reveal';
+    revealBtn.style.display = 'inline-block';
+    confirmBtn.style.display = 'none';
+    copyBtn.style.display = 'none';
+    cancelBtn.style.display = 'none';
+}
+
+/**
+ * Copy API key to clipboard
+ */
+function copyApiKey() {
+    const keyText = document.getElementById('apiKeyDisplay').textContent;
+
+    navigator.clipboard.writeText(keyText).then(() => {
+        showNotification('API key copied to clipboard!', 'success');
+    }).catch(() => {
+        // Fallback
+        const textArea = document.createElement('textarea');
+        textArea.value = keyText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showNotification('API key copied to clipboard!', 'success');
+    });
+}
+
+/**
+ * Show regenerate API key modal
+ */
+function showRegenerateModal() {
+    const modal = document.getElementById('regenerateModal');
+    const password = document.getElementById('regeneratePassword');
+    const errorDiv = document.getElementById('regenerateError');
+    const newKeyDisplay = document.getElementById('regenerateNewKeyDisplay');
+    const confirmBtn = document.getElementById('confirmRegenerateBtn');
+    const copyBtn = document.getElementById('copyNewKeyBtn');
+
+    // Reset modal state
+    password.value = '';
+    errorDiv.style.display = 'none';
+    newKeyDisplay.style.display = 'none';
+    confirmBtn.style.display = 'inline-block';
+    copyBtn.style.display = 'none';
+
+    // Show modal
+    modal.style.display = 'flex';
+    password.focus();
+}
+
+/**
+ * Close regenerate modal
+ */
+function closeRegenerateModal() {
+    const modal = document.getElementById('regenerateModal');
+    const password = document.getElementById('regeneratePassword');
+    const errorDiv = document.getElementById('regenerateError');
+    const newKeyDisplay = document.getElementById('regenerateNewKeyDisplay');
+    const confirmBtn = document.getElementById('confirmRegenerateBtn');
+    const copyBtn = document.getElementById('copyNewKeyBtn');
+
+    // Reset modal state
+    modal.style.display = 'none';
+    password.value = '';
+    errorDiv.style.display = 'none';
+    newKeyDisplay.style.display = 'none';
+    confirmBtn.style.display = 'inline-block';
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = '🔄 Regenerate Now';
+    copyBtn.style.display = 'none';
+
+    // Reload API keys to show updated information
+    console.log('[Profile] Reloading API keys after regeneration');
+    loadApiKeys();
+}
+
+/**
+ * Confirm and execute API key regeneration
+ */
+async function confirmRegenerate() {
+    const password = document.getElementById('regeneratePassword').value;
+    const errorDiv = document.getElementById('regenerateError');
+    const confirmBtn = document.getElementById('confirmRegenerateBtn');
+    const copyBtn = document.getElementById('copyNewKeyBtn');
+    const newKeyDisplay = document.getElementById('regenerateNewKeyDisplay');
+    const newKeyCode = document.getElementById('regenerateNewKey');
+
+    if (!password) {
+        errorDiv.textContent = 'Please enter your password';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    // Disable button to prevent double-clicks
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = '🔄 Regenerating...';
+    errorDiv.style.display = 'none';
+
+    try {
+        const response = await authenticatedFetch('/api/instructors/api-keys/regenerate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: password })
+        });
+
+        if (response.status === 401) {
+            const error = await response.json();
+            if (error.detail === 'Invalid password') {
+                errorDiv.textContent = 'Invalid password. Please try again.';
+                errorDiv.style.display = 'block';
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = '🔄 Regenerate Now';
+                return;
+            }
+            handleAuthError();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to regenerate API key');
+        }
+
+        const result = await response.json();
+
+        // Display the new key
+        newKeyCode.textContent = result.key;
+        newKeyDisplay.style.display = 'block';
+
+        // Hide confirm button, show copy button
+        confirmBtn.style.display = 'none';
+        copyBtn.style.display = 'inline-block';
+
+        // Clear password field
+        document.getElementById('regeneratePassword').value = '';
+
+        // Reload API keys in the background to update the display
+        console.log('[Profile] API key regenerated, reloading display');
+        loadApiKeys();
+
+        showNotification('API key regenerated successfully! Copy it now.', 'success');
+
+    } catch (error) {
+        console.error('[Profile] Error regenerating API key:', error);
+        errorDiv.textContent = 'Failed to regenerate API key. Please try again.';
+        errorDiv.style.display = 'block';
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '🔄 Regenerate Now';
+    }
+}
+
+/**
+ * Copy newly generated API key to clipboard
+ */
+function copyNewKey() {
+    const keyText = document.getElementById('regenerateNewKey').textContent;
+
+    navigator.clipboard.writeText(keyText).then(() => {
+        showNotification('New API key copied to clipboard!', 'success');
+        // Close modal after a short delay
+        setTimeout(() => {
+            closeRegenerateModal();
+        }, 1500);
+    }).catch(() => {
+        // Fallback
+        const textArea = document.createElement('textarea');
+        textArea.value = keyText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showNotification('New API key copied to clipboard!', 'success');
+        setTimeout(() => {
+            closeRegenerateModal();
+        }, 1500);
+    });
+}
+
+/**
  * Setup navigation menu
  */
 function setupNavigationMenu() {
@@ -239,11 +581,12 @@ function setupNavigationMenu() {
  */
 function initProfile() {
     console.log('[Profile] Initializing profile page');
-    
+
     try {
         setupNavigationMenu();
         loadProfile();
-        
+        loadApiKeys();
+
         // Setup form submission
         const form = document.getElementById('profileForm');
         if (form) {

@@ -619,7 +619,7 @@ async function loadApiKeys() {
 
 function renderApiKeys(apiKeys) {
     const tbody = document.getElementById('api-keys-tbody');
-    
+
     if (apiKeys.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -638,22 +638,37 @@ function renderApiKeys(apiKeys) {
             ? '<span class="badge badge-active">Active</span>'
             : '<span class="badge badge-ended">Inactive</span>';
 
+        // Use key_masked (or key_preview) if available, otherwise fall back to key field
+        const displayKey = key.key_masked || key.key_preview || key.key;
+
+        // Display instructor info: prefer display_name, fallback to username
+        const instructorDisplay = key.instructor_display_name || key.instructor_username || 'Unknown';
+
         return `
             <tr>
-                <td><strong>${escapeHtml(key.name)}</strong></td>
+                <td><strong>${escapeHtml(instructorDisplay)}</strong></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <code class="code-snippet" style="flex: 1; user-select: all;" id="key-${key.id}">
-                            ${escapeHtml(key.key)}
+                            ${escapeHtml(displayKey)}
                         </code>
-                        <button class="btn-view" style="padding: 4px 8px; min-width: 70px;" onclick="copyApiKeyById(${key.id}, '${key.key}', this)">📋 Copy</button>
+                        <button class="btn-view" style="padding: 4px 8px; min-width: 70px;" id="reveal-btn-${key.id}" onclick="revealApiKey(${key.id}, this)">👁️ Reveal</button>
                     </div>
                 </td>
                 <td>${createdDate.toLocaleString()}</td>
                 <td>${lastUsedDate ? lastUsedDate.toLocaleString() : 'Never'}</td>
                 <td>${statusBadge}</td>
                 <td>
-                    <button class="btn-delete" onclick="deleteApiKey(${key.id}, '${escapeHtml(key.name)}')">🗑️ Delete</button>
+                    ${key.is_active ? `
+                        <button class="btn-warning" style="margin-right: 5px;" onclick="regenerateApiKeyFromDashboard(${key.instructor_id}, '${escapeHtml(instructorDisplay)}')">
+                            🔄 Regenerate
+                        </button>
+                        <button class="btn-delete" onclick="deleteApiKey(${key.id}, '${escapeHtml(instructorDisplay)}')">
+                            🔒 Revoke
+                        </button>
+                    ` : `
+                        <span style="color: #999;">Revoked</span>
+                    `}
                 </td>
             </tr>
         `;
@@ -741,26 +756,138 @@ async function handleCreateApiKey(event) {
     }
 }
 
+async function regenerateApiKeyFromDashboard(instructorId, instructorName) {
+    const reason = prompt(`Regenerate API key for ${instructorName}?\n\nThis will revoke all active keys and create a new one.\n\nPlease provide a reason (e.g., "Compromised", "Security update"):`);
+
+    if (!reason || reason.trim() === '') {
+        return; // User cancelled or provided empty reason
+    }
+
+    try {
+        const response = await fetch(`/api/admin/api-keys/${instructorId}/regenerate`, {
+            method: 'POST',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+        });
+
+        if (handleAuthError(response)) return;
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to regenerate API key');
+        }
+
+        const result = await response.json();
+
+        // Show the new API key
+        const newKey = result.api_key.key;
+        const message = `✅ New API key generated successfully!\n\nKey: ${newKey}\n\n⚠️ IMPORTANT: Copy this key now! You won't be able to see it again.\n\nThis key has been copied to your clipboard.`;
+
+        // Copy to clipboard
+        if (navigator.clipboard) {
+            await navigator.clipboard.writeText(newKey);
+        } else {
+            // Fallback
+            const textArea = document.createElement('textarea');
+            textArea.value = newKey;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        }
+
+        alert(message);
+
+        showNotification('API key regenerated successfully', 'success');
+        loadApiKeys(); // Refresh the list
+    } catch (error) {
+        console.error('Error regenerating API key:', error);
+        showNotification(`Failed to regenerate API key: ${error.message}`, 'error');
+    }
+}
+
 async function deleteApiKey(keyId, keyName) {
-    if (!confirm(`Are you sure you want to delete the API key "${keyName}"?\n\nThis will prevent anyone using this key from creating new sessions.`)) {
+    // First confirm the revocation
+    if (!confirm(`Are you sure you want to revoke the API key for "${keyName}"?\n\nThis will prevent anyone using this key from accessing the system.`)) {
+        return;
+    }
+
+    // Prompt for revocation reason
+    const reason = prompt('Please provide a reason for revoking this API key:', 'Security policy');
+    if (!reason) {
+        showNotification('Revocation cancelled - no reason provided', 'info');
         return;
     }
 
     try {
         const response = await fetch(`/api/admin/api-keys/${keyId}`, {
             method: 'DELETE',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason })
+        });
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to revoke API key');
+        }
+
+        showNotification('API key revoked successfully', 'success');
+        loadApiKeys(); // Refresh the list
+    } catch (error) {
+        console.error('Error revoking API key:', error);
+        showNotification(`Failed to revoke API key: ${error.message}`, 'error');
+    }
+}
+
+async function revealApiKey(keyId, button) {
+    try {
+        const response = await fetch(`/api/admin/api-keys/${keyId}`, {
             headers: getAuthHeaders()
         });
 
         if (handleAuthError(response)) return;
-        if (!response.ok) throw new Error('Failed to delete API key');
+        if (!response.ok) throw new Error('Failed to reveal API key');
 
-        showNotification('API key deleted successfully', 'success');
-        loadApiKeys(); // Refresh the list
+        const apiKey = await response.json();
+        const codeElement = document.getElementById(`key-${keyId}`);
+
+        // Check if already revealed
+        if (codeElement.textContent.includes(apiKey.key)) {
+            // Already revealed, now hide it
+            hideApiKey(keyId, button);
+            return;
+        }
+
+        // Reveal the key
+        codeElement.textContent = apiKey.key;
+        button.textContent = '🙈 Hide';
+        button.style.background = '#f39c12';
+
+        // Add copy button functionality
+        codeElement.style.userSelect = 'all';
+        showNotification('API key revealed! Be careful with this key.', 'warning');
+
     } catch (error) {
-        console.error('Error deleting API key:', error);
-        showNotification('Failed to delete API key', 'error');
+        console.error('Error revealing API key:', error);
+        showNotification('Failed to reveal API key', 'error');
     }
+}
+
+function hideApiKey(keyId, button) {
+    const codeElement = document.getElementById(`key-${keyId}`);
+    // Restore masked version - need to get it from somewhere
+    // For now, use a fallback pattern
+    const masked = codeElement.textContent.substring(0, 7) + '...' + codeElement.textContent.slice(-4);
+    codeElement.textContent = masked;
+    button.textContent = '👁️ Reveal';
+    button.style.background = '';
 }
 
 function copyApiKeyById(keyId, keyText, button) {
