@@ -1,16 +1,3 @@
-# TEMP STUFFU
-
-ARCHITECTURE.md
-COMPREHENSIVE_REVIEW_AND_RECOMMENDATIONS.md
-IMPLEMENTATION_SUMMARY.md
-QUICK_REFERENCE.md
-ROADMAP.md
-create_roadmap_issues.sh
-notes.md
-notes2.md
-notes3.md
-
-
 __pycache__/
 *.py[cod]
 *$py.class
