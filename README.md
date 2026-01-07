@@ -1,73 +1,155 @@
-# 🙋 RaiseMyHand - Student Question System
+# 🙋 RaiseMyHand
 
-A real-time web application for collecting and managing student questions during live classes. Students submit questions anonymously, vote on popular questions, and view instructor responses in real-time.
+A real-time classroom question system where students submit questions anonymously, vote on what matters most, and see instructor responses instantly.
 
-[![Python](https://img.shields.io/badge/python-3.9+-blue)]()
+[![Python](https://img.shields.io/badge/python-3.11+-blue)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-latest-009688)]()
-[![Production Ready](https://img.shields.io/badge/production-ready-brightgreen)]()
+[![License](https://img.shields.io/badge/license-MIT-green)]()
+
+Perfect for lectures, coding sessions, or any classroom where you want to encourage questions without putting students on the spot.
 
 ---
 
-## ✨ What This System Does
+## ⚡ Quick Start
 
-### **Core Features**
+Choose your setup:
 
-- **Anonymous Question Submission** - Students submit questions without revealing identity
-- **Real-time Upvoting** - Questions with more votes appear higher in the list
-- **WebSocket Updates** - New questions and votes appear instantly for everyone
-- **QR Code Access** - Students scan QR codes to join sessions quickly
-- **Session Management** - Instructors create, start, pause, and end question sessions
-- **Content Moderation** - Three-state profanity filtering (approved/flagged/rejected)
-- **Markdown Support** - Rich text formatting in instructor answers with WYSIWYG editor
-- **Presentation Mode** - Full-screen view optimized for classroom projection
-- **Multi-monitor Support** - Pop-out windows for QR codes and presentation view
-- **Written Answers** - Instructors can write detailed responses with markdown formatting
-- **Session Statistics** - Public stats page showing question activity
-- **Data Export** - Download session data as JSON or CSV
-- **API Key Authentication** - Secure instructor access via API keys
+### 🎯 Demo Mode (Try it out)
 
-### **User Interface**
-
-- **Student View** - Clean question submission and voting interface
-- **Instructor Dashboard** - Real-time question monitoring with moderation tools
-- **Admin Panel** - User management and API key creation
-- **Stats Page** - Large-text presentation view for classroom displays
-- **Responsive Design** - Works on desktop, tablet, and mobile devices
-
-### **Security & Moderation**
-
-- **Profanity Filter** - Automatic detection using `better-profanity` library
-- **Three-state Moderation** - Clean (auto-approved), Flagged (needs review), Rejected (hidden)
-- **Server-side Filtering** - Security enforcement at the API level
-- **Rate Limiting** - DDoS protection and submission throttling
-- **CSRF Protection** - Cross-site request forgery prevention
-- **JWT Authentication** - Secure admin authentication with bcrypt password hashing
-
----
-
-## 🚀 Quick Setup
-
-### **Option 1: Docker (Recommended)**
+Perfect for testing and demonstrations. Includes pre-loaded physics class data.
 
 ```bash
-# Clone the repository
-git clone <your-repo-url>
-cd raisemyhand
-
-# Configure environment
-cp .env.example .env
-echo "YourSecureAdminPassword" > secrets/admin_password.txt
-
-# Build and start
-docker compose up --build -d
+docker compose -f docker-compose.demo.yml up -d
 ```
 
-The application will be available at **http://localhost:8000**
+**Access at:** http://localhost:8000
+**Login:** `admin` / `demo123`
+**Note:** Database resets on every container restart
 
-### **Option 2: Local Python Development**
+---
+
+### 🎓 Development Mode (Use in your class)
+
+For actual classroom use with persistent data.
 
 ```bash
-# Clone and setup virtual environment
+# 1. Create environment configuration
+cp .env.example .env
+
+# 2. Set admin password
+mkdir -p secrets
+echo "YourSecurePassword" > secrets/admin_password.txt
+
+# 3. Start the application
+docker compose -f docker-compose.dev.yml up -d
+```
+
+**Access at:** http://localhost:8001
+**Login:** `admin` / (your password from secrets file)
+**Note:** Data persists between sessions
+
+---
+
+## 📖 First Time Setup
+
+### 1. Create an API Key
+
+1. Visit http://localhost:8001/admin-login (or :8000 for demo)
+2. Login with admin credentials
+3. Click "API Keys" in the admin panel
+4. Create a new API key for instructors
+
+### 2. Start a Session
+
+1. Go to the home page
+2. Enter your API key and session title
+3. Click "Create Session"
+4. Share the QR code or URL with students
+
+### 3. Students Join & Ask
+
+- Students scan the QR code or visit the shared URL
+- They submit questions anonymously
+- Questions appear in real-time, sorted by votes
+- You can answer, moderate, and manage questions from the instructor dashboard
+
+---
+
+## ✨ Key Features
+
+- **Anonymous Questions** - Students ask without fear of judgment
+- **Real-time Voting** - Most important questions rise to the top
+- **Live Updates** - WebSocket connections keep everyone in sync
+- **QR Code Access** - Students join instantly from phones
+- **Content Moderation** - Automatic profanity filtering
+- **Markdown Support** - Rich formatting for instructor answers
+- **Presentation Mode** - Full-screen view for classroom displays
+- **Data Export** - Download session reports as JSON or CSV
+
+---
+
+## 🔧 Advanced Setup
+
+### Run Both Demo and Dev Simultaneously
+
+```bash
+# Start demo on :8000
+docker compose -f docker-compose.demo.yml up -d
+
+# Start dev on :8001
+docker compose -f docker-compose.dev.yml up -d
+```
+
+### Auto-Reset Demo Every 24 Hours
+
+For public demos, automatically reset to fresh data:
+
+```bash
+# Set up cron job
+chmod +x scripts/reset-demo.sh
+crontab -e
+
+# Add this line (resets daily at 3 AM):
+0 3 * * * /path/to/raisemyhand/scripts/reset-demo.sh
+```
+
+See [scripts/setup-demo-cron.md](scripts/setup-demo-cron.md) for detailed instructions.
+
+### Use Different Demo Contexts
+
+Choose from pre-loaded demo data:
+
+```bash
+# Physics (default)
+docker compose -f docker-compose.demo.yml up -d
+
+# Biology
+DEMO_CONTEXT=biology_200 docker compose -f docker-compose.demo.yml up -d
+
+# Computer Science
+DEMO_CONTEXT=computer_science_101 docker compose -f docker-compose.demo.yml up -d
+```
+
+Available contexts: `physics_101`, `biology_200`, `chemistry_110`, `calculus_150`, `computer_science_101`
+
+---
+
+## 📚 Documentation
+
+- **[Full Documentation](docs/README.md)** - Complete feature guide
+- **[Instructor Guide](docs/INSTRUCTOR_GUIDE.md)** - Step-by-step classroom workflow
+- **[Student Guide](docs/STUDENT_GUIDE.md)** - How students use the system
+- **[Admin Guide](docs/ADMIN_GUIDE.md)** - User and API key management
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production setup with Nginx
+- **[API Documentation](docs/API.md)** - REST API reference
+- **[FAQ](docs/FAQ.md)** - Common questions and troubleshooting
+
+---
+
+## 🛠️ Local Development (Without Docker)
+
+```bash
+# Clone and setup
 git clone <your-repo-url>
 cd raisemyhand
 python3 -m venv venv
@@ -76,317 +158,74 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
+# Configure
 cp .env.example .env
-# Edit .env file and set ADMIN_PASSWORD=YourSecurePassword
+# Edit .env and set ADMIN_PASSWORD
 
-# Initialize database and start server
+# Run
 python main.py
 ```
 
-The application will be available at **http://localhost:8000**
+Access at http://localhost:8000
 
 ---
 
-## 📖 Getting Started
+## 🏗️ Tech Stack
 
-See [GETTING_STARTED.md](GETTING_STARTED.md) for a complete step-by-step walkthrough.
-
-### **1. Admin Setup (First Time Only)**
-
-1. Go to **http://localhost:8000/admin-login**
-2. Login with username `admin` and your password from .env or secrets file
-3. Create an API key for instructors in the admin dashboard
-
-### **2. Instructor Workflow**
-
-1. **Create Session**: Enter your API key and session title at home page
-2. **Share Access**: Display QR code or share the generated student URL
-3. **Monitor Questions**: Watch questions appear in real-time, sorted by votes
-4. **Moderate Content**: Review flagged questions, approve or reject as needed
-5. **Answer Questions**: Mark questions as answered or write detailed responses
-6. **Manage Session**: Toggle voting, end session, download reports
-
-### **3. Student Experience**
-
-1. **Join Session**: Scan QR code or visit shared URL
-2. **Submit Questions**: Type questions and submit anonymously
-3. **Vote on Questions**: Upvote questions you want answered
-4. **Real-time Updates**: See new questions and instructor responses instantly
+- **Backend:** FastAPI, SQLAlchemy, WebSockets, SQLite (PostgreSQL-ready)
+- **Frontend:** Vanilla JavaScript, CSS, EasyMDE markdown editor
+- **Security:** JWT auth, bcrypt passwords, CSRF protection, rate limiting
+- **Deployment:** Docker, Docker Compose, Nginx-ready
 
 ---
 
-## 🏗️ Architecture
+## 🎯 Use Cases
 
-**Backend (Python/FastAPI):**
-- FastAPI web framework with automatic OpenAPI documentation
-- SQLAlchemy ORM with SQLite database (PostgreSQL-ready)
-- WebSocket connections for real-time updates
-- Pydantic data validation and serialization
-- bcrypt password hashing and JWT authentication
-- SlowAPI rate limiting and CSRF protection
-
-**Frontend (Vanilla JavaScript):**
-- WebSocket client for real-time communication
-- EasyMDE markdown editor for instructor answers
-- Marked.js and DOMPurify for safe markdown rendering
-- Responsive CSS design without framework dependencies
-- QR code generation and display
-
-**Database Schema:**
-- `class_meetings` - Session information and settings
-- `questions` - Student questions with moderation status
-- `answers` - Instructor written responses with markdown
-- `question_votes` - Upvote tracking per student
-- `api_keys` - Instructor authentication tokens
-
-**Dependencies:**
-- `better-profanity` - Content moderation
-- `qrcode[pil]` - QR code generation
-- `python-jose[cryptography]` - JWT tokens
-- `passlib[bcrypt]` - Password hashing
-- CDN libraries: EasyMDE, Marked.js, DOMPurify
+- **Physics/Math:** Students ask conceptual questions during problem-solving
+- **Computer Science:** Debugging help and code clarification in real-time
+- **Large Lectures:** Collect questions from hundreds of students simultaneously
+- **Remote Teaching:** Works great for hybrid and online classes
 
 ---
 
-## ⚙️ Configuration
+## 📊 System Requirements
 
-### **Environment Variables (.env file)**
-
-```bash
-# Server Configuration
-HOST=0.0.0.0
-PORT=8000
-BASE_URL=http://localhost:8000
-
-# Database
-DATABASE_URL=sqlite:///./data/raisemyhand.db
-
-# Admin Authentication (choose one)
-ADMIN_PASSWORD=YourSecurePassword    # For development
-# OR use Docker secrets: secrets/admin_password.txt
-
-# Optional Settings
-TIMEZONE=America/New_York
-CREATE_DEFAULT_API_KEY=false
-```
-
-### **Production Deployment**
-
-For production, set `BASE_URL` to your actual domain and use Docker secrets:
-
-```bash
-# Production example
-BASE_URL=https://questions.university.edu
-echo "ProductionPassword123!" > secrets/admin_password.txt
-docker compose up -d
-```
-
-### **Database Migration (PostgreSQL)**
-
-To switch from SQLite to PostgreSQL:
-
-```bash
-# Update .env
-DATABASE_URL=postgresql://user:password@host:5432/database
-
-# Install driver
-pip install psycopg2-binary
-
-# Run normally - tables auto-created
-python main.py
-```
-
----
-
-## 🔒 Security Features
-
-- **Content Moderation**: Server-side profanity detection with three-state system
-- **Authentication**: JWT tokens for admin, API keys for instructors
-- **Rate Limiting**: Prevents spam and DDoS attacks
-- **CSRF Protection**: Secure state-changing operations
-- **XSS Prevention**: HTML sanitization with DOMPurify
-- **Password Security**: bcrypt hashing with salt
-- **Session Isolation**: Students only see approved content
-
----
-
-## 📊 API Documentation
-
-Interactive API documentation is available at **http://localhost:8000/docs** when the server is running.
-
-### **Key Endpoints**
-
-**Session Management:**
-- `POST /api/meetings` - Create new session (requires API key)
-- `GET /api/meetings/{meeting_code}` - Get session details and questions
-- `POST /api/meetings/{instructor_code}/end` - End session
-- `GET /api/meetings/{instructor_code}/flagged-questions` - Review flagged content
-
-**Question Operations:**
-- `POST /api/meetings/{meeting_code}/questions` - Submit question
-- `POST /api/questions/{question_id}/vote` - Toggle upvote
-- `POST /api/questions/{question_id}/approve` - Approve flagged question
-- `POST /api/questions/{question_id}/reject` - Reject flagged question
-
-**Answer Management:**
-- `POST /api/questions/{question_id}/answer` - Create/update written answer
-- `POST /api/questions/{question_id}/answer/publish` - Make answer public
-
-**Real-time:**
-- `WS /ws/{meeting_code}` - WebSocket for live updates
-
----
-
-## 🐳 Docker Details
-
-The included `docker-compose.yml` sets up:
-- FastAPI application container
-- Volume mounting for persistent data
-- Environment variable configuration
-- Docker secrets support for production
-
-**Container Structure:**
-```
-/app/
-├── main.py (application entry point)
-├── data/ (SQLite database storage)
-├── static/ (CSS/JS assets)
-├── templates/ (HTML templates)
-└── secrets/ (password files)
-```
-
----
-
-## 📁 Project Structure
-
-```
-raisemyhand/
-├── main.py                    # Application entry point
-├── models_v2.py               # Database models (SQLAlchemy)
-├── schemas_v2.py              # API schemas (Pydantic)
-├── routes_classes.py          # Session management routes
-├── routes_questions.py        # Question handling routes
-├── routes_answers.py          # Answer management routes
-├── database.py                # Database configuration
-├── logging_config.py          # Logging setup
-├── static/
-│   ├── css/styles.css         # Application styles
-│   └── js/
-│       ├── shared.js          # Common utilities
-│       ├── student.js         # Student interface
-│       ├── instructor.js      # Instructor dashboard
-│       └── admin.js           # Admin panel
-├── templates/
-│   ├── student.html           # Student question interface
-│   ├── instructor.html        # Instructor dashboard
-│   ├── stats.html             # Presentation view
-│   ├── admin.html             # Admin panel
-│   └── *.html                 # Other UI templates
-├── requirements.txt           # Python dependencies
-├── Dockerfile                 # Container definition
-├── docker-compose.yml         # Container orchestration
-└── .env.example               # Configuration template
-```
-
----
-
-## 🧪 Testing & Development
-
-### **Local Testing**
-
-```bash
-# Start the server
-python main.py
-
-# Test workflow:
-# 1. Create admin account at /admin-login
-# 2. Create API key in admin dashboard
-# 3. Start new session at home page
-# 4. Open student URL in different browser/tab
-# 5. Submit questions and test voting
-# 6. Try content moderation with test profanity
-```
-
-### **Multi-user Testing**
-
-Open multiple browser tabs/windows:
-- **Tab 1**: Instructor dashboard (with API key)
-- **Tab 2+**: Student views (different browsers to simulate multiple students)
-- Test real-time updates by submitting questions and votes
-
-### **Content Moderation Testing**
-
-Submit questions with profanity to test the three-state moderation system:
-- Clean questions → Auto-approved and visible
-- Flagged questions → Require instructor review
-- Rejected questions → Hidden from students
-
----
-
-## 📈 Monitoring & Logs
-
-The application logs all operations including:
-- Database operations (CREATE, UPDATE, DELETE)
-- WebSocket connections and disconnections
-- Security events (authentication, rate limiting)
-- Content moderation actions
-
-Logs are structured for production monitoring and include timestamps, operation types, and success/failure status.
-
----
-
-## 🔧 Troubleshooting
-
-**Common Issues:**
-
-1. **Port already in use**: Change `PORT` in .env file
-2. **Database errors**: Check write permissions in `data/` directory
-3. **WebSocket connection failed**: Verify `BASE_URL` matches actual domain
-4. **QR code not loading**: Check network connectivity and BASE_URL configuration
-5. **Markdown not rendering**: Ensure CDN libraries load (check browser console)
-
-**Development Issues:**
-
-1. **Changes not visible**: Clear browser cache or hard refresh (Ctrl+Shift+R)
-2. **API key authentication fails**: Verify API key was created in admin panel
-3. **Real-time updates not working**: Check WebSocket connection in browser dev tools
+- Docker 20.10+ and Docker Compose 2.0+
+- OR Python 3.11+
+- 1GB RAM minimum (2GB recommended)
+- Modern web browser with WebSocket support
 
 ---
 
 ## 🤝 Contributing
 
-This is educational software built for classroom use. The codebase follows professional standards with comprehensive error handling, security measures, and clean architecture.
+This is educational software built for classroom use. Contributions welcome!
 
-**Development Guidelines:**
-- Follow existing code structure and naming conventions
-- Add tests for new features
-- Update documentation for any changes
-- Ensure mobile responsiveness for UI changes
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ---
 
 ## 📄 License
 
-MIT License - See LICENSE file for details.
+MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🏫 Use Cases
+## 🆘 Getting Help
 
-**Physics Classes**: Students ask questions about complex topics during lectures
-**Computer Science**: Debugging help and concept clarification during coding sessions  
-**Mathematics**: Step-by-step explanations and problem-solving guidance
-**General Education**: Any classroom where anonymous question collection improves participation
-
-The presentation mode and QR code features are specifically designed for classroom projection systems and student mobile device access.
+- **Issues:** Report bugs and request features via GitHub Issues
+- **Troubleshooting:** Check [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+- **Questions:** See [docs/FAQ.md](docs/FAQ.md)
 
 ---
 
 <div align="center">
 
-**[Visit GitHub Repository](#) • [Report Issues](#) • [Documentation](#)**
+**Built for education with ❤️**
 
-Built for education with ❤️
+[Documentation](docs/) • [Report Issue](../../issues) • [View Demo](#)
 
 </div>

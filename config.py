@@ -11,8 +11,11 @@ import os
 class Settings(BaseSettings):
     """Application configuration with environment variable support"""
 
+    # Prefer .env (for local dev) over .env.demo (for Docker demo)
+    _env_file = ".env" if os.path.exists(".env") else ".env.demo"
+
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_env_file,
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"
@@ -89,13 +92,6 @@ class Settings(BaseSettings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-        # Try to load admin password from Docker secret file if not in env
-        if not self.admin_password:
-            secret_file = "/run/secrets/admin_password"
-            if os.path.exists(secret_file):
-                with open(secret_file, 'r') as f:
-                    self.admin_password = f.read().strip()
 
 
 # Global settings instance

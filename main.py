@@ -957,9 +957,16 @@ def instructor_auth(auth_data: InstructorAuth, db: DBSession = Depends(get_db)):
 
 # Authentication endpoints
 @app.post("/api/admin/login", response_model=Token)
-@limiter.limit("5/minute")
+@limiter.limit("20/minute")  # Increased for demo/development
 def admin_login(request: Request, login_data: AdminLogin):
     """Admin login endpoint."""
+    # Detailed debug logging
+    logger.info(f"=== LOGIN ATTEMPT ===")
+    logger.info(f"Received username: '{login_data.username}' (len={len(login_data.username)}, repr={repr(login_data.username)})")
+    logger.info(f"Received password: '{login_data.password}' (len={len(login_data.password)}, repr={repr(login_data.password)})")
+    logger.info(f"Expected username: '{settings.admin_username}' (len={len(settings.admin_username)}, repr={repr(settings.admin_username)})")
+    logger.info(f"Expected password: '{settings.admin_password}' (len={len(settings.admin_password or '')}, repr={repr(settings.admin_password)})")
+
     if not settings.enable_auth:
         # If auth is disabled, always return a valid token
         access_token = create_access_token(data={"sub": "admin"})
@@ -969,6 +976,7 @@ def admin_login(request: Request, login_data: AdminLogin):
     # Verify admin credentials
     correct_username = secrets.compare_digest(login_data.username, settings.admin_username)
     correct_password = secrets.compare_digest(login_data.password, settings.admin_password or "")
+    logger.info(f"Username match: {correct_username}, Password match: {correct_password}")
 
     if not (correct_username and correct_password):
         log_security_event(

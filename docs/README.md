@@ -4,6 +4,11 @@ Welcome to the RaiseMyHand documentation hub. Find guides for every role and use
 
 ## Quick Navigation
 
+### Getting Started
+
+**I'm new to RaiseMyHand - where do I start?**
+→ [Getting Started Guide](GETTING_STARTED.md)
+
 ### For Users
 
 **I'm a student - how do I participate?**
@@ -37,6 +42,10 @@ Welcome to the RaiseMyHand documentation hub. Find guides for every role and use
 ---
 
 ## Documentation Overview
+
+### Getting Started
+
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Complete walkthrough for first-time setup and basic usage
 
 ### User Guides
 
