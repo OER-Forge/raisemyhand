@@ -1,8 +1,7 @@
 title: RaiseMyHand Documentation
 description: Real-time classroom question system with live Q&A
-remote_theme: pages-themes/slate@v0.2.0
+theme: slate
 plugins:
-  - jekyll-remote-theme
   - jekyll-seo-tag
 
 # Site settings
@@ -11,7 +10,6 @@ baseurl: "/raisemyhand"
 
 # Navigation and layout
 markdown: kramdown
-theme: slate
 
 # Kramdown options
 kramdown:
