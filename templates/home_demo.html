@@ -3,9 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RaiseMyHand - Student Question Aggregator</title>
+    <title>RaiseMyHand - Demo</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <style>
+        .demo-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            color: #856404;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demo-banner::before {
+            content: "⚠️";
+            font-size: 1.2rem;
+        }
+
         .hero {
             text-align: center;
             padding: 60px 20px;
@@ -26,11 +44,22 @@
             opacity: 0.9;
         }
 
+        .hero .demo-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
         .cta-buttons {
             display: flex;
             gap: 20px;
             justify-content: center;
             margin-top: 30px;
+            flex-wrap: wrap;
         }
 
         .cta-btn {
@@ -55,6 +84,48 @@
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 2px solid white;
+        }
+
+        .demo-credentials {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .demo-credentials h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .credentials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .credential-item {
+            background: var(--bg-color);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .credential-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .credential-value {
+            font-family: monospace;
+            font-weight: bold;
+            color: var(--primary-color);
+            word-break: break-all;
         }
 
         .features {
@@ -123,7 +194,7 @@
         <div class="container">
             <div class="header-left">
                 <h1>✋ RaiseMyHand</h1>
-                <p class="subtitle">Real-time student question aggregator for classrooms</p>
+                <p class="subtitle">Demo Mode - Try it out!</p>
             </div>
             <div class="header-right">
                 <a href="/admin-login" class="admin-nav">🔐 Admin</a>
@@ -132,13 +203,39 @@
     </header>
 
     <div class="container">
+        <div class="demo-banner">
+            This is a demo environment. All data resets every 24 hours. Don't use for production!
+        </div>
+
         <div class="hero">
-            <h1>Engage Your Classroom</h1>
-            <p>Collect, organize, and answer student questions in real-time</p>
+            <div class="demo-badge">🧪 DEMO MODE</div>
+            <h1>Try RaiseMyHand</h1>
+            <p>Test the platform with pre-loaded demo data</p>
             <div class="cta-buttons">
                 <a href="/instructor-login" class="cta-btn cta-btn-primary">👨‍🏫 I'm an Instructor</a>
                 <a href="/student-login" class="cta-btn cta-btn-secondary">👨‍🎓 I'm a Student</a>
             </div>
+        </div>
+
+        <div class="demo-credentials">
+            <h3>Demo Login Credentials</h3>
+            <p>Use these credentials to explore the application:</p>
+            <div class="credentials-grid">
+                <div class="credential-item">
+                    <div class="credential-label">Admin Username</div>
+                    <div class="credential-value">admin</div>
+                </div>
+                <div class="credential-item">
+                    <div class="credential-label">Admin Password</div>
+                    <div class="credential-value">demo123</div>
+                </div>
+            </div>
+            <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-secondary);">
+                Access the <a href="/admin-login" style="color: var(--primary-color);">admin panel</a> to explore administrator features.
+            </p>
+            <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-secondary);">
+                <strong>⏰ Important:</strong> This demo resets automatically every 24 hours. Any data you create will be erased. This environment is for testing and evaluation only.
+            </p>
         </div>
 
         <div class="features">

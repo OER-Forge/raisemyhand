@@ -6,6 +6,7 @@
     --bg-color: #f5f7fa;
     --card-bg: #ffffff;
     --text-color: #2c3e50;
+    --text-secondary: #7f8c8d;
     --border-color: #dfe6e9;
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -37,6 +38,22 @@ header {
     box-shadow: var(--shadow);
 }
 
+header .container:has(.header-left) {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+header .header-left {
+    flex: 1;
+}
+
+header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 header h1 {
     font-size: 2rem;
     color: var(--primary-color);
@@ -46,6 +63,23 @@ header h1 {
 header .subtitle {
     color: #7f8c8d;
     font-size: 1rem;
+}
+
+header .admin-nav {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+header .admin-nav:hover {
+    color: var(--primary-color);
+    background: var(--bg-color);
+    text-decoration: none;
 }
 
 .session-info {

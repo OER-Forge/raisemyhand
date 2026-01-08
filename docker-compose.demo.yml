@@ -24,9 +24,9 @@ services:
       - DATABASE_URL=sqlite:///./data/demo_raisemyhand.db
 
       # Server Configuration
-      - HOST=0.0.0.0
-      - PORT=8000
-      - BASE_URL=${BASE_URL:-http://localhost:8000}
+      # - HOST=0.0.0.0
+      # - PORT=8000
+      # - BASE_URL=${BASE_URL:-http://localhost:8000}
       - TIMEZONE=${TIMEZONE:-UTC}
 
       # Admin Credentials (Demo defaults)

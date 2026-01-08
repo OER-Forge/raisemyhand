@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - RaiseMyHand</title>
+    <title>Register - RaiseMyHand Demo</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <style>
         .register-container {
             max-width: 600px;
-            margin: 60px auto;
+            margin: 40px auto;
             background: var(--card-bg);
             padding: 40px;
             border-radius: 12px;
@@ -23,6 +23,39 @@
         .register-header h2 {
             color: var(--primary-color);
             margin-bottom: 10px;
+        }
+
+        .demo-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #856404;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demo-banner::before {
+            content: "⚠️";
+            font-size: 1.2rem;
+        }
+
+        .demo-notice {
+            background: #fee;
+            border: 1px solid #fcc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #c33;
+        }
+
+        .demo-notice strong {
+            display: block;
+            margin-bottom: 5px;
         }
 
         .form-group {
@@ -195,7 +228,7 @@
         <div class="container">
             <div class="header-left">
                 <h1>✋ RaiseMyHand</h1>
-                <p class="subtitle">Instructor Registration</p>
+                <p class="subtitle">Instructor Registration - Demo</p>
             </div>
             <div class="header-right">
                 <a href="/admin-login" class="admin-nav">🔐 Admin</a>
@@ -208,6 +241,15 @@
             <div class="register-header">
                 <h2>👨‍🏫 Create Your Account</h2>
                 <p>Register to start using RaiseMyHand</p>
+            </div>
+
+            <div class="demo-banner">
+                Demo environment - all accounts are deleted every 24 hours.
+            </div>
+
+            <div class="demo-notice">
+                <strong>⏰ Important:</strong>
+                This is a demo environment. Any accounts you create will be automatically deleted every 24 hours. Use this only for testing purposes.
             </div>
 
             {% if registration_enabled %}
@@ -453,7 +495,7 @@
                 }
 
                 const data = await response.json();
-                
+
                 // Now login the user
                 const loginResponse = await fetch('/api/instructors/login', {
                     method: 'POST',
@@ -473,11 +515,11 @@
                 }
 
                 const tokenData = await loginResponse.json();
-                
+
                 // Store token
                 localStorage.setItem('instructor_token', tokenData.access_token);
                 showSuccess('Account created and logged in! Redirecting...');
-                
+
                 // Redirect to classes page
                 setTimeout(() => {
                     window.location.href = '/classes';

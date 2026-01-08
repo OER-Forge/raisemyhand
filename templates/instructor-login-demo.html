@@ -3,12 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instructor Login - RaiseMyHand</title>
+    <title>Instructor Login - RaiseMyHand Demo</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <style>
+        .demo-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            color: #856404;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demo-banner::before {
+            content: "⚠️";
+            font-size: 1.2rem;
+        }
+
         .login-container {
             max-width: 600px;
-            margin: 60px auto;
+            margin: 40px auto;
             background: var(--card-bg);
             padding: 40px;
             border-radius: 12px;
@@ -23,6 +41,18 @@
         .login-header h2 {
             color: var(--primary-color);
             margin-bottom: 10px;
+        }
+
+        .demo-badge {
+            display: inline-block;
+            background: #fff3cd;
+            color: #856404;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+            border: 1px solid #ffc107;
         }
 
         .back-link {
@@ -81,6 +111,21 @@
             color: var(--text-secondary);
         }
 
+        .warning-box {
+            background: #fee;
+            border: 1px solid #fcc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #c33;
+        }
+
+        .warning-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
         .error-message {
             background: #fee;
             color: #c33;
@@ -129,7 +174,7 @@
         <div class="container">
             <div class="header-left">
                 <h1>✋ RaiseMyHand</h1>
-                <p class="subtitle">Instructor Access</p>
+                <p class="subtitle">Instructor Access - Demo Mode</p>
             </div>
             <div class="header-right">
                 <a href="/admin-login" class="admin-nav">🔐 Admin</a>
@@ -138,10 +183,20 @@
     </header>
 
     <div class="container">
+        <div class="demo-banner">
+            Demo environment - all data resets every 24 hours. Not for production use.
+        </div>
+
         <div class="login-container">
             <div class="login-header">
+                <div class="demo-badge">🧪 DEMO</div>
                 <h2>👨‍🏫 Instructor Portal</h2>
                 <p>View your sessions or create a new one</p>
+            </div>
+
+            <div class="warning-box">
+                <strong>⏰ Important Notice:</strong>
+                This is a demo environment. Any sessions, questions, and data you create will be automatically deleted every 24 hours. Use this only for testing and evaluation purposes.
             </div>
 
             <div class="tab-container">
@@ -240,11 +295,11 @@
 
         function switchTab(tab) {
             hideMessages();
-            
+
             // Update tab buttons
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
+
             if (tab === 'password') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('password-tab').classList.add('active');
@@ -282,12 +337,12 @@
 
                 const data = await response.json();
                 console.log('Login successful, token:', data.access_token.substring(0, 20) + '...');
-                
+
                 // Store the JWT token
                 localStorage.setItem('instructor_token', data.access_token);
                 console.log('Token stored in localStorage');
                 showSuccess('Login successful! Redirecting...');
-                
+
                 // Redirect to classes page
                 setTimeout(() => {
                     console.log('Redirecting to /classes');

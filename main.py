@@ -692,7 +692,8 @@ async def websocket_endpoint(websocket: WebSocket, session_code: str, db: DBSess
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """Home page with marketing content."""
-    return templates.TemplateResponse("home.html", {"request": request})
+    template_name = "home_demo.html" if settings.demo_mode else "home.html"
+    return templates.TemplateResponse(template_name, {"request": request})
 
 
 @app.get("/student-login", response_class=HTMLResponse)
@@ -704,22 +705,25 @@ async def student_login_view(request: Request):
 @app.get("/instructor-login", response_class=HTMLResponse)
 async def instructor_login_view(request: Request):
     """Instructor login page - enter API key or create session."""
-    return templates.TemplateResponse("instructor-login.html", {"request": request})
+    template_name = "instructor-login-demo.html" if settings.demo_mode else "instructor-login.html"
+    return templates.TemplateResponse(template_name, {"request": request})
 
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_view(request: Request, db: DBSession = Depends(get_db)):
     """Instructor registration page."""
     from models_config import SystemConfig
-    
+
     # Check if registration is enabled
     registration_enabled = SystemConfig.get_value(db, "instructor_registration_enabled", default=True)
     disabled_reason = SystemConfig.get_value(db, "instructor_registration_disabled_reason", default="Registration is currently disabled")
-    
-    return templates.TemplateResponse("register.html", {
+
+    template_name = "register-demo.html" if settings.demo_mode else "register.html"
+    return templates.TemplateResponse(template_name, {
         "request": request,
         "registration_enabled": registration_enabled,
-        "disabled_reason": disabled_reason
+        "disabled_reason": disabled_reason,
+        "demo_mode": settings.demo_mode
     })
 
 
@@ -957,16 +961,9 @@ def instructor_auth(auth_data: InstructorAuth, db: DBSession = Depends(get_db)):
 
 # Authentication endpoints
 @app.post("/api/admin/login", response_model=Token)
-@limiter.limit("20/minute")  # Increased for demo/development
+@limiter.limit("5/minute")
 def admin_login(request: Request, login_data: AdminLogin):
     """Admin login endpoint."""
-    # Detailed debug logging
-    logger.info(f"=== LOGIN ATTEMPT ===")
-    logger.info(f"Received username: '{login_data.username}' (len={len(login_data.username)}, repr={repr(login_data.username)})")
-    logger.info(f"Received password: '{login_data.password}' (len={len(login_data.password)}, repr={repr(login_data.password)})")
-    logger.info(f"Expected username: '{settings.admin_username}' (len={len(settings.admin_username)}, repr={repr(settings.admin_username)})")
-    logger.info(f"Expected password: '{settings.admin_password}' (len={len(settings.admin_password or '')}, repr={repr(settings.admin_password)})")
-
     if not settings.enable_auth:
         # If auth is disabled, always return a valid token
         access_token = create_access_token(data={"sub": "admin"})
@@ -976,7 +973,6 @@ def admin_login(request: Request, login_data: AdminLogin):
     # Verify admin credentials
     correct_username = secrets.compare_digest(login_data.username, settings.admin_username)
     correct_password = secrets.compare_digest(login_data.password, settings.admin_password or "")
-    logger.info(f"Username match: {correct_username}, Password match: {correct_password}")
 
     if not (correct_username and correct_password):
         log_security_event(
@@ -1005,12 +1001,14 @@ def verify_admin_token(request: Request, username: str = Depends(verify_token)):
 @app.get("/admin-login", response_class=HTMLResponse)
 async def admin_login_view(request: Request):
     """Admin login page."""
-    return templates.TemplateResponse("admin-login.html", {"request": request})
+    template_name = "admin-login-demo.html" if settings.demo_mode else "admin-login.html"
+    return templates.TemplateResponse(template_name, {"request": request, "demo_mode": settings.demo_mode})
 
 @app.get("/admin/login", response_class=HTMLResponse)
 async def admin_login_view_alt(request: Request):
     """Admin login page (alternative route)."""
-    return templates.TemplateResponse("admin-login.html", {"request": request})
+    template_name = "admin-login-demo.html" if settings.demo_mode else "admin-login.html"
+    return templates.TemplateResponse(template_name, {"request": request, "demo_mode": settings.demo_mode})
 
 
 @app.get("/admin/instructor-details", response_class=HTMLResponse)
