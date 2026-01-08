@@ -142,13 +142,36 @@
             margin-bottom: 15px;
             display: none;
         }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
-            <h1>✋ RaiseMyHand</h1>
-            <p class="subtitle">Student Access</p>
+            <div class="header-left">
+                <h1>✋ RaiseMyHand</h1>
+                <p class="subtitle">Student Access</p>
+            </div>
+            <div class="header-right">
+                <a href="/admin-login" class="admin-nav">🔐 Admin</a>
+            </div>
         </div>
     </header>
 
@@ -477,5 +500,9 @@
         }
     </script>
     <script src="/static/js/shared.js"></script>
+
+    <footer>
+        <p>RaiseMyHand v0.1 | Built by <a href="https://github.com/OER-Forge" target="_blank">oer-forge</a></p>
+    </footer>
 </body>
 </html>

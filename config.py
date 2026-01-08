@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limit_enabled: bool = True
 
+    # Demo Mode
+    demo_mode: bool = False
+
     @property
     def is_production(self) -> bool:
         """Check if running in production"""
