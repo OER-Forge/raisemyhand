@@ -8,6 +8,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from typing import List, Optional
 import json
+import asyncio
 import qrcode
 from io import BytesIO
 import csv
@@ -405,39 +406,74 @@ class ConnectionManager:
         self.connection_times[websocket] = datetime.utcnow().timestamp()
 
     async def broadcast(self, message: dict, session_code: str):
-        if session_code in self.active_connections:
-            disconnected = []
-            for connection in self.active_connections[session_code]:
-                try:
-                    await connection.send_json(message)
-                except (WebSocketDisconnect, RuntimeError, ConnectionError) as e:
-                    logger.warning(f"WebSocket connection error for session {session_code}: {e}")
-                    disconnected.append(connection)
+        """Broadcast message to all connections in a session in parallel."""
+        if session_code not in self.active_connections:
+            return
 
-            # Clean up disconnected clients
-            for conn in disconnected:
+        connections = self.active_connections[session_code]
+        if not connections:
+            return
+
+        # Helper function to send message and handle errors
+        async def send_safe(connection: WebSocket, msg: dict):
+            """Send message and return connection if it fails."""
+            try:
+                await connection.send_json(msg)
+                return None  # Success
+            except (WebSocketDisconnect, RuntimeError, ConnectionError) as e:
+                logger.warning(f"WebSocket send failed for session {session_code}: {e}")
+                return connection  # Return connection to be disconnected
+
+        # Send to all connections in parallel using asyncio.gather
+        results = await asyncio.gather(
+            *[send_safe(conn, message) for conn in connections],
+            return_exceptions=False
+        )
+
+        # Disconnect failed connections
+        for conn in results:
+            if conn is not None:
                 self.disconnect(conn, session_code)
 
     async def broadcast_to_all(self, message: dict):
-        """Broadcast message to all active connections across all sessions."""
+        """Broadcast message to all active connections across all sessions in parallel."""
         logger.info(f"[BROADCAST_TO_ALL] Starting broadcast. Active sessions: {list(self.active_connections.keys())}")
-        disconnected = []
-        sent_count = 0
+
+        # Flatten all connections across sessions
+        all_tasks = []
+        connection_to_session = {}  # Track which session each connection belongs to
+
         for session_code, connections in self.active_connections.items():
             logger.info(f"[BROADCAST_TO_ALL] Session '{session_code}' has {len(connections)} connections")
             for connection in connections:
-                try:
-                    await connection.send_json(message)
-                    sent_count += 1
-                except (WebSocketDisconnect, RuntimeError, ConnectionError) as e:
-                    logger.warning(f"WebSocket connection error for session {session_code}: {e}")
-                    disconnected.append((connection, session_code))
+                connection_to_session[id(connection)] = (connection, session_code)
 
-        # Clean up disconnected clients
-        for conn, session_code in disconnected:
-            self.disconnect(conn, session_code)
-        
-        logger.info(f"[BROADCAST_TO_ALL] Broadcast complete. Sent to {sent_count} connections, {len(disconnected)} failed")
+                # Create send task for this connection
+                async def send_safe_with_session(conn: WebSocket, msg: dict, sess: str):
+                    """Send message and return (connection, session) if it fails."""
+                    try:
+                        await conn.send_json(msg)
+                        return (None, None)
+                    except (WebSocketDisconnect, RuntimeError, ConnectionError) as e:
+                        logger.warning(f"WebSocket send failed for session {sess}: {e}")
+                        return (conn, sess)
+
+                all_tasks.append(send_safe_with_session(connection, message, session_code))
+
+        # Send to all connections in parallel
+        if all_tasks:
+            results = await asyncio.gather(*all_tasks, return_exceptions=False)
+
+            # Disconnect failed connections
+            disconnected_count = 0
+            for conn, session in results:
+                if conn is not None:
+                    self.disconnect(conn, session)
+                    disconnected_count += 1
+
+            logger.info(f"[BROADCAST_TO_ALL] Broadcast complete. Sent to {len(all_tasks)} connections, {disconnected_count} failed")
+        else:
+            logger.info(f"[BROADCAST_TO_ALL] No active connections to broadcast to")
 
 
 manager = ConnectionManager()

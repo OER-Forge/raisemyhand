@@ -1,7 +1,7 @@
 """
 Question management routes for v2 API
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Header, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, Header, BackgroundTasks, Request
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import func
 from datetime import datetime
@@ -18,12 +18,17 @@ from logging_config import get_logger, log_database_operation
 router = APIRouter(tags=["questions"])
 logger = get_logger(__name__)
 
+# Import limiter from main for rate limiting
+from main import limiter
+
 # Initialize profanity filter
 profanity.load_censor_words()
 
 
 @router.post("/api/meetings/{meeting_code}/questions", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def create_question(
+    request: Request,
     meeting_code: str,
     question: QuestionCreate,
     background_tasks: BackgroundTasks,
@@ -31,7 +36,7 @@ async def create_question(
     db: DBSession = Depends(get_db),
     authorization: str = Header(None)
 ):
-    """Submit a new question to a meeting."""
+    """Submit a new question to a meeting. Rate limited to 10 questions per minute per IP."""
     # Check maintenance mode
     from security import check_maintenance_mode, verify_jwt_token
     from models_v2 import Instructor
@@ -163,7 +168,9 @@ async def create_question(
 
 
 @router.put("/api/questions/{question_id}/edit")
+@limiter.limit("20/minute")
 def edit_question(
+    request: Request,
     question_id: int,
     question_update: QuestionCreate,
     student_id: str,
@@ -241,12 +248,14 @@ def edit_question(
 
 
 @router.post("/api/questions/{question_id}/vote")
+@limiter.limit("30/minute")
 def toggle_vote(
+    request: Request,
     question_id: int,
     student_id: str,  # Should come from cookie/session
     db: DBSession = Depends(get_db)
 ):
-    """Toggle vote on a question."""
+    """Toggle vote on a question. Rate limited to 30 votes per minute per IP."""
     question = db.query(Question).filter(Question.id == question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
@@ -303,13 +312,15 @@ def toggle_vote(
 
 
 @router.post("/api/questions/{question_id}/mark-answered-in-class")
+@limiter.limit("20/minute")
 def mark_answered_in_class(
+    request: Request,
     question_id: int,
     api_key: Optional[str] = None,
     authorization: Optional[str] = Header(None),
     db: DBSession = Depends(get_db)
 ):
-    """Mark question as answered in class (verbal answer) - supports JWT and API key auth."""
+    """Mark question as answered in class (verbal answer) - supports JWT and API key auth. Rate limited to 20 per minute."""
     instructor_id = None
     
     # Try JWT authentication first
@@ -369,7 +380,9 @@ def mark_answered_in_class(
 
 
 @router.put("/api/questions/{question_id}", response_model=QuestionResponse)
+@limiter.limit("20/minute")
 def update_question_status(
+    request: Request,
     question_id: int,
     data: QuestionUpdate,
     api_key: Optional[str] = None,
@@ -455,12 +468,14 @@ def get_flagged_questions(
 
 
 @router.post("/api/questions/{question_id}/approve")
+@limiter.limit("20/minute")
 def approve_question(
+    request: Request,
     question_id: int,
     db: DBSession = Depends(get_db)
 ):
     """
-    Approve a flagged question.
+    Approve a flagged question. Rate limited to 20 per minute.
     Note: This endpoint relies on the instructor being authenticated via the instructor page.
     No additional auth required since this is called from an authenticated context.
     """
@@ -483,12 +498,14 @@ def approve_question(
 
 
 @router.post("/api/questions/{question_id}/reject")
+@limiter.limit("20/minute")
 def reject_question(
+    request: Request,
     question_id: int,
     db: DBSession = Depends(get_db)
 ):
     """
-    Reject a flagged question (hides it from view).
+    Reject a flagged question (hides it from view). Rate limited to 20 per minute.
     Note: This endpoint relies on the instructor being authenticated via the instructor page.
     No additional auth required since this is called from an authenticated context.
     """
@@ -511,12 +528,14 @@ def reject_question(
 
 
 @router.delete("/api/questions/{question_id}")
+@limiter.limit("20/minute")
 def delete_question(
+    request: Request,
     question_id: int,
     db: DBSession = Depends(get_db)
 ):
     """
-    Delete a question permanently.
+    Delete a question permanently. Rate limited to 20 per minute.
     Note: This endpoint relies on the instructor being authenticated via the instructor page.
     No additional auth required since this is called from an authenticated context.
     """
