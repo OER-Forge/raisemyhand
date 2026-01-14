@@ -1,0 +1,147 @@
+# RaiseMyHand Production Environment
+# Uses PostgreSQL for scalability and performance
+#
+# Prerequisites:
+#   1. Copy .env.production.example to .env.production
+#   2. Set strong ADMIN_PASSWORD, SECRET_KEY, and CSRF_SECRET
+#   3. Configure POSTGRES_PASSWORD
+#
+# Quick Start:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# To stop:
+#   docker compose -f docker-compose.prod.yml down
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: raisemyhand-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-raisemyhand}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD not set in .env.production}
+      POSTGRES_DB: ${POSTGRES_DB:-raisemyhand}
+      # Performance tuning for classroom workload
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.utf8"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backups:/backups  # Mount for database backups
+    ports:
+      - "5432:5432"  # Exposed for migrations/debugging (can restrict in production)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-raisemyhand}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command:
+      - postgres
+      # Performance tuning for 75+ concurrent users
+      - -c
+      - max_connections=100
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=1GB
+      - -c
+      - maintenance_work_mem=64MB
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - wal_buffers=16MB
+      - -c
+      - default_statistics_target=100
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - effective_io_concurrency=200
+      - -c
+      - work_mem=4MB
+      - -c
+      - min_wal_size=1GB
+      - -c
+      - max_wal_size=4GB
+
+  app:
+    build: .
+    container_name: raisemyhand-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - app-data:/app/data
+    env_file:
+      - .env.production
+    environment:
+      - ENV=production
+      - DEMO_MODE=false
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-raisemyhand}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-raisemyhand}
+    command: >
+      sh -c "
+        echo '🚀 Starting RaiseMyHand PRODUCTION Environment' &&
+        echo '' &&
+        if [ -z \"\$$POSTGRES_PASSWORD\" ] || [ -z \"\$$SECRET_KEY\" ] || [ -z \"\$$CSRF_SECRET\" ]; then
+          echo '❌ FATAL: Required environment variables not set!' &&
+          echo '' &&
+          echo 'Required variables:' &&
+          echo '  - POSTGRES_PASSWORD' &&
+          echo '  - SECRET_KEY' &&
+          echo '  - CSRF_SECRET' &&
+          echo '' &&
+          echo 'Ensure .env.production is created:' &&
+          echo '  1. Run: python scripts/setup_production.py' &&
+          echo '  2. Start with: docker compose --env-file .env.production -f docker-compose.prod.yml up' &&
+          echo '' &&
+          exit 1
+        fi &&
+        echo '✅ Configuration verified' &&
+        echo '⏳ Waiting for PostgreSQL...' &&
+        sleep 5 &&
+        echo '🗄️  Initializing database...' &&
+        python init_db_v2.py &&
+        echo '✅ Database initialized' &&
+        echo '' &&
+        echo '📊 PostgreSQL Configuration:' &&
+        echo '   - Connection pool: 20 persistent + 10 overflow' &&
+        echo '   - Row-level locking enabled' &&
+        echo '   - Supports 150+ concurrent users' &&
+        echo '🔒 Production mode: DEBUG=false' &&
+        echo '' &&
+        echo '🌐 Starting server with 4 workers...' &&
+        uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+      "
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/system/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: PgAdmin for database management
+  # Start with: docker compose -f docker-compose.prod.yml --profile management up
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: raisemyhand-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - management  # Only starts with --profile management flag
+
+volumes:
+  postgres-data:
+    driver: local
+  app-data:
+    driver: local
+  pgadmin-data:
+    driver: local

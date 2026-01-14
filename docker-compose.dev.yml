@@ -1,0 +1,41 @@
+# RaiseMyHand Development Environment
+# Uses SQLite for fast local development
+#
+# Quick Start:
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# To stop:
+#   docker compose -f docker-compose.dev.yml down
+
+services:
+  app:
+    build: .
+    container_name: raisemyhand-dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - app-data:/app/data
+      - ./:/app  # Mount source code for hot reload
+    env_file:
+      - .env
+    environment:
+      - ENV=development
+      - DEMO_MODE=false
+    command: >
+      sh -c "
+        echo '💻 Starting RaiseMyHand DEVELOPMENT Environment' &&
+        echo '🗄️  Initializing database...' &&
+        python init_db_v2.py &&
+        echo '✅ Database initialized (SQLite)' &&
+        echo '' &&
+        echo '🔥 Hot reload enabled - code changes will auto-restart server' &&
+        echo '📍 Access at: http://localhost:8000' &&
+        echo '' &&
+        echo '🚀 Starting server...' &&
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    restart: unless-stopped
+
+volumes:
+  app-data:
+    driver: local

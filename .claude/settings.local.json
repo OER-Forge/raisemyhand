@@ -7,7 +7,9 @@
       "Bash(python -m py_compile:*)",
       "Bash(mkdir:*)",
       "Bash(find:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue create:*)"
     ],
     "deny": [],
     "ask": []

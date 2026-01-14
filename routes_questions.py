@@ -14,12 +14,10 @@ from database import get_db
 from models_v2 import Question, ClassMeeting, QuestionVote
 from schemas_v2 import QuestionCreate, QuestionResponse, QuestionUpdate
 from logging_config import get_logger, log_database_operation
+from rate_limiter import limiter
 
 router = APIRouter(tags=["questions"])
 logger = get_logger(__name__)
-
-# Import limiter from main for rate limiting
-from main import limiter
 
 # Initialize profanity filter
 profanity.load_censor_words()

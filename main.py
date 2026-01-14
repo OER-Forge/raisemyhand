@@ -81,8 +81,9 @@ from logging_config import setup_logging, get_logger, log_request, log_database_
 setup_logging()
 logger = get_logger(__name__)
 
-# Initialize rate limiter
-limiter = Limiter(key_func=get_remote_address)
+# Import rate limiter (defined separately to avoid circular imports)
+from rate_limiter import limiter
+
 app = FastAPI(title="RaiseMyHand - Student Question Aggregator")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

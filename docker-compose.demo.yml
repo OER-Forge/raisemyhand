@@ -18,6 +18,9 @@ services:
       - demo-data:/app/data
       - ./demo/data:/app/demo/data:ro
     environment:
+      # Environment
+      - ENV=demo
+
       # Demo Configuration
       - DEMO_MODE=true
       - DEMO_CONTEXT=${DEMO_CONTEXT:-physics_101}
