@@ -5,7 +5,13 @@ All notable changes to RaiseMyHand are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v0.2] - 2026-01-14 - Strickland Stallion 🐎
+
+**Strickland Stallion** – powerful, reliable, and a little proud
+
+### Major Release: Production-Ready with Verified Performance at Scale
+
+This release marks a major milestone - RaiseMyHand is now production-ready with verified support for 200+ concurrent students. Comprehensive load testing, performance optimization, and documentation ensure classroom-scale reliability. Like a dependable stallion, this version is built for strength and stamina in real classroom environments.
 
 ### Added
 - **Load Testing Infrastructure** - Comprehensive Locust-based load testing suite
