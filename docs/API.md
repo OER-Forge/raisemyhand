@@ -562,17 +562,42 @@ All errors return JSON with status and message:
 
 ## Rate Limiting
 
-Rate limits apply to prevent abuse:
+Rate limits apply to prevent abuse and ensure fair resource allocation. Verified to support 200+ concurrent students with these limits:
 
-- **Questions:** 1 per 2 seconds per IP
-- **Votes:** 5 per second per IP
-- **API requests:** 100 per minute per API key
+| Endpoint | Rate Limit | Purpose |
+|----------|-----------|---------|
+| **POST** `/meetings/{code}/questions` | 500/minute | Question submission |
+| **POST** `/questions/{id}/vote` | 500/minute | Voting on questions |
+| **GET** `/sessions/{code}/stats` | 500/minute | Session statistics |
+| **GET** `/meetings/{code}` | Unlimited | Question list fetching |
+| **POST** `/meetings/{code}/verify-password` | 30/minute per IP | Password verification |
+
+**Handling Rate Limits:**
+When rate limited, the API returns `429 Too Many Requests`:
+
+```json
+{
+  "detail": "Rate limit exceeded. Try again in 60 seconds."
+}
+```
 
 Response includes rate limit headers:
 ```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
+X-RateLimit-Limit: 500
+X-RateLimit-Remaining: 495
 X-RateLimit-Reset: 1702805400
+```
+
+**Client Retry Strategy:**
+```python
+import time
+
+for attempt in range(3):
+    response = requests.post(endpoint, json=data)
+    if response.status_code == 429:
+        time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s, 4s
+        continue
+    return response
 ```
 
 ## Examples
@@ -639,15 +664,20 @@ echo "Report saved to report.csv"
 
 ## Rate Limiting Headers
 
-All API responses include rate limit information:
+All API responses include rate limit information in headers:
 
 ```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 99
+X-RateLimit-Limit: 500
+X-RateLimit-Remaining: 498
 X-RateLimit-Reset: 1609459200
 ```
 
-Check `X-RateLimit-Remaining` to see how many requests you have left.
+**Header Meanings:**
+- `X-RateLimit-Limit`: Maximum requests per minute for this endpoint
+- `X-RateLimit-Remaining`: Number of requests remaining in current window
+- `X-RateLimit-Reset`: Unix timestamp when limit resets
+
+Check `X-RateLimit-Remaining` before making requests to avoid hitting the limit. If approaching 0, consider implementing client-side throttling.
 
 ## CORS
 

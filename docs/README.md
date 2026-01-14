@@ -28,6 +28,12 @@ Welcome to the RaiseMyHand documentation hub. Find guides for every role and use
 **I need the API reference**
 → [API Documentation](API.md)
 
+**I want to run tests and verify performance**
+→ [Testing Guide](TESTING.md)
+
+**I need performance metrics and load testing info**
+→ [Load Testing Report](LOAD_TESTING.md)
+
 **I'm having technical problems**
 → [Troubleshooting Guide](TROUBLESHOOTING.md)
 
@@ -57,6 +63,8 @@ Welcome to the RaiseMyHand documentation hub. Find guides for every role and use
 
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - How to deploy to production with Docker, Nginx, and SSL
 - **[API.md](API.md)** - Complete REST API reference for programmatic access
+- **[TESTING.md](TESTING.md)** - Unit tests, integration tests, and load testing guide
+- **[LOAD_TESTING.md](LOAD_TESTING.md)** - Performance metrics, benchmarks, and load testing methodology
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Solutions for common problems and errors
 
 ### Reference
@@ -259,8 +267,10 @@ docs/
 ├── INSTRUCTOR_GUIDE.md          # For instructors
 ├── ADMIN_GUIDE.md               # For administrators
 ├── DEPLOYMENT.md                # Production deployment
-├── TROUBLESHOOTING.md           # Common problems & solutions
+├── TESTING.md                   # Testing guide (unit, integration, load)
+├── LOAD_TESTING.md              # Load testing methodology & results
 ├── API.md                       # REST API reference
+├── TROUBLESHOOTING.md           # Common problems & solutions
 ├── SCREENSHOTS.md               # Visual documentation guide
 ├── setup/                       # Legacy setup guides
 ├── deployment/                  # Legacy deployment guides

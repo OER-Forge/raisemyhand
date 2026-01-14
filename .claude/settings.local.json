@@ -9,7 +9,9 @@
       "Bash(find:*)",
       "Bash(cat:*)",
       "Bash(gh issue list:*)",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(tree:*)",
+      "Bash(file:*)"
     ],
     "deny": [],
     "ask": []

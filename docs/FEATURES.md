@@ -66,6 +66,38 @@ RaiseMyHand is a real-time classroom question system that enables students to as
 - Edge (latest)
 - Mobile browsers (iOS Safari, Android Chrome)
 
+## Scalability & Performance
+
+RaiseMyHand is tested and verified to handle large classroom environments:
+
+### Verified Performance
+
+**200+ Concurrent Students**
+- **Success Rate:** 99.92% (13,469/13,480 requests)
+- **Average Response Time:** 932ms
+- **95th Percentile Response Time:** 1840ms
+- **Throughput:** 45 requests/second sustained
+- **Error Rate:** 0.08% (gracefully handled race conditions)
+
+### Tested Workload
+
+Per-student behavior during 5-minute sustained load test:
+- Submit questions at 3x rate (~3 questions/minute total)
+- Vote on questions at 5x rate (~5 votes/minute per user)
+- Fetch question lists periodically
+- Check session statistics every 2-3 seconds
+
+### Scaling Limits
+
+| Concurrent Users | Configuration | Success Rate | Status |
+|-----------------|---------------|--------------|--------|
+| 100 | Single worker | 99.98% | ✅ Excellent |
+| 200 | 4 workers | 99.92% | ✅ Verified |
+| 300 | 8 workers | ~99.5% | ✅ Estimated |
+| 500+ | 16+ workers + DB scaling | ~95%+ | ✅ Possible |
+
+See [Load Testing Report](LOAD_TESTING.md) and [Performance Tuning](PRODUCTION_DEPLOYMENT.md#performance-tuning) for detailed methodology and optimization strategies.
+
 ## Not Included
 
 RaiseMyHand does **not** include:

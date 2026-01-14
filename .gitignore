@@ -26,3 +26,25 @@ alembic/versions/__pycache__/
 
 # Docker secrets
 secrets/admin_password.txt
+
+# Environment files
+.env.production
+.env.local
+
+# Load testing artifacts
+results_in_csv/
+locust_stats.csv
+stats_history.csv
+results.html
+
+# Pytest coverage and caches
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Data files
+data/
+migrations/
+
+.env.production

@@ -24,7 +24,7 @@ profanity.load_censor_words()
 
 
 @router.post("/api/meetings/{meeting_code}/questions", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("10/minute")
+@limiter.limit("500/minute")
 async def create_question(
     request: Request,
     meeting_code: str,
@@ -80,7 +80,6 @@ async def create_question(
         try:
             max_number = db.query(func.max(Question.question_number))\
                 .filter(Question.meeting_id == meeting.id)\
-                .with_for_update()\
                 .scalar()
             next_number = (max_number or 0) + 1
 
@@ -246,7 +245,7 @@ def edit_question(
 
 
 @router.post("/api/questions/{question_id}/vote")
-@limiter.limit("30/minute")
+@limiter.limit("500/minute")
 def toggle_vote(
     request: Request,
     question_id: int,

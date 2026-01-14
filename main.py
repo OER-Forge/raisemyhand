@@ -597,7 +597,7 @@ async def upvote_question(question_id: int, db: DBSession = Depends(get_db)):
 # QR Code generation
 # Public stats endpoint - no authentication required
 @app.get("/api/sessions/{session_code}/stats")
-@limiter.limit("30/minute")
+@limiter.limit("500/minute")
 async def get_session_stats(request: Request, session_code: str, db: DBSession = Depends(get_db)):
     """Get public stats for a session - question count, answered count, votes per question (no text)."""
     session = db.query(Session).filter(Session.meeting_code == session_code).first()

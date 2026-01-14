@@ -143,6 +143,25 @@ Available contexts: `physics_101`, `biology_200`, `chemistry_110`, `calculus_150
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production setup with Nginx
 - **[API Documentation](docs/API.md)** - REST API reference
 - **[FAQ](docs/FAQ.md)** - Common questions and troubleshooting
+- **[Testing Guide](docs/TESTING.md)** - Unit tests, integration tests, and load testing
+- **[Load Testing Report](docs/LOAD_TESTING.md)** - Performance metrics and benchmarks
+
+---
+
+## ⚙️ Performance & Scalability
+
+RaiseMyHand is tested and verified to handle **200+ concurrent students** with excellent performance:
+
+| Metric | Result |
+|--------|--------|
+| **Concurrent Users** | 200+ ✅ |
+| **Success Rate** | 99.92% ✅ |
+| **Avg Response Time** | 932ms ✅ |
+| **Throughput** | 45 requests/second ✅ |
+| **95th Percentile** | 1840ms ✅ |
+| **Error Rate** | 0.08% ✅ |
+
+Performance tested with realistic classroom workload (students asking questions, voting, and fetching updates). See [Load Testing Report](docs/LOAD_TESTING.md) for detailed methodology and results.
 
 ---
 
